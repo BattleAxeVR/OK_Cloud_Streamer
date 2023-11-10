@@ -1,0 +1,2 @@
+Just edit the CloudXRLaunchOptions.txt file to set it to your local or remote IP address you want to connect to, and then run the deploy_cloudxr_client_settings.bat
+ batch file. Then just pick which refresh rate you want to use, and run deploy_XXhz.bat. Your headset must be connected via USB and dev mode enabled. Or you can use SideQuest.
