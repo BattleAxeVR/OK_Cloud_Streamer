@@ -1,0 +1,1 @@
+adb install -t OVR_Quest_SampleClient72Hz.apk
