@@ -31,3 +31,4 @@ Full Source + prebuilt APKs/.exe for the waist-loco demo (which will be ported i
 
 https://github.com/BattleAxeVR/OpenXR-SDK-Source
 
+NOTE: The actual OpenXR implementation isn't pushed yet, I'm still debugging / tweaking it. I pushed the reference Oculus OVR sample client as APKs, that I built as a convenience. There is another README in the directory. The SteamVR Plugin supplied by Nvidia as part of their CloudXR SDK. The sample does not work very reliably, and it has some wavey lines. The final client won't have such obvious visual defects.
