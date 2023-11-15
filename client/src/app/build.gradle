@@ -1,0 +1,60 @@
+apply plugin: 'com.android.application'
+apply from: "$projectDir/build_sdk.gradle"
+
+dependencies {
+  compile 'com.android.support:support-v4:28.0.0'
+}
+
+android {
+    buildToolsVersion '28.0.3'
+    ndkVersion '21.4.7075529' // current LTS atm
+
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.nvidia.cloudxr.ovr"
+        minSdkVersion 25
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('./dummy.jks')
+            storePassword 'nvidia'
+            keyAlias 'nvidia'
+            keyPassword 'nvidia'
+        }
+        release {
+            storeFile file('./dummy.jks')
+            storePassword 'nvidia'
+            keyAlias 'nvidia'
+            keyPassword 'nvidia'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "ENABLE_DEBUG", "false"
+            signingConfig signingConfigs.release
+        }
+
+        debug {
+            buildConfigField "boolean", "ENABLE_DEBUG", "true"
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
