@@ -42,7 +42,7 @@ public class MainActivity extends android.app.NativeActivity {
 
     static {
         System.loadLibrary("vrapi");
-        System.loadLibrary("CloudXRClientOVR");
+        System.loadLibrary("OKCloudStreamer");
     }
 
     static native void nativeHandleLaunchOptions(String jcmdline);

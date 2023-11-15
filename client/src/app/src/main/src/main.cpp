@@ -49,7 +49,7 @@
 static struct android_app* GAndroidApp = NULL;
 static CloudXR::ClientOptions GOptions;
 static std::mutex GJniMutex;
-static CloudXRClientOVR *gClientHandle = NULL;
+static OKCloudStreamer *gClientHandle = NULL;
 
 // TODO: these values are heavily dependent on app workload.
 static const int CPU_LEVEL = 1;
@@ -59,7 +59,7 @@ static const int GPU_LEVEL = 1;
 #define LOG_TO_FILE 1
 
 //-----------------------------------------------------------------------------
-cxrClientCallbacks CloudXRClientOVR::s_clientProxy = { 0 };
+cxrClientCallbacks OKCloudStreamer::s_clientProxy = { 0 };
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
     va_list aptr;
@@ -114,7 +114,7 @@ const char* ClientStateEnumToString(cxrClientState state)
 //
 //==============================================================
 void android_handle_cmd(struct android_app* app, int32_t cmd) {
-    CloudXRClientOVR* cxrc = (CloudXRClientOVR*)app->userData;
+    OKCloudStreamer* cxrc = (OKCloudStreamer*)app->userData;
     if (cxrc == nullptr) {
         // TODO: shouldn't hit this case, but if we do we need to likely
         //  log and exit. TBD.
@@ -159,7 +159,7 @@ void android_handle_cmd(struct android_app* app, int32_t cmd) {
 //
 //==============================================================
 int32_t android_handle_input(struct android_app* app, AInputEvent* event) {
-    CloudXRClientOVR* cxrc = (CloudXRClientOVR*)app->userData;
+    OKCloudStreamer* cxrc = (OKCloudStreamer*)app->userData;
     if (app == nullptr) {
         CXR_LOGE("android_handle_input called with null userData");
         return 0;
@@ -255,7 +255,7 @@ static ovrVector3f cxrGetTranslation(const cxrMatrix34& m)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-CloudXRClientOVR::CloudXRClientOVR(struct android_app* app)
+OKCloudStreamer::OKCloudStreamer(struct android_app* app)
 {
     mRenderState = RenderState_Loading;
     mHeadsetOnHead = true; // assume it is until we detect otherwise.
@@ -279,15 +279,15 @@ CloudXRClientOVR::CloudXRClientOVR(struct android_app* app)
     mJavaCtx.ActivityObject = app->activity->clazz;
 
     // AttachCurrentThread reset the thread name, set it to something meaningful here.
-    prctl(PR_SET_NAME, (long)"CloudXRClientOVR", 0, 0, 0);
+    prctl(PR_SET_NAME, (long)"OKCloudStreamer", 0, 0, 0);
 }
 
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrError CloudXRClientOVR::Initialize()
+cxrError OKCloudStreamer::Initialize()
 {
-    CXR_LOGV("CloudXRClientOVR::Initialize START");
+    CXR_LOGV("OKCloudStreamer::Initialize START");
 
     int32_t result = VRAPI_INITIALIZE_SUCCESS;
     ovrInitParms localInitParms = vrapi_DefaultInitParms(&mJavaCtx);
@@ -324,7 +324,7 @@ cxrError CloudXRClientOVR::Initialize()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrError CloudXRClientOVR::Release()
+cxrError OKCloudStreamer::Release()
 {
     mEglHelper.Release();
 
@@ -349,7 +349,7 @@ cxrError CloudXRClientOVR::Release()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::RequestExit()
+void OKCloudStreamer::RequestExit()
 {
     CXR_LOGI("Requesting application exit.");
     mClientState = cxrClientState_Exiting;
@@ -359,7 +359,7 @@ void CloudXRClientOVR::RequestExit()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::UpdateClientState()
+void OKCloudStreamer::UpdateClientState()
 {
     if (mClientState==cxrClientState_Exiting)
         return; // early return if we're ALREADY in exiting state.
@@ -403,7 +403,7 @@ void CloudXRClientOVR::UpdateClientState()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrError CloudXRClientOVR::MainLoop()
+cxrError OKCloudStreamer::MainLoop()
 {
     const double startTime = GetTimeInSeconds();
 
@@ -453,7 +453,7 @@ cxrError CloudXRClientOVR::MainLoop()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrError CloudXRClientOVR::CreateReceiver()
+cxrError OKCloudStreamer::CreateReceiver()
 {
     if (Receiver)
         return cxrError_Success;
@@ -540,15 +540,15 @@ cxrError CloudXRClientOVR::CreateReceiver()
 
     s_clientProxy.GetTrackingState = [](void* context, cxrVRTrackingState* trackingState)
     {
-        return reinterpret_cast<CloudXRClientOVR*>(context)->GetTrackingState(trackingState);
+        return reinterpret_cast<OKCloudStreamer*>(context)->GetTrackingState(trackingState);
     };
     s_clientProxy.TriggerHaptic = [](void* context, const cxrHapticFeedback* haptic)
     {
-        return reinterpret_cast<CloudXRClientOVR*>(context)->TriggerHaptic(haptic);
+        return reinterpret_cast<OKCloudStreamer*>(context)->TriggerHaptic(haptic);
     };
     s_clientProxy.RenderAudio = [](void* context, const cxrAudioFrame *audioFrame)
     {
-        return reinterpret_cast<CloudXRClientOVR*>(context)->RenderAudio(audioFrame);
+        return reinterpret_cast<OKCloudStreamer*>(context)->RenderAudio(audioFrame);
     };
 
     // the client_lib calls into here when the async connection status changes
@@ -575,7 +575,7 @@ cxrError CloudXRClientOVR::CreateReceiver()
 
         // update the state of the app, don't perform any actions here
         // the client state change will be handled in the render thread (UpdateClientState())
-        CloudXRClientOVR *client = reinterpret_cast<CloudXRClientOVR*>(context);
+        OKCloudStreamer *client = reinterpret_cast<OKCloudStreamer*>(context);
         client->mClientState = state;
         client->mClientError = error;
     };
@@ -638,7 +638,7 @@ cxrError CloudXRClientOVR::CreateReceiver()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::TeardownReceiver() {
+void OKCloudStreamer::TeardownReceiver() {
     if (playbackStream)
     {
         playbackStream->close();
@@ -660,7 +660,7 @@ void CloudXRClientOVR::TeardownReceiver() {
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrError CloudXRClientOVR::QueryChaperone(cxrDeviceDesc* deviceDesc) const
+cxrError OKCloudStreamer::QueryChaperone(cxrDeviceDesc* deviceDesc) const
 {
     if (mOvrSession == nullptr)
     {
@@ -704,7 +704,7 @@ cxrError CloudXRClientOVR::QueryChaperone(cxrDeviceDesc* deviceDesc) const
 // post-connect, if we don't detect any, or don't detect two.  Also note that
 // this code has removed all support for non Touch controllers and old devices.
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::DetectControllers()
+void OKCloudStreamer::DetectControllers()
 {
     // determine class of Oculus device
     mControllersFound = 0;
@@ -751,7 +751,7 @@ void CloudXRClientOVR::DetectControllers()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-bool CloudXRClientOVR::SetupFramebuffer(GLuint colorTexture, uint32_t eye)
+bool OKCloudStreamer::SetupFramebuffer(GLuint colorTexture, uint32_t eye)
 {
     if(Framebuffers[eye] == 0)
     {
@@ -791,7 +791,7 @@ bool CloudXRClientOVR::SetupFramebuffer(GLuint colorTexture, uint32_t eye)
 }
 
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::FillBackground()
+void OKCloudStreamer::FillBackground()
 {
     float cr = ((mBGColor & 0x00FF0000) >> 16) / 255.0f;
     float cg = ((mBGColor & 0x0000FF00) >> 8) / 255.0f;
@@ -923,7 +923,7 @@ const int ovrTouchToInput[16] = { // ovr touch bit index -> client input index
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::ProcessControllers(float predictedTimeS)
+void OKCloudStreamer::ProcessControllers(float predictedTimeS)
 {
     if (mClientState != cxrClientState_StreamingSessionInProgress)
     {
@@ -1129,7 +1129,7 @@ void CloudXRClientOVR::ProcessControllers(float predictedTimeS)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrTrackedDevicePose CloudXRClientOVR::ConvertPose(
+cxrTrackedDevicePose OKCloudStreamer::ConvertPose(
         const ovrRigidBodyPosef& inPose, float rotationX)
 {
     ovrMatrix4f transform = vrapi_GetTransformFromPose(&inPose.Pose);
@@ -1156,7 +1156,7 @@ cxrTrackedDevicePose CloudXRClientOVR::ConvertPose(
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::DoTracking(double predictedTimeS)
+void OKCloudStreamer::DoTracking(double predictedTimeS)
 {
     ProcessControllers(predictedTimeS);
 
@@ -1190,7 +1190,7 @@ void CloudXRClientOVR::DoTracking(double predictedTimeS)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::GetTrackingState(cxrVRTrackingState* trackingState)
+void OKCloudStreamer::GetTrackingState(cxrVRTrackingState* trackingState)
 {
     // TODO TBD!!! we used to use null to do the ovr api calls on loading/exiting screens
     //  but that generates events and state changes the system isn't expecting.  so return for now.
@@ -1209,7 +1209,7 @@ void CloudXRClientOVR::GetTrackingState(cxrVRTrackingState* trackingState)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrDeviceDesc CloudXRClientOVR::GetDeviceDesc(float fovX, float fovY)
+cxrDeviceDesc OKCloudStreamer::GetDeviceDesc(float fovX, float fovY)
 {
     cxrDeviceDesc desc = {};
     if (mJavaCtx.Vm == nullptr)
@@ -1369,7 +1369,7 @@ cxrDeviceDesc CloudXRClientOVR::GetDeviceDesc(float fovX, float fovY)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::RecreateSwapchain(uint32_t width, uint32_t height, uint32_t eye)
+void OKCloudStreamer::RecreateSwapchain(uint32_t width, uint32_t height, uint32_t eye)
 {
     // TODO: this log should likely be Warning level, as this is expensive and we should
     //   see clearly in log when it happens.  Don't think it needs to be Error, but will for now.
@@ -1390,7 +1390,7 @@ void CloudXRClientOVR::RecreateSwapchain(uint32_t width, uint32_t height, uint32
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::TriggerHaptic(
+void OKCloudStreamer::TriggerHaptic(
        const cxrHapticFeedback* hapticFeedback)
 {
     const cxrHapticFeedback& haptic = *hapticFeedback;
@@ -1440,7 +1440,7 @@ void CloudXRClientOVR::TriggerHaptic(
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-cxrBool CloudXRClientOVR::RenderAudio(const cxrAudioFrame *audioFrame)
+cxrBool OKCloudStreamer::RenderAudio(const cxrAudioFrame *audioFrame)
 {
     if (!playbackStream)
     {
@@ -1457,7 +1457,7 @@ cxrBool CloudXRClientOVR::RenderAudio(const cxrAudioFrame *audioFrame)
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::SubmitLayers(const ovrLayerHeader2* layers[], int layerCount, ovrFrameFlags flags)
+void OKCloudStreamer::SubmitLayers(const ovrLayerHeader2* layers[], int layerCount, ovrFrameFlags flags)
 {
     ovrSubmitFrameDescription2 frameDesc = {0};
     frameDesc.LayerCount = layerCount;
@@ -1473,7 +1473,7 @@ void CloudXRClientOVR::SubmitLayers(const ovrLayerHeader2* layers[], int layerCo
 //-----------------------------------------------------------------------------
 // Here we render the loading 'spinner' while we're starting up.
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::RenderLoadScreen()
+void OKCloudStreamer::RenderLoadScreen()
 {
     GetTrackingState(NULL);
     ovrLayerProjection2 blackLayer = vrapi_DefaultLayerBlackProjection2();
@@ -1488,7 +1488,7 @@ void CloudXRClientOVR::RenderLoadScreen()
 //-----------------------------------------------------------------------------
 // Clear to black for exit, and tell VrApi we are done submitting frames.
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::RenderExitScreen()
+void OKCloudStreamer::RenderExitScreen()
 {
     GetTrackingState(NULL);
     ovrLayerProjection2 layer = vrapi_DefaultLayerBlackProjection2();
@@ -1501,7 +1501,7 @@ void CloudXRClientOVR::RenderExitScreen()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::Render()
+void OKCloudStreamer::Render()
 {
     // This is the only place the frame index is incremented, right before
     // calling vrapi_GetPredictedDisplayTime().
@@ -1660,7 +1660,7 @@ void CloudXRClientOVR::Render()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::AppResumed()
+void OKCloudStreamer::AppResumed()
 {
     if (mOvrSession == nullptr)
     {
@@ -1728,7 +1728,7 @@ void CloudXRClientOVR::AppResumed()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::AppPaused() {
+void OKCloudStreamer::AppPaused() {
     // TODO verify whether we need a mutex around resources here to ensure some thread isn't
     //  rendering actively while we're pausing...
     CXR_LOGI("App Paused");
@@ -1768,7 +1768,7 @@ void CloudXRClientOVR::AppPaused() {
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-bool CloudXRClientOVR::EnterVRMode()
+bool OKCloudStreamer::EnterVRMode()
 {
     if (mOvrSession == NULL) {
         ovrModeParms parms = vrapi_DefaultModeParms(&mJavaCtx);
@@ -1812,7 +1812,7 @@ bool CloudXRClientOVR::EnterVRMode()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::HandleVrModeChanges()
+void OKCloudStreamer::HandleVrModeChanges()
 {
     if (mIsPaused==mWasPaused) // nothing to do then.
         return;
@@ -1850,7 +1850,7 @@ void CloudXRClientOVR::HandleVrModeChanges()
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-oboe::DataCallbackResult CloudXRClientOVR::onAudioReady(oboe::AudioStream *oboeStream,
+oboe::DataCallbackResult OKCloudStreamer::onAudioReady(oboe::AudioStream *oboeStream,
         void *audioData, int32_t numFrames)
 {
     cxrAudioFrame recordedFrame{};
@@ -1864,7 +1864,7 @@ oboe::DataCallbackResult CloudXRClientOVR::onAudioReady(oboe::AudioStream *oboeS
 //-----------------------------------------------------------------------------
 // TODO: we may need to handle these events for better app lifecycle.
 //-----------------------------------------------------------------------------
-void CloudXRClientOVR::HandleVrApiEvents()
+void OKCloudStreamer::HandleVrApiEvents()
 {
     ovrEventDataBuffer eventDataBuffer = {};
 
@@ -2014,7 +2014,7 @@ void android_main(struct android_app* app)
 {
     cxrError status = cxrError_Success;
     GAndroidApp = app;
-    CloudXRClientOVR cxrcOvr(app);
+    OKCloudStreamer cxrcOvr(app);
     gClientHandle = &cxrcOvr;
 
     ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_KEEP_SCREEN_ON, 0);

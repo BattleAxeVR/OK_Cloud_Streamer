@@ -45,7 +45,7 @@
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
-class CloudXRClientOVR : public oboe::AudioStreamDataCallback
+class OKCloudStreamer : public oboe::AudioStreamDataCallback
 {
     static constexpr uint32_t SwapChainLen = 3;
     static constexpr uint32_t NumEyes = 2;
@@ -60,7 +60,7 @@ class CloudXRClientOVR : public oboe::AudioStreamDataCallback
     } CxrcRenderStates;
 
 public:
-    CloudXRClientOVR(struct android_app* app);
+    OKCloudStreamer(struct android_app* app);
     cxrError Initialize();
     cxrError MainLoop();
     cxrError Release();

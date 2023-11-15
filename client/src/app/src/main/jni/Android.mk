@@ -14,7 +14,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := CloudXRClientOVR
+LOCAL_MODULE := OKCloudStreamer
 
 LOCAL_CPP_FEATURES := exceptions
 
