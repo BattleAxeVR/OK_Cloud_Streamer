@@ -1,0 +1,31 @@
+name: Build Release APK
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup secrets
+      run: |
+        echo ${{ secrets.RELEASE_KEYSTORE }} | base64 -d > app/keystore.jks
+        echo ${{ secrets.RELEASE_KEYSTORE_PASSWORD }} | base64 -d > app/passwords.properties
+    - name: Get libs
+      run: ./get-libs.sh
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: 17
+    - name: Build with Gradle
+      run: ./gradlew assembleRelease
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: client
+        path: app/build/outputs/apk/release/app-release.apk

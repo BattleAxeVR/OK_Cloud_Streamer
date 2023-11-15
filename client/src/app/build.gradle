@@ -1,19 +1,29 @@
+def passwordProperties = new Properties()
+def passwordPropertiesFile = rootProject.file('app/passwords.properties')
+if (passwordPropertiesFile.exists()) {
+    passwordPropertiesFile.withReader('UTF-8') { reader -> passwordProperties.load(reader) }
+}
+
+def keystorePassword = passwordProperties.getProperty('keystorePassword')
+
 apply plugin: 'com.android.application'
 apply from: "$projectDir/build_sdk.gradle"
+apply plugin: 'kotlin-android'
 
 dependencies {
-  compile 'com.android.support:support-v4:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.10.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
 android {
-    buildToolsVersion '28.0.3'
-    ndkVersion '21.4.7075529' // current LTS atm
+    ndkVersion '25.2.9519653'
 
-    compileSdkVersion 28
+    compileSdk 33
     defaultConfig {
         applicationId "com.nvidia.cloudxr.ovr"
         minSdkVersion 25
-        targetSdkVersion 28
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
         ndk {
@@ -21,24 +31,22 @@ android {
         }
     }
 
-    signingConfigs {
-        debug {
-            storeFile file('./dummy.jks')
-            storePassword 'nvidia'
-            keyAlias 'nvidia'
-            keyPassword 'nvidia'
-        }
-        release {
-            storeFile file('./dummy.jks')
-            storePassword 'nvidia'
-            keyAlias 'nvidia'
-            keyPassword 'nvidia'
-        }
-    }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('./keystore.jks')
+            storePassword keystorePassword
+            keyAlias 'key0'
+            keyPassword keystorePassword
+        }
     }
 
     buildTypes {
@@ -54,7 +62,8 @@ android {
         }
     }
 
-    lintOptions {
+    namespace 'com.nvidia.cloudxr.ovr'
+    lint {
         abortOnError false
     }
 }

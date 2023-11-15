@@ -1983,6 +1983,14 @@ Java_com_nvidia_cloudxr_ovr_MainActivity_nativeHandleLaunchOptions(JNIEnv* env, 
     else
         gClientHandle->SetDefaultBGColor(0xFF555555); // dark gray for now.
 
+#if 1
+    if (GOptions.mServerIP.empty())
+    {
+        GOptions.mServerIP = "192.168.2.38";
+    }
+#endif
+
+
     // check if we have a server yet (if have no 'input UI', we have no other source)
     if (!GOptions.mServerIP.empty())
     {

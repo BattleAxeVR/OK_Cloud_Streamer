@@ -44,27 +44,27 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile "com.nvidia.CloudXRClient:CloudXR@aar"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "com.nvidia.CloudXRClient:CloudXR@aar"
 }
 
 
 // Extract the Oculus VR SDK
-task extractOVRSDK(type: Copy)  {
+tasks.register('extractOVRSDK', Copy) {
     def sourceFile = file("${projectDir}/libs/ovr_sdk.zip")
     from zipTree(sourceFile)
     into OVR_SDK_ROOT
 }
 
 // Extract the Oboe SDK
-task extractOboeSDK(type: Copy)  {
-    def sourceFile = file("${projectDir}/libs/oboe-1.5.0.aar")
+tasks.register('extractOboeSDK', Copy) {
+    def sourceFile = file("${projectDir}/libs/oboe.aar")
     from zipTree(sourceFile)
     into OBOE_SDK_ROOT
 }
 
 // Extract the CloudXR SDK
-task extractCloudXRSDK(type: Copy)  {
+tasks.register('extractCloudXRSDK', Copy) {
     def sourceFile = file("${projectDir}/libs/CloudXR.aar")
     from zipTree(sourceFile)
     into CLOUDXR_SDK_ROOT

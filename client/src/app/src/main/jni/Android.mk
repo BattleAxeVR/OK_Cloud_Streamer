@@ -28,7 +28,7 @@ LOCAL_C_INCLUDES := $(OVR_SDK_ROOT)/1stParty/OVR/Include \
 
 LOCAL_SRC_FILES := ../src/main.cpp \
                    ../src/EGLHelper.cpp \
-                   $(C_SHARED_INCLUDE)/CloudXRFileLogger.cpp
+                   $(CLOUDXR_SDK_ROOT)/include/CloudXRFileLogger.cpp
 
 LOCAL_LDLIBS := -llog -landroid -lGLESv3 -lEGL
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue

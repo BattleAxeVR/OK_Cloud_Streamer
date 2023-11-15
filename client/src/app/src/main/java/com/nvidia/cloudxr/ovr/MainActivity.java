@@ -22,13 +22,13 @@
 
 package com.nvidia.cloudxr.ovr;
 
-import android.content.Intent;
+//import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.content.pm.PackageManager;
-import android.Manifest;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends android.app.NativeActivity {
     public static final String TAG = "CloudXR";
@@ -57,16 +57,18 @@ public class MainActivity extends android.app.NativeActivity {
 
         // check for permission for any 'dangerous' class features.
         // Note that INTERNET is normal and pre-granted, and READ_EXTERNAL is implicitly granted when accepting WRITE.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, "android.permission.WRITE_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, "android.permission.RECORD_AUDIO") != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[] {
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.RECORD_AUDIO
+                    "android.permission.WRITE_EXTERNAL_STORAGE",
+                    "android.permission.RECORD_AUDIO"
             }, PERMISSION_REQUEST_CODE);
             Log.w(TAG, "Waiting for permissions from user...");
         } else {
             permissionDone = true;
         }
+
+        permissionDone = true;
     }
 
     protected void doResume() {

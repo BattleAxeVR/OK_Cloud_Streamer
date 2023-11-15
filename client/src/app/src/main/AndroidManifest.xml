@@ -1,48 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-		package="com.nvidia.cloudxr.ovr"
-		android:versionCode="20"
-		android:versionName="2.0"
-		android:installLocation="auto" >
+    android:installLocation="auto"
+    android:versionCode="20"
+    android:versionName="2.0">
 
-	<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-	<uses-permission android:name="android.permission.INTERNET" />
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-	<uses-feature android:name="android.hardware.usb.host" />
-	<!-- Tell the system this app requires OpenGL ES 3.1. -->
-	<uses-feature android:glEsVersion="0x00030001" android:required="true" />
-	<!-- Tell the system this app works in either 3dof or 6dof mode -->
-	<uses-feature android:name="android.hardware.vr.headtracking" android:required="false" />
-	<!-- Tell the system this app uses the microphone -->
-	<uses-feature android:name="android.hardware.microphone" android:required="false" />
-	<application
-			android:allowBackup="false"
-			android:icon="@drawable/nvidia_logo"
-			android:label="@string/app_name" >
-                <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only"/>
-                <meta-data android:name="com.oculus.supportedDevices" android:value="quest|quest2"/>
-		<!-- launchMode is set to singleTask because there should never be multiple copies of the app running -->
-		<!-- Theme.Black.NoTitleBar.Fullscreen gives solid black instead of a (bad stereoscopic) gradient on app transition -->
-		<!-- If targeting API level 24+, configChanges should additionally include 'density'. -->
-		<!-- If targeting API level 24+, android:resizeableActivity="false" should be added. -->
-		<activity
-				android:name="com.nvidia.cloudxr.ovr.MainActivity"
-				android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
-				android:label="@string/app_name"
-				android:launchMode="singleTask"
-				android:screenOrientation="landscape"
-				android:configChanges="screenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode">
-			<!-- Tell NativeActivity the name of the .so -->
-			<meta-data android:name="android.app.lib_name" android:value="CloudXRClientOVR" />
-			<!-- This filter lets the apk show up as a launchable icon -->
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
-	</application>
+    <uses-feature android:name="android.hardware.usb.host" />
+    <!-- Tell the system this app requires OpenGL ES 3.1. -->
+    <uses-feature
+        android:glEsVersion="0x00030001"
+        android:required="true" />
+    <!-- Tell the system this app works in either 3dof or 6dof mode -->
+    <uses-feature
+        android:name="android.hardware.vr.headtracking"
+        android:required="false" />
+    <!-- Tell the system this app uses the microphone -->
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/dv_logo"
+        android:label="@string/app_name">
+        <meta-data
+            android:name="com.samsung.android.vr.application.mode"
+            android:value="vr_only" />
+        <meta-data
+            android:name="com.oculus.supportedDevices"
+            android:value="quest|quest2" />
+        <!-- launchMode is set to singleTask because there should never be multiple copies of the app running -->
+        <!-- Theme.Black.NoTitleBar.Fullscreen gives solid black instead of a (bad stereoscopic) gradient on app transition -->
+        <!-- If targeting API level 24+, configChanges should additionally include 'density'. -->
+        <!-- If targeting API level 24+, android:resizeableActivity="false" should be added. -->
+        <activity
+            android:name="com.nvidia.cloudxr.ovr.MainActivity"
+            android:configChanges="screenSize|screenLayout|orientation|keyboardHidden|keyboard|navigation|uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+            <!-- Tell NativeActivity the name of the .so -->
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="CloudXRClientOVR" />
+            <meta-data
+                android:name="com.oculus.ossplash"
+                android:value="true" />
+            <!-- This filter lets the apk show up as a launchable icon -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="desktopvisionxr" />
+            </intent-filter>
+        </activity>
+    </application>
 </manifest>
