@@ -13,10 +13,6 @@ https://developer.nvidia.com/cloudxr-sdk
 
 -Legal / licensing: I was told by Nvidia reps on their forums that it's ok if I share the SteamVR plugin installer and libraries for CXR, as long as I use a permissive license such as MIT, which I am. All rights reserved and credit due to NV for their CloudXR library. NB: Please reach out to me if there are any issues w/ this repo's legality and I will correct them immediately, or even take this entire project down. My relationship with Nvidia matters far more to me than this project.
 
--Use Meta IGL library as a foundation that supports multiple API backends, for eventual porting to PC, Apple, Linux, etc.
-
-https://github.com/facebook/igl
-
 -Support any and fall Quest (or other) standalone features available over OpenXR, such as eye-tracking, full body tracking simultaneous hands + controller tracking, via the custom non-VR Controller input data and server-side API functionality. 
 
 -Goal is NOT to try and beat Virtual Desktop in terms of overall video quality, as the image quality is limited by CloudXR which I believe is inferior (for now). However CXR should run better over 5G and cloud scenarios than local wifi, due to frame dejittering and other advanced features that are out of scope to discuss here. 
