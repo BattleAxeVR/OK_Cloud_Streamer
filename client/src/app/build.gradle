@@ -42,7 +42,7 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('./keystore.jks')
+            storeFile file('./battleaxevr_keystore.jks')
             storePassword keystorePassword
             keyAlias 'key0'
             keyPassword keystorePassword
