@@ -1,0 +1,3 @@
+[submodule "external/igl"]
+	path = external/igl
+	url = https://github.com/battleAxeVR/igl
