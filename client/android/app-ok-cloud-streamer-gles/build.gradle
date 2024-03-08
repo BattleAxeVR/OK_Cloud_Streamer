@@ -39,14 +39,14 @@ android {
         debug {
             sourceSets {
                 main {
-                    manifest.srcFile '../../../../external/igl/shell/openxr/mobile/java/com/facebook/igl/shell/openxr/gles/AndroidManifest.xml'
+                    manifest.srcFile '../../../external/igl/shell/openxr/mobile/java/com/facebook/igl/shell/openxr/gles/AndroidManifest.xml'
                 }
             }
         }
         release {
             sourceSets {
                 main {
-                    manifest.srcFile '../../../../external/igl/shell/openxr/mobile/java/com/facebook/igl/shell/openxr/gles/AndroidManifest.xml'
+                    manifest.srcFile '../../../external/igl/shell/openxr/mobile/java/com/facebook/igl/shell/openxr/gles/AndroidManifest.xml'
                 }
             }
             minifyEnabled false
@@ -60,13 +60,13 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path file('../../../../external/igl/CMakeLists.txt')
+            path file('../../../external/igl/CMakeLists.txt')
             version '3.22.1'
         }
     }
 
     sourceSets {
-        main.assets.srcDirs += '../../../../external/igl/shell/resources/images'
+        main.assets.srcDirs += '../../../external/igl/shell/resources/images'
     }
 
     ndkVersion '25.2.9519653'
