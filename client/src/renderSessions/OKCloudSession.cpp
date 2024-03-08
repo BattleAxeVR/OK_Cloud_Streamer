@@ -1,9 +1,6 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+//--------------------------------------------------------------------------------------
+// Copyright (c) 2024 BattleAxeVR. All rights reserved.
+//--------------------------------------------------------------------------------------
 
 #include <../../../external/igl/IGLU/managedUniformBuffer/ManagedUniformBuffer.h>
 
@@ -15,9 +12,8 @@
 #include <igl/opengl/Device.h>
 #include <igl/opengl/GLIncludes.h>
 #include <igl/opengl/RenderCommandEncoder.h>
-#include "HelloOpenXRSession.h"
+#include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
-
 
 #ifndef ENABLE_CLOUDXR
 #define ENABLE_CLOUDXR 1
@@ -33,7 +29,8 @@
 #include <CloudXRClientOptions.h>
 #include <CloudXRController.h>
 
-extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...) {
+extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...) 
+{
 }
 
 #endif
@@ -42,17 +39,20 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 #include <oboe/Oboe.h>
 #endif
 
-namespace igl::shell {
+namespace igl::shell 
+{
 
-struct VertexPosUvw {
+struct VertexPosUvw 
+{
   glm::vec3 position;
   glm::vec3 uvw;
 };
 
-namespace {
 
 const float half = 1.0f;
-VertexPosUvw vertexData0[] = {
+
+VertexPosUvw vertexData0[] = 
+{
     {{-half, half, -half}, {0.0, 1.0, 0.0}},
     {{half, half, -half}, {1.0, 1.0, 0.0}},
     {{-half, -half, -half}, {0.0, 0.0, 0.0}},
@@ -62,10 +62,12 @@ VertexPosUvw vertexData0[] = {
     {{half, -half, half}, {1.0, 0.0, 1.0}},
     {{-half, -half, half}, {0.0, 0.0, 1.0}},
 };
+
 uint16_t indexData[] = {0, 1, 2, 1, 3, 2, 1, 4, 3, 4, 6, 3, 4, 5, 6, 5, 7, 6,
                         5, 0, 7, 0, 2, 7, 5, 4, 0, 4, 1, 0, 2, 3, 7, 3, 6, 7};
 
-std::string getProlog(igl::IDevice& device) {
+std::string getProlog(igl::IDevice& device) 
+{
 #if IGL_BACKEND_OPENGL
   const auto shaderVersion = device.getShaderVersion();
   if (shaderVersion.majorVersion >= 3 || shaderVersion.minorVersion >= 30) {
@@ -78,7 +80,8 @@ std::string getProlog(igl::IDevice& device) {
   return "";
 };
 
-std::string getOpenGLFragmentShaderSource(igl::IDevice& device) {
+std::string getOpenGLFragmentShaderSource(igl::IDevice& device) 
+{
   return getProlog(device) + std::string(R"(
                       precision highp float;
                       precision highp sampler2D;
@@ -91,7 +94,8 @@ std::string getOpenGLFragmentShaderSource(igl::IDevice& device) {
                       })");
 }
 
-std::string getOpenGLVertexShaderSource(igl::IDevice& device) {
+std::string getOpenGLVertexShaderSource(igl::IDevice& device) 
+{
   return getProlog(device) + R"(
                       layout(num_views = 2) in;
                       precision highp float;
@@ -113,7 +117,8 @@ std::string getOpenGLVertexShaderSource(igl::IDevice& device) {
                       })";
 }
 
-static const char* getVulkanFragmentShaderSource() {
+static const char* getVulkanFragmentShaderSource() 
+{
   return R"(
                       precision highp float;
                       precision highp sampler2D;
@@ -128,7 +133,8 @@ static const char* getVulkanFragmentShaderSource() {
                       })";
 }
 
-static const char* getVulkanVertexShaderSource() {
+static const char* getVulkanVertexShaderSource() 
+{
   return R"(
                       #extension GL_OVR_multiview2 : require
                       layout(num_views = 2) in;
@@ -153,7 +159,8 @@ static const char* getVulkanVertexShaderSource() {
                       })";
 }
 
-std::unique_ptr<IShaderStages> getShaderStagesForBackend(igl::IDevice& device) {
+std::unique_ptr<IShaderStages> getShaderStagesForBackend(igl::IDevice& device) 
+{
   switch (device.getBackendType()) {
   // @fb-only
     // @fb-only
@@ -184,11 +191,13 @@ std::unique_ptr<IShaderStages> getShaderStagesForBackend(igl::IDevice& device) {
   }
 }
 
-bool isDeviceCompatible(IDevice& device) noexcept {
+bool isDeviceCompatible(IDevice& device) noexcept 
+{
   return device.hasFeature(DeviceFeatures::Multiview);
 }
 
-glm::mat4 perspectiveAsymmetricFovRH(const igl::shell::Fov& fov, float nearZ, float farZ) {
+glm::mat4 perspectiveAsymmetricFovRH(const igl::shell::Fov& fov, float nearZ, float farZ) 
+{
   glm::mat4 mat;
 
   const float tanLeft = tanf(fov.angleLeft);
@@ -221,10 +230,9 @@ glm::mat4 perspectiveAsymmetricFovRH(const igl::shell::Fov& fov, float nearZ, fl
 
   return mat;
 }
-} // namespace
 
-void HelloOpenXRSession::createSamplerAndTextures(const igl::IDevice& device) {
-  // Sampler & Texture
+void OKCloudSession::createSamplerAndTextures(const igl::IDevice& device) 
+{
   SamplerStateDesc samplerDesc;
   samplerDesc.minFilter = samplerDesc.magFilter = SamplerMinMagFilter::Linear;
   samplerDesc.addressModeU = SamplerAddressMode::MirrorRepeat;
@@ -235,17 +243,24 @@ void HelloOpenXRSession::createSamplerAndTextures(const igl::IDevice& device) {
   tex0_ = getPlatform().loadTexture("macbeth.png");
 }
 
-void HelloOpenXRSession::initialize() noexcept {
+void OKCloudSession::initialize() noexcept 
+{
   auto& device = getPlatform().getDevice();
-  if (!isDeviceCompatible(device)) {
+  
+  if (!isDeviceCompatible(device)) 
+  {
     return;
   }
+  
   // Vertex buffer, Index buffer and Vertex Input
   const BufferDesc vb0Desc =
       BufferDesc(BufferDesc::BufferTypeBits::Vertex, vertexData0, sizeof(vertexData0));
+	  
   vb0_ = device.createBuffer(vb0Desc, nullptr);
+  
   const BufferDesc ibDesc =
       BufferDesc(BufferDesc::BufferTypeBits::Index, indexData, sizeof(indexData));
+	  
   ib0_ = device.createBuffer(ibDesc, nullptr);
 
   VertexInputStateDesc inputDesc;
@@ -286,7 +301,8 @@ void HelloOpenXRSession::initialize() noexcept {
   renderPass_.depthAttachment.clearDepth = 1.0;
 }
 
-void HelloOpenXRSession::setVertexParams() {
+void OKCloudSession::setVertexParams() 
+{
   // rotating animation
   static float angle = 0.0f, scaleZ = 1.0f, ss = 0.005f;
   angle += 0.005f;
@@ -310,9 +326,12 @@ void HelloOpenXRSession::setVertexParams() {
   vertexParameters_.scaleZ = scaleZ;
 }
 
-void HelloOpenXRSession::update(igl::SurfaceTextures surfaceTextures) noexcept {
+void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept 
+{
   auto& device = getPlatform().getDevice();
-  if (!isDeviceCompatible(device)) {
+  
+  if (!isDeviceCompatible(device)) 
+  {
     return;
   }
 
@@ -320,7 +339,9 @@ void HelloOpenXRSession::update(igl::SurfaceTextures surfaceTextures) noexcept {
   setVertexParams();
 
   igl::Result ret;
-  if (framebuffer_ == nullptr) {
+  
+  if (framebuffer_ == nullptr) 
+  {
     igl::FramebufferDesc framebufferDesc;
     framebufferDesc.colorAttachments[0].texture = surfaceTextures.color;
     framebufferDesc.depthAttachment.texture = surfaceTextures.depth;
@@ -331,12 +352,16 @@ void HelloOpenXRSession::update(igl::SurfaceTextures surfaceTextures) noexcept {
     framebuffer_ = getPlatform().getDevice().createFramebuffer(framebufferDesc, &ret);
     IGL_ASSERT(ret.isOk());
     IGL_ASSERT(framebuffer_ != nullptr);
-  } else {
+  } 
+  else 
+  {
     framebuffer_->updateDrawable(surfaceTextures.color);
   }
 
   constexpr uint32_t textureUnit = 0;
-  if (pipelineState_ == nullptr) {
+  
+  if (pipelineState_ == nullptr) 
+  {
     // Graphics pipeline: state batch that fully configures GPU for rendering
 
     RenderPipelineDesc graphicsDesc;
@@ -405,6 +430,7 @@ void HelloOpenXRSession::update(igl::SurfaceTextures surfaceTextures) noexcept {
       igl::UniformDesc{
           "scaleZ", -1, igl::UniformType::Float, 1, offsetof(VertexFormat, scaleZ), 0}};
 #endif
+
   const auto vertUniformBuffer = std::make_shared<iglu::ManagedUniformBuffer>(device, info);
   IGL_ASSERT(vertUniformBuffer->result.isOk());
   *static_cast<VertexFormat*>(vertUniformBuffer->getData()) = vertexParameters_;
@@ -425,4 +451,4 @@ void HelloOpenXRSession::update(igl::SurfaceTextures surfaceTextures) noexcept {
   commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
 }
 
-} // namespace igl::shell
+} // namespace BVR
