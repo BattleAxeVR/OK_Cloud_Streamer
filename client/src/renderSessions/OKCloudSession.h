@@ -2,9 +2,10 @@
 // Copyright (c) 2024 BattleAxeVR. All rights reserved.
 //--------------------------------------------------------------------------------------
 
+#ifndef OK_CLOUD_SESSION_H
+#define OK_CLOUD_SESSION_H
 
-#pragma once
-
+#include "defines.h"
 #include <shell/shared/renderSession/RenderSession.h>
 
 #include <glm/glm.hpp>
@@ -48,3 +49,7 @@ class OKCloudSession : public RenderSession
 };
 
 } // namespace igl::shell
+
+#endif // OK_CLOUD_SESSION_H
+
+
