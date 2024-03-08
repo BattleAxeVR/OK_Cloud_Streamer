@@ -6,12 +6,19 @@
 #define OK_CLOUD_SESSION_H
 
 #include "defines.h"
+
+#if ENABLE_CLOUDXR
 #include <shell/shared/renderSession/RenderSession.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <igl/IGL.h>
 #include <shell/shared/platform/Platform.h>
+
+#include <CloudXRClient.h>
+#include <CloudXRMatrixHelpers.h>
+#include <CloudXRClientOptions.h>
+#include <CloudXRController.h>
 
 namespace igl::shell
 {
@@ -78,9 +85,22 @@ namespace igl::shell
 
         bool create_receiver();
         void destroy_receiver();
+
+        bool latch_frame();
+        void release_frame();
+
+        CloudXR::ClientOptions cxr_options_ = {};
+        cxrGraphicsContext graphics_context_ = {};
+        cxrReceiverHandle cxr_receiver_ = nullptr;
+        cxrClientState cxr_client_state_ = cxrClientState_Disconnected;
+        cxrFramesLatched latched_frames_ = {};
+        bool is_latched_ = false;
+
     };
 
 } // namespace igl::shell
+
+#endif // ENABLE_CLOUDXR
 
 #endif // OK_CLOUD_SESSION_H
 

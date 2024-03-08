@@ -2,6 +2,10 @@
 // Copyright (c) 2024 BattleAxeVR. All rights reserved.
 //--------------------------------------------------------------------------------------
 
+#include "defines.h"
+
+#if ENABLE_CLOUDXR
+
 #include <../../../external/igl/IGLU/managedUniformBuffer/ManagedUniformBuffer.h>
 
 #include <algorithm>
@@ -12,28 +16,13 @@
 #include <igl/opengl/Device.h>
 #include <igl/opengl/GLIncludes.h>
 #include <igl/opengl/RenderCommandEncoder.h>
+
 #include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
-
-#ifndef ENABLE_CLOUDXR
-#define ENABLE_CLOUDXR 1
-#endif
-
-#ifndef ENABLE_OBOE
-#define ENABLE_OBOE 1
-#endif
-
-#if ENABLE_CLOUDXR
-#include <CloudXRClient.h>
-#include <CloudXRMatrixHelpers.h>
-#include <CloudXRClientOptions.h>
-#include <CloudXRController.h>
 
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
 }
-
-#endif
 
 #if ENABLE_OBOE
 #include <oboe/Oboe.h>
@@ -465,9 +454,7 @@ namespace igl::shell
             return true;
         }
 
-        const bool init_ok = true;
-
-        // TODO
+        const bool init_ok = create_receiver();
 
         is_cxr_initialized_ = init_ok;
         return init_ok;
@@ -505,6 +492,19 @@ namespace igl::shell
             return true;
         }
 
+        cxrConnectionDesc connection_desc = {0};
+        connection_desc.async = true;
+        connection_desc.useL4S = false;
+        connection_desc.clientNetwork = cxrNetworkInterface_Unknown;
+        connection_desc.topology = cxrNetworkTopology_LAN;
+
+        cxrError error = cxrConnect(cxr_receiver_, ip_address_.c_str(), &connection_desc);
+
+        if (error)
+        {
+            return false;
+        }
+
         connection_in_progress_ = true;
 
         return connection_in_progress_;
@@ -519,6 +519,89 @@ namespace igl::shell
 
         is_connected_ = false;
         connection_in_progress_ = false;
+
+        destroy_receiver();
+    }
+
+
+    bool OKCloudSession::create_receiver()
+    {
+        if (!is_cxr_initialized_)
+        {
+            return false;
+        }
+
+        if (cxr_receiver_)
+        {
+            return false;
+        }
+
+        // Set parameters here...
+
+        cxrReceiverDesc receiver_desc = {0};
+        receiver_desc.requestedVersion = CLOUDXR_VERSION_DWORD;
+        receiver_desc.deviceDesc.maxResFactor = 1.0f;
+
+        float ipd_m = 67.0f / 1000.0f;
+        receiver_desc.deviceDesc.ipd = ipd_m;
+        receiver_desc.deviceDesc.foveationModeCaps = cxrFoveation_PiecewiseQuadratic;
+
+#if 0
+        Platform& platform = getPlatform();
+        igl::IDevice& device = platform.getDevice();
+
+        device.getBackendType()
+
+        const XrGraphicsBindingOpenGLESAndroidKHR *gles =
+                reinterpret_cast<const XrGraphicsBindingOpenGLESAndroidKHR *>(graphicsBinding);
+
+        XrGraphicsBindingOpenGLESAndroidKHR* gles = impl_->Get
+
+        graphics_context_.type = cxrGraphicsContext_GLES;
+        graphics_context_.egl.display = (void *)gles->display;
+        graphics_context_.egl.context = (void *)gles->context;
+#endif
+        receiver_desc.shareContext = &graphics_context_;
+
+        cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
+
+        if (error)
+        {
+            //cxrErrorString(error)
+            return false;
+        }
+
+        return true;
+    }
+
+    void OKCloudSession::destroy_receiver()
+    {
+        if (!is_cxr_initialized_)
+        {
+            return;
+        }
+    }
+
+    bool OKCloudSession::latch_frame()
+    {
+        if (!is_cxr_initialized_)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    void OKCloudSession::release_frame()
+    {
+        if (!is_cxr_initialized_)
+        {
+            return;
+        }
     }
 
 } // namespace BVR
+
+
+#endif // ENABLE_CLOUDXR
+
