@@ -16,6 +16,7 @@
       android:allowBackup="false"
       android:fullBackupContent="false"
       android:label="OK Cloud Streamer - BattleAxeVR"
+      android:icon="@mipmap/ic_launcher"
       android:debuggable="true">
     <activity android:name="android.app.NativeActivity"
               android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
