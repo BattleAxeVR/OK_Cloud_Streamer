@@ -1,13 +1,13 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+//--------------------------------------------------------------------------------------
+// Copyright (c) 2024 BattleAxeVR. All rights reserved.
+//--------------------------------------------------------------------------------------
 
 plugins {
     id 'com.android.application'
 }
+
+def CLOUDXR_AAR_PATH = file("${project.rootDir}/app-ok-cloud-streamer-gles/libs/CloudXR.aar")
+def CLOUDXR_ROOT = file("${project.buildDir}/tmp/CloudXR")
 
 android {
     namespace 'com.facebook.igl.shell.openxr.gles'
@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId "com.facebook.igl.shell.openxr.gles"
-        minSdk 24
+        minSdk 25
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -75,3 +75,15 @@ android {
         viewBinding true
     }
 }
+
+dependencies {
+    implementation files("${CLOUDXR_AAR_PATH}")
+    implementation "com.google.oboe:oboe:1.7.0"
+}
+
+tasks.register('extractCloudXR', Copy) {
+    from zipTree(CLOUDXR_AAR_PATH)
+    into CLOUDXR_ROOT
+}
+
+preBuild.dependsOn(extractCloudXR)
