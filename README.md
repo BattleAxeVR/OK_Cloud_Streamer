@@ -7,9 +7,13 @@ An Open-source CloudXR 4 client, based on OpenXR with OK performance and feature
 
 Goals:
 
--Provide an Open Source OpenXR-based client for CloudXR 4.0, which is still missing in the default SDK package
+-Provide an Open Source OpenXR-based client for CloudXR 4.0
 
 https://developer.nvidia.com/cloudxr-sdk
+
+-Graphics library is Facebook IGL:
+
+https://github.com/BattleAxeVR/igl/tree/ok_cloud_streamer
 
 -Legal / licensing: I was told by Nvidia reps on their forums that it's ok if I share the SteamVR plugin installer and libraries for CXR, as long as I use a permissive license such as MIT, which I am. All rights reserved and credit due to NV for their CloudXR library. NB: Please reach out to me if there are any issues w/ this repo's legality and I will correct them immediately, or even take this entire project down. My relationship with Nvidia matters far more to me than this project.
 
