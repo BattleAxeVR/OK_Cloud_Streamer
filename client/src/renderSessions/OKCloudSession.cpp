@@ -316,7 +316,7 @@ namespace igl::shell
         glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f)) *
                            glm::rotate(glm::mat4(1.0f), -0.2f, glm::vec3(1.0f, 0.0f, 0.0f));
 
-        vertexParameters_.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.f, -8.0f)) *
+        vertexParameters_.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.f, 8.0f)) *
                                         rotMat *
                                         glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, scaleZ));
 
