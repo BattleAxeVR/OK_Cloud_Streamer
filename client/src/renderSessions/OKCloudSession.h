@@ -13,40 +13,72 @@
 #include <igl/IGL.h>
 #include <shell/shared/platform/Platform.h>
 
-namespace igl::shell 
+namespace igl::shell
 {
+    struct VertexFormat
+    {
+        glm::mat4 modelMatrix = glm::mat4(1.0);
+        glm::mat4 viewProjectionMatrix[2]{};
+        float scaleZ{};
+    };
 
-struct VertexFormat 
-{
-  glm::mat4 modelMatrix = glm::mat4(1.0);
-  glm::mat4 viewProjectionMatrix[2]{};
-  float scaleZ{};
-};
+    class OKCloudSession : public RenderSession
+    {
+    public:
+        OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform)) {}
+        void initialize() noexcept override;
+        void update(igl::SurfaceTextures surfaceTextures) noexcept override;
 
-class OKCloudSession : public RenderSession 
-{
- public:
-    OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform)) {}
-  void initialize() noexcept override;
-  void update(igl::SurfaceTextures surfaceTextures) noexcept override;
+        // CloudXR stuff
+        bool init_cxr();
+        bool update_cxr_state();
+        void shutdown_cxr();
 
- private:
-  std::shared_ptr<ICommandQueue> commandQueue_;
-  RenderPassDesc renderPass_;
-  std::shared_ptr<IRenderPipelineState> pipelineState_;
-  std::shared_ptr<IVertexInputState> vertexInput0_;
-  std::shared_ptr<IShaderStages> shaderStages_;
-  std::shared_ptr<IBuffer> vb0_, ib0_; // Buffers for vertices and indices (or constants)
-  std::shared_ptr<ITexture> tex0_;
-  std::shared_ptr<ISamplerState> samp0_;
-  std::shared_ptr<IFramebuffer> framebuffer_;
+        bool connect();
+        void disconnect();
 
-  VertexFormat vertexParameters_;
+        void set_ip_address(const std::string& ip_address)
+        {
+            ip_address_ = ip_address;
+        }
 
-  // utility fns
-  void createSamplerAndTextures(const IDevice& /*device*/);
-  void setVertexParams();
-};
+        bool is_cxr_initialized() const
+        {
+            return is_cxr_initialized_;
+        }
+
+        bool is_connected() const
+        {
+            return is_connected_;
+        }
+
+    private:
+        std::shared_ptr<ICommandQueue> commandQueue_;
+        RenderPassDesc renderPass_;
+        std::shared_ptr<IRenderPipelineState> pipelineState_;
+        std::shared_ptr<IVertexInputState> vertexInput0_;
+        std::shared_ptr<IShaderStages> shaderStages_;
+        std::shared_ptr<IBuffer> vb0_, ib0_; // Buffers for vertices and indices (or constants)
+        std::shared_ptr<ITexture> tex0_;
+        std::shared_ptr<ISamplerState> samp0_;
+        std::shared_ptr<IFramebuffer> framebuffer_;
+
+        VertexFormat vertexParameters_;
+
+        void createSamplerAndTextures(const IDevice& /*device*/);
+        void setVertexParams();
+
+        bool is_cxr_initialized_ = false;
+        bool is_connected_ = false;
+        bool connection_in_progress_ = false;
+
+        bool is_oboe_initialized_ = false;
+
+        std::string ip_address_ = DEFAULT_IP_ADDRESS;
+
+        bool create_receiver();
+        void destroy_receiver();
+    };
 
 } // namespace igl::shell
 
