@@ -8,6 +8,7 @@ plugins {
 
 def CLOUDXR_AAR_PATH = file("${project.rootDir}/app-ok-cloud-streamer-gles/libs/CloudXR.aar")
 def CLOUDXR_ROOT = file("${project.buildDir}/tmp/CloudXR")
+def EXTERNAL_SRC_ROOT = file("${project.rootDir}/../src")
 
 def OBOE_SDK_ROOT = file("${buildDir}/Oboe")
 
@@ -28,7 +29,7 @@ android {
             cmake {
                 targets 'openxr-gles-Jni'
                 cppFlags '-std=c++20'
-                arguments '-DIGL_OPENXR_RENDER_SESSION=HelloOpenXRSession', '-DIGL_WITH_OPENXR=ON', '-DIGL_WITH_VULKAN=OFF', '-DIGL_WITH_OPENGLES=ON', '-DIGL_WITH_SAMPLES=ON'
+                arguments '-DIGL_OPENXR_RENDER_SESSION=HelloOpenXRSession', '-DIGL_WITH_OPENXR=ON', '-DIGL_WITH_VULKAN=OFF', '-DIGL_WITH_OPENGLES=ON', '-DIGL_WITH_SAMPLES=ON', '-DENABLE_CLOUDXR=ON', "-DCLOUDXR_ROOT=${CLOUDXR_ROOT}", "-DEXTERNAL_SRC_ROOT=${EXTERNAL_SRC_ROOT}"
             }
         }
     }
