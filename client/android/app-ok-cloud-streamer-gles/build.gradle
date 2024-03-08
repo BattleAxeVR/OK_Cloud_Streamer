@@ -8,9 +8,11 @@ plugins {
 
 def CLOUDXR_AAR_PATH = file("${project.rootDir}/app-ok-cloud-streamer-gles/libs/CloudXR.aar")
 def CLOUDXR_ROOT = file("${project.buildDir}/tmp/CloudXR")
-def EXTERNAL_SRC_ROOT = file("${project.rootDir}/../src")
 
-def OBOE_SDK_ROOT = file("${buildDir}/Oboe")
+def OBOE_AAR_PATH = file("${project.rootDir}/app-ok-cloud-streamer-gles/libs/oboe.aar")
+def OBOE_SDK_ROOT = file("${project.buildDir}/tmp/oboe")
+
+def EXTERNAL_SRC_ROOT = file("${project.rootDir}/../src")
 
 android {
     namespace 'com.facebook.igl.shell.openxr.gles'
@@ -29,7 +31,7 @@ android {
             cmake {
                 targets 'openxr-gles-Jni'
                 cppFlags '-std=c++20'
-                arguments '-DIGL_OPENXR_RENDER_SESSION=HelloOpenXRSession', '-DIGL_WITH_OPENXR=ON', '-DIGL_WITH_VULKAN=OFF', '-DIGL_WITH_OPENGLES=ON', '-DIGL_WITH_SAMPLES=ON', '-DENABLE_CLOUDXR=ON', "-DCLOUDXR_ROOT=${CLOUDXR_ROOT}", "-DEXTERNAL_SRC_ROOT=${EXTERNAL_SRC_ROOT}"
+                arguments '-DIGL_OPENXR_RENDER_SESSION=HelloOpenXRSession', '-DIGL_WITH_OPENXR=ON', '-DIGL_WITH_VULKAN=OFF', '-DIGL_WITH_OPENGLES=ON', '-DIGL_WITH_SAMPLES=ON', '-DENABLE_CLOUDXR=ON', "-DCLOUDXR_ROOT=${CLOUDXR_ROOT}", "-DEXTERNAL_SRC_ROOT=${EXTERNAL_SRC_ROOT}", '-DENABLE_OBOE=ON', "-DOBOE_SDK_ROOT=${OBOE_SDK_ROOT}"
             }
         }
     }
@@ -90,8 +92,7 @@ tasks.register('extractCloudXR', Copy) {
 }
 
 tasks.register('extractOboeSDK', Copy) {
-    def sourceFile = file("${projectDir}/libs/oboe.aar")
-    from zipTree(sourceFile)
+    from zipTree(OBOE_AAR_PATH)
     into OBOE_SDK_ROOT
 }
 

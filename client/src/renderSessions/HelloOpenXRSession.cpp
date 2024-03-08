@@ -18,6 +18,30 @@
 #include <shell/renderSessions/HelloOpenXRSession.h>
 #include <shell/shared/renderSession/ShellParams.h>
 
+
+#ifndef ENABLE_CLOUDXR
+#define ENABLE_CLOUDXR 1
+#endif
+
+#ifndef ENABLE_OBOE
+#define ENABLE_OBOE 1
+#endif
+
+#if ENABLE_CLOUDXR
+#include <CloudXRClient.h>
+#include <CloudXRMatrixHelpers.h>
+#include <CloudXRClientOptions.h>
+#include <CloudXRController.h>
+
+extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...) {
+}
+
+#endif
+
+#if ENABLE_OBOE
+#include <oboe/Oboe.h>
+#endif
+
 namespace igl::shell {
 
 struct VertexPosUvw {
