@@ -9,6 +9,8 @@ plugins {
 def CLOUDXR_AAR_PATH = file("${project.rootDir}/app-ok-cloud-streamer-gles/libs/CloudXR.aar")
 def CLOUDXR_ROOT = file("${project.buildDir}/tmp/CloudXR")
 
+def OBOE_SDK_ROOT = file("${buildDir}/Oboe")
+
 android {
     namespace 'com.facebook.igl.shell.openxr.gles'
     compileSdk 33
@@ -78,7 +80,7 @@ android {
 
 dependencies {
     implementation files("${CLOUDXR_AAR_PATH}")
-    implementation "com.google.oboe:oboe:1.7.0"
+    //implementation "com.google.oboe:oboe:1.7.0"
 }
 
 tasks.register('extractCloudXR', Copy) {
@@ -86,4 +88,11 @@ tasks.register('extractCloudXR', Copy) {
     into CLOUDXR_ROOT
 }
 
+tasks.register('extractOboeSDK', Copy) {
+    def sourceFile = file("${projectDir}/libs/oboe.aar")
+    from zipTree(sourceFile)
+    into OBOE_SDK_ROOT
+}
+
 preBuild.dependsOn(extractCloudXR)
+preBuild.dependsOn(extractOboeSDK)
