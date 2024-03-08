@@ -48,20 +48,19 @@ namespace igl::shell
         glm::vec3 uvw;
     };
 
-
     const float half = 1.0f;
 
     VertexPosUvw vertexData0[] =
-            {
-                    {{-half, half, -half}, {0.0, 1.0, 0.0}},
-                    {{half, half, -half}, {1.0, 1.0, 0.0}},
-                    {{-half, -half, -half}, {0.0, 0.0, 0.0}},
-                    {{half, -half, -half}, {1.0, 0.0, 0.0}},
-                    {{half, half, half}, {1.0, 1.0, 1.0}},
-                    {{-half, half, half}, {0.0, 1.0, 1.0}},
-                    {{half, -half, half}, {1.0, 0.0, 1.0}},
-                    {{-half, -half, half}, {0.0, 0.0, 1.0}},
-            };
+    {
+    {{-half, half, -half}, {0.0, 1.0, 0.0}},
+    {{half, half, -half}, {1.0, 1.0, 0.0}},
+    {{-half, -half, -half}, {0.0, 0.0, 0.0}},
+    {{half, -half, -half}, {1.0, 0.0, 0.0}},
+    {{half, half, half}, {1.0, 1.0, 1.0}},
+    {{-half, half, half}, {0.0, 1.0, 1.0}},
+    {{half, -half, half}, {1.0, 0.0, 1.0}},
+    {{-half, -half, half}, {0.0, 0.0, 1.0}},
+    };
 
     uint16_t indexData[] = {0, 1, 2, 1, 3, 2, 1, 4, 3, 4, 6, 3, 4, 5, 6, 5, 7, 6,
                             5, 0, 7, 0, 2, 7, 5, 4, 0, 4, 1, 0, 2, 3, 7, 3, 6, 7};
@@ -70,7 +69,8 @@ namespace igl::shell
     {
 #if IGL_BACKEND_OPENGL
         const auto shaderVersion = device.getShaderVersion();
-        if (shaderVersion.majorVersion >= 3 || shaderVersion.minorVersion >= 30) {
+        if (shaderVersion.majorVersion >= 3 || shaderVersion.minorVersion >= 30)
+        {
             std::string prependVersionString = igl::opengl::getStringFromShaderVersion(shaderVersion);
             prependVersionString += "\n#extension GL_OVR_multiview2 : require\n";
             prependVersionString += "\nprecision highp float;\n";
@@ -161,7 +161,8 @@ namespace igl::shell
 
     std::unique_ptr<IShaderStages> getShaderStagesForBackend(igl::IDevice& device)
     {
-        switch (device.getBackendType()) {
+        switch (device.getBackendType())
+        {
             // @fb-only
             // @fb-only
             // @fb-only
@@ -314,10 +315,13 @@ namespace igl::shell
 
         glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f)) *
                            glm::rotate(glm::mat4(1.0f), -0.2f, glm::vec3(1.0f, 0.0f, 0.0f));
+
         vertexParameters_.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.f, -8.0f)) *
                                         rotMat *
                                         glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, scaleZ));
-        for (size_t i = 0; i < std::min(shellParams().viewParams.size(), size_t(2)); ++i) {
+
+        for (size_t i = 0; i < std::min(shellParams().viewParams.size(), size_t(2)); ++i)
+        {
             vertexParameters_.viewProjectionMatrix[i] =
                     perspectiveAsymmetricFovRH(shellParams().viewParams[i].fov, 0.1f, 100.0f) *
                     shellParams().viewParams[i].viewMatrix;
@@ -418,8 +422,10 @@ namespace igl::shell
         iglu::ManagedUniformBufferInfo info;
         info.index = 1;
         info.length = sizeof(VertexFormat);
-        info.uniforms = std::vector<igl::UniformDesc>{
-                igl::UniformDesc{
+        info.uniforms = std::vector<igl::UniformDesc>
+                {
+                igl::UniformDesc
+                {
                         "modelMatrix", -1, igl::UniformType::Mat4x4, 1, offsetof(VertexFormat, modelMatrix), 0},
                 igl::UniformDesc{"viewProjectionMatrix",
                                  -1,
@@ -434,6 +440,7 @@ namespace igl::shell
         const auto vertUniformBuffer = std::make_shared<iglu::ManagedUniformBuffer>(device, info);
         IGL_ASSERT(vertUniformBuffer->result.isOk());
         *static_cast<VertexFormat*>(vertUniformBuffer->getData()) = vertexParameters_;
+
         vertUniformBuffer->bind(device, *pipelineState_, *commands);
 
         commands->bindTexture(textureUnit, BindTarget::kFragment, tex0_.get());
