@@ -20,6 +20,11 @@
 #include <CloudXRClientOptions.h>
 #include <CloudXRController.h>
 
+
+#if ENABLE_OBOE
+#include <oboe/Oboe.h>
+#endif
+
 namespace igl::shell
 {
     struct VertexFormat
@@ -29,10 +34,12 @@ namespace igl::shell
         float scaleZ{};
     };
 
-    class OKCloudSession : public RenderSession
+    class OKCloudSession : public RenderSession//, public oboe::AudioStreamDataCallback
     {
     public:
+        //OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform), oboe::AudioStreamDataCallback {}
         OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform)) {}
+
         void initialize() noexcept override;
         void update(igl::SurfaceTextures surfaceTextures) noexcept override;
 
@@ -72,6 +79,8 @@ namespace igl::shell
 #if ENABLE_OBOE
         bool init_audio();
         void shutdown_audio();
+        cxrBool RenderAudio(const cxrAudioFrame* audio_frame);
+        oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void *data, int32_t frame_count);
 #endif
 
     private:
@@ -94,6 +103,10 @@ namespace igl::shell
 
 #if ENABLE_OBOE
         bool is_audio_initialized_ = false;
+        bool enable_audio_playback_ = true;
+        bool enable_audio_recording_ = true;
+        std::shared_ptr<oboe::AudioStream> audio_playback_stream_;
+        std::shared_ptr<oboe::AudioStream> audio_record_stream_;
 #endif
 
         std::string ip_address_ = DEFAULT_IP_ADDRESS;

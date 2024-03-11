@@ -25,13 +25,8 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 {
 }
 
-#if ENABLE_OBOE
-#include <oboe/Oboe.h>
-#endif
-
 namespace igl::shell
 {
-
     struct VertexPosUvw
     {
         glm::vec3 position;
@@ -694,6 +689,11 @@ namespace igl::shell
 #if ENABLE_OBOE
     bool OKCloudSession::init_audio()
     {
+        if (!enable_audio_playback_ && !enable_audio_recording_)
+        {
+            return false;
+        }
+
         if (is_audio_initialized_)
         {
             return true;
@@ -701,10 +701,97 @@ namespace igl::shell
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::init_audio\n");
 
-        const bool init_audio_ok = true;
-        is_audio_initialized_ = init_audio_ok;
+        if (enable_audio_playback_)
+        {
+            // Playback Stream
+            oboe::AudioStreamBuilder audio_output_stream_builder = {};
+            audio_output_stream_builder.setDirection(oboe::Direction::Output);
 
-        return init_audio_ok;
+            audio_output_stream_builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+            //audio_output_stream_builder.setPerformanceMode(oboe::PerformanceMode::None);
+
+            audio_output_stream_builder.setSharingMode(oboe::SharingMode::Exclusive);
+            audio_output_stream_builder.setFormat(oboe::AudioFormat::I16);
+            audio_output_stream_builder.setChannelCount(oboe::ChannelCount::Stereo);
+            audio_output_stream_builder.setSampleRate(CXR_AUDIO_SAMPLING_RATE);
+
+            oboe::Result playback_stream_result = audio_output_stream_builder.openStream(audio_playback_stream_);
+
+            if (playback_stream_result != oboe::Result::OK)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "openStream playback error = %s\n", oboe::convertToText(playback_stream_result));
+                return false;
+            }
+
+            int buffer_size = audio_playback_stream_->getFramesPerBurst() * CXR_AUDIO_CHANNEL_COUNT;
+            oboe::Result set_buffer_size_result = audio_playback_stream_->setBufferSizeInFrames(buffer_size);
+
+            if (set_buffer_size_result != oboe::Result::OK)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "setBufferSizeInFrames playback error = %s\n", oboe::convertToText(set_buffer_size_result));
+                return false;
+            }
+
+            oboe::Result start_playback_result = audio_playback_stream_->start();
+
+            if (start_playback_result != oboe::Result::OK)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "start audio playback error = %s\n", oboe::convertToText(start_playback_result));
+                return false;
+            }
+        }
+
+        if (enable_audio_recording_)
+        {
+            // Capture Stream
+            oboe::AudioStreamBuilder audio_capture_stream_builder = {};
+            audio_capture_stream_builder.setDirection(oboe::Direction::Input);
+
+            //audio_capture_stream_builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
+            audio_capture_stream_builder.setPerformanceMode(oboe::PerformanceMode::None);
+
+            audio_capture_stream_builder.setSharingMode(oboe::SharingMode::Exclusive);
+            audio_capture_stream_builder.setFormat(oboe::AudioFormat::I16);
+            audio_capture_stream_builder.setChannelCount(oboe::ChannelCount::Stereo);
+            audio_capture_stream_builder.setSampleRate(CXR_AUDIO_SAMPLING_RATE);
+
+            audio_capture_stream_builder.setDirection(oboe::Direction::Input);
+            audio_capture_stream_builder.setPerformanceMode(oboe::PerformanceMode::None);
+            audio_capture_stream_builder.setSharingMode(oboe::SharingMode::Exclusive);
+            audio_capture_stream_builder.setFormat(oboe::AudioFormat::I16);
+            audio_capture_stream_builder.setChannelCount(oboe::ChannelCount::Stereo);
+            audio_capture_stream_builder.setSampleRate(CXR_AUDIO_SAMPLING_RATE);
+            audio_capture_stream_builder.setInputPreset(oboe::InputPreset::VoiceCommunication);
+            //audio_capture_stream_builder.setDataCallback(this);
+
+            oboe::Result capture_stream_result = audio_capture_stream_builder.openStream(audio_record_stream_);
+
+            if (capture_stream_result != oboe::Result::OK)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "openStream record error = %s\n", oboe::convertToText(capture_stream_result));
+                return false;
+            }
+
+            int buffer_size = audio_playback_stream_->getFramesPerBurst() * 2;
+            oboe::Result set_buffer_size_result = audio_playback_stream_->setBufferSizeInFrames(buffer_size);
+
+            if (set_buffer_size_result != oboe::Result::OK)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "setBufferSizeInFrames record error = %s\n", oboe::convertToText(set_buffer_size_result));
+                return false;
+            }
+
+            oboe::Result start_record_result = audio_record_stream_->start();
+
+            if (start_record_result != oboe::Result::OK)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "start audio record error = %s\n", oboe::convertToText(start_record_result));
+                return false;
+            }
+        }
+
+        is_audio_initialized_ = true;
+        return true;
     }
 
     void OKCloudSession::shutdown_audio()
@@ -716,8 +803,59 @@ namespace igl::shell
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::shutdown_audio\n");
 
+        if (audio_playback_stream_)
+        {
+            audio_playback_stream_->close();
+        }
+
+        if (audio_record_stream_)
+        {
+            audio_record_stream_->close();
+        }
+
         is_audio_initialized_ = false;
     }
+
+    cxrBool OKCloudSession::RenderAudio(const cxrAudioFrame* audio_frame)
+    {
+        if (!audio_frame|| is_audio_initialized_ || !enable_audio_playback_ || !audio_playback_stream_)
+        {
+            return cxrFalse;
+        }
+
+        uint32_t timeout = audio_frame->streamSizeBytes / CXR_AUDIO_BYTES_PER_MS;
+        uint32_t frame_count = timeout * CXR_AUDIO_SAMPLING_RATE / 1000;
+
+        oboe::ResultWithValue write_result =
+                audio_playback_stream_->write(audio_frame->streamBuffer, frame_count, timeout * oboe::kNanosPerMillisecond);
+
+        if (!write_result)
+        {
+            IGLLog(IGLLogLevel::LOG_ERROR, "Error rendering audio: %s", oboe::convertToText(write_result.error()));
+
+            if (write_result.error() == oboe::Result::ErrorDisconnected)
+            {
+                shutdown_audio();
+                init_audio();
+            }
+        }
+
+        return cxrTrue;
+    }
+
+    oboe::DataCallbackResult OKCloudSession::onAudioReady(oboe::AudioStream* audio_stream, void *data, int32_t frame_count)
+    {
+        if (is_connected())
+        {
+            cxrAudioFrame audio_frame = {};
+            audio_frame.streamBuffer = (int16_t *)data;
+            audio_frame.streamSizeBytes = frame_count * CXR_AUDIO_CHANNEL_COUNT * CXR_AUDIO_SAMPLE_SIZE;
+            cxrSendAudio(cxr_receiver_, &audio_frame);
+        }
+
+        return oboe::DataCallbackResult::Continue;
+    }
+
 #endif
 
 } // namespace BVR
