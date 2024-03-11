@@ -20,7 +20,6 @@
 #include <CloudXRClientOptions.h>
 #include <CloudXRController.h>
 
-
 #if ENABLE_OBOE
 #include <oboe/Oboe.h>
 #endif
@@ -34,11 +33,14 @@ namespace igl::shell
         float scaleZ{};
     };
 
-    class OKCloudSession : public RenderSession//, public oboe::AudioStreamDataCallback
+
+    class OKCloudSession : public RenderSession
+#if ENABLE_OBOE
+    , oboe::AudioStreamDataCallback
+#endif
     {
     public:
-        //OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform), oboe::AudioStreamDataCallback {}
-        OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform)) {}
+        OKCloudSession(std::shared_ptr<Platform> platform);
 
         void initialize() noexcept override;
         void update(igl::SurfaceTextures surfaceTextures) noexcept override;

@@ -229,6 +229,10 @@ namespace igl::shell
         tex0_ = getPlatform().loadTexture("macbeth.png");
     }
 
+    OKCloudSession::OKCloudSession(std::shared_ptr<Platform> platform) : RenderSession(std::move(platform))
+    {
+    }
+
     void OKCloudSession::initialize() noexcept
     {
         auto& device = getPlatform().getDevice();
@@ -762,7 +766,7 @@ namespace igl::shell
             audio_capture_stream_builder.setChannelCount(oboe::ChannelCount::Stereo);
             audio_capture_stream_builder.setSampleRate(CXR_AUDIO_SAMPLING_RATE);
             audio_capture_stream_builder.setInputPreset(oboe::InputPreset::VoiceCommunication);
-            //audio_capture_stream_builder.setDataCallback(this);
+            audio_capture_stream_builder.setDataCallback(this);
 
             oboe::Result capture_stream_result = audio_capture_stream_builder.openStream(audio_record_stream_);
 
