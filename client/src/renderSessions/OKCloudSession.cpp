@@ -16,6 +16,7 @@
 #include <igl/opengl/Device.h>
 #include <igl/opengl/GLIncludes.h>
 #include <igl/opengl/RenderCommandEncoder.h>
+#include <igl/Log.h>
 
 #include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
@@ -454,6 +455,8 @@ namespace igl::shell
             return true;
         }
 
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::init_cxr\n");
+
         const bool init_ok = create_receiver();
 
         is_cxr_initialized_ = init_ok;
@@ -467,6 +470,8 @@ namespace igl::shell
         {
             return false;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::update_cxr_state\n");
     }
 
     void OKCloudSession::shutdown_cxr()
@@ -475,6 +480,8 @@ namespace igl::shell
         {
             return;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::shutdown_cxr\n");
 
         disconnect();
         is_cxr_initialized_ = false;
@@ -491,6 +498,8 @@ namespace igl::shell
         {
             return true;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect IP = %s\n", ip_address_.c_str());
 
         cxrConnectionDesc connection_desc = {0};
         connection_desc.async = true;
@@ -517,6 +526,8 @@ namespace igl::shell
             return;
         }
 
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::disconnect\n");
+
         is_connected_ = false;
         connection_in_progress_ = false;
 
@@ -535,6 +546,8 @@ namespace igl::shell
         {
             return false;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
 
         // Set parameters here...
 
@@ -580,6 +593,8 @@ namespace igl::shell
         {
             return;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::destroy_receiver\n");
     }
 
     bool OKCloudSession::latch_frame()
@@ -588,6 +603,8 @@ namespace igl::shell
         {
             return false;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::latch_frame\n");
 
         return true;
     }
@@ -598,6 +615,8 @@ namespace igl::shell
         {
             return;
         }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::release_frame\n");
     }
 
 } // namespace BVR
