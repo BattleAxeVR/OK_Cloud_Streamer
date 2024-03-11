@@ -493,8 +493,9 @@ namespace igl::shell
                 cxr_client_state_ == cxrClientState_ReadyToConnect;
                 return;
             case cxrClientState_Exiting:
-                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting");
-                break;
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting, setting back to cxrClientState_ReadyToConnect");
+                cxr_client_state_ == cxrClientState_ReadyToConnect;
+                return;
         }
 
         cxr_client_state_ = state;
