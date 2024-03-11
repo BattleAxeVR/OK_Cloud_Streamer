@@ -63,6 +63,11 @@ namespace igl::shell
             return is_cxr_initialized_;
         }
 
+        bool is_ready_to_connect() const
+        {
+            return (cxr_client_state_ == cxrClientState::cxrClientState_ReadyToConnect);
+        }
+
         bool is_connected() const
         {
             return (cxr_client_state_ == cxrClientState::cxrClientState_StreamingSessionInProgress);
@@ -122,7 +127,7 @@ namespace igl::shell
         CloudXR::ClientOptions cxr_options_ = {};
         cxrGraphicsContext graphics_context_ = {};
         cxrReceiverHandle cxr_receiver_ = nullptr;
-        cxrClientState cxr_client_state_ = cxrClientState_Disconnected;
+        cxrClientState cxr_client_state_ = cxrClientState_ReadyToConnect;
         cxrFramesLatched latched_frames_ = {};
         bool is_latched_ = false;
 
