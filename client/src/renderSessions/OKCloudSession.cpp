@@ -474,8 +474,6 @@ namespace igl::shell
 
     void OKCloudSession::update_cxr_state(cxrClientState state, cxrError error)
     {
-        cxr_client_state_ = state;
-
         switch (state)
         {
             case cxrClientState_ReadyToConnect:
@@ -491,12 +489,15 @@ namespace igl::shell
                 IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_StreamingSessionInProgress");
                 break;
             case cxrClientState_Disconnected:
-                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Disconnected");
-                break;
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Disconnected, setting back to cxrClientState_ReadyToConnect");
+                cxr_client_state_ == cxrClientState_ReadyToConnect;
+                return;
             case cxrClientState_Exiting:
                 IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting");
                 break;
         }
+
+        cxr_client_state_ = state;
     }
 
     void OKCloudSession::shutdown_cxr()
@@ -519,14 +520,9 @@ namespace igl::shell
 
     bool OKCloudSession::connect()
     {
-        if (!is_cxr_initialized_ || failed_to_connect() )
+        if (!is_cxr_initialized_ || !is_ready_to_connect() )
         {
             return false;
-        }
-
-        if (is_connected() || is_connecting())
-        {
-            return true;
         }
 
         if (cxr_receiver_)
