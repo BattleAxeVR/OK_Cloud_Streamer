@@ -38,7 +38,7 @@ namespace igl::shell
 
         // CloudXR stuff
         bool init_cxr();
-        bool update_cxr_state();
+        void update_cxr_state(cxrClientState state, cxrError error);
         void shutdown_cxr();
 
         bool connect();
@@ -56,8 +56,23 @@ namespace igl::shell
 
         bool is_connected() const
         {
-            return is_connected_;
+            return (cxr_client_state_ == cxrClientState::cxrClientState_StreamingSessionInProgress);
         }
+
+        bool is_connecting() const
+        {
+            return (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptInProgress);
+        }
+
+        bool failed_to_connect() const
+        {
+            return (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptFailed);
+        }
+
+#if ENABLE_OBOE
+        bool init_audio();
+        void shutdown_audio();
+#endif
 
     private:
         std::shared_ptr<ICommandQueue> commandQueue_;
@@ -76,10 +91,10 @@ namespace igl::shell
         void setVertexParams();
 
         bool is_cxr_initialized_ = false;
-        bool is_connected_ = false;
-        bool connection_in_progress_ = false;
 
-        bool is_oboe_initialized_ = false;
+#if ENABLE_OBOE
+        bool is_audio_initialized_ = false;
+#endif
 
         std::string ip_address_ = DEFAULT_IP_ADDRESS;
 

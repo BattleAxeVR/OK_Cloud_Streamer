@@ -457,6 +457,15 @@ namespace igl::shell
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::init_cxr\n");
 
+#if ENABLE_OBOE
+        const bool audio_ok = init_audio();
+
+        if (!audio_ok)
+        {
+            return false;
+        }
+#endif
+
         const bool init_ok = create_receiver();
 
         is_cxr_initialized_ = init_ok;
@@ -464,14 +473,31 @@ namespace igl::shell
 
     }
 
-    bool OKCloudSession::update_cxr_state()
+    void OKCloudSession::update_cxr_state(cxrClientState state, cxrError error)
     {
-        if (!is_cxr_initialized_)
-        {
-            return false;
-        }
+        cxr_client_state_ = state;
 
-        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::update_cxr_state\n");
+        switch (state)
+        {
+            case cxrClientState_ReadyToConnect:
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ReadyToConnect");
+                break;
+            case cxrClientState_ConnectionAttemptInProgress:
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptInProgress");
+                break;
+            case cxrClientState_ConnectionAttemptFailed:
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptFailed");
+                break;
+            case cxrClientState_StreamingSessionInProgress:
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_StreamingSessionInProgress");
+                break;
+            case cxrClientState_Disconnected:
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Disconnected");
+                break;
+            case cxrClientState_Exiting:
+                IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting");
+                break;
+        }
     }
 
     void OKCloudSession::shutdown_cxr()
@@ -484,19 +510,34 @@ namespace igl::shell
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::shutdown_cxr\n");
 
         disconnect();
+
+#if ENABLE_OBOE
+        shutdown_audio();
+#endif
+
         is_cxr_initialized_ = false;
     }
 
     bool OKCloudSession::connect()
     {
-        if (!is_cxr_initialized_)
+        if (!is_cxr_initialized_ || failed_to_connect() )
         {
             return false;
         }
 
-        if (connection_in_progress_)
+        if (is_connected() || is_connecting())
         {
             return true;
+        }
+
+        if (cxr_receiver_)
+        {
+            destroy_receiver();
+        }
+
+        if (!cxr_receiver_)
+        {
+            create_receiver();
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect IP = %s\n", ip_address_.c_str());
@@ -511,26 +552,21 @@ namespace igl::shell
 
         if (error)
         {
+            IGLLog(IGLLogLevel::LOG_ERROR, "cxrConnect error = %s\n", cxrErrorString(error));
             return false;
         }
 
-        connection_in_progress_ = true;
-
-        return connection_in_progress_;
+        return true;
     }
 
     void OKCloudSession::disconnect()
     {
-        if (!is_cxr_initialized_ || !is_connected_ || connection_in_progress_)
+        if (!is_cxr_initialized_ || !is_connected() || !is_connecting())
         {
             return;
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::disconnect\n");
-
-        is_connected_ = false;
-        connection_in_progress_ = false;
-
         destroy_receiver();
     }
 
@@ -550,14 +586,8 @@ namespace igl::shell
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
 
         // Set parameters here...
-
         cxrReceiverDesc receiver_desc = {0};
         receiver_desc.requestedVersion = CLOUDXR_VERSION_DWORD;
-        receiver_desc.deviceDesc.maxResFactor = 1.0f;
-
-        float ipd_m = 67.0f / 1000.0f;
-        receiver_desc.deviceDesc.ipd = ipd_m;
-        receiver_desc.deviceDesc.foveationModeCaps = cxrFoveation_PiecewiseQuadratic;
 
 #if 0
         Platform& platform = getPlatform();
@@ -576,11 +606,46 @@ namespace igl::shell
 #endif
         receiver_desc.shareContext = &graphics_context_;
 
+        cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
+        device_desc.maxResFactor = 1.0f;
+
+        float ipd_m = 67.0f / 1000.0f;
+        device_desc.ipd = ipd_m;
+        device_desc.foveationModeCaps = cxrFoveation_PiecewiseQuadratic;
+
+
+        const uint32_t number_of_streams = 2;
+        device_desc.numVideoStreamDescs = number_of_streams;
+
+        uint32_t per_eye_width = 2064;
+        uint32_t per_eye_height = 2064;
+
+        const float fps = 90.0f;
+
+        for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
+        {
+            device_desc.videoStreamDescs[stream_index].width = per_eye_width;
+            device_desc.videoStreamDescs[stream_index].height = per_eye_height;
+            device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
+            device_desc.videoStreamDescs[stream_index].fps = fps;
+            device_desc.videoStreamDescs[stream_index].maxBitrate = 100;
+        }
+
+        device_desc.disableVVSync = false;
+        device_desc.embedInfoInVideo = false;
+        device_desc.foveatedScaleFactor = 0.0f;
+        device_desc.stereoDisplay = true;
+        device_desc.predOffset = 0.04f;
+        device_desc.receiveAudio = false;
+        device_desc.sendAudio = false;
+        device_desc.disablePosePrediction = false;
+        device_desc.angularVelocityInDeviceSpace = false;
+
         cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
 
         if (error)
         {
-            //cxrErrorString(error)
+            IGLLog(IGLLogLevel::LOG_ERROR, "cxrCreateReceiver error = %s\n", cxrErrorString(error));
             return false;
         }
 
@@ -589,12 +654,19 @@ namespace igl::shell
 
     void OKCloudSession::destroy_receiver()
     {
-        if (!is_cxr_initialized_)
+        if (!is_cxr_initialized_ || !cxr_receiver_)
         {
             return;
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::destroy_receiver\n");
+
+        //destroy_audio()
+
+        cxrDestroyReceiver(cxr_receiver_);
+        cxr_receiver_ = nullptr;
+
+        update_cxr_state(cxrClientState_Disconnected, cxrError_Success);
     }
 
     bool OKCloudSession::latch_frame()
@@ -618,6 +690,35 @@ namespace igl::shell
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::release_frame\n");
     }
+
+#if ENABLE_OBOE
+    bool OKCloudSession::init_audio()
+    {
+        if (is_audio_initialized_)
+        {
+            return true;
+        }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::init_audio\n");
+
+        const bool init_audio_ok = true;
+        is_audio_initialized_ = init_audio_ok;
+
+        return init_audio_ok;
+    }
+
+    void OKCloudSession::shutdown_audio()
+    {
+        if (!is_audio_initialized_)
+        {
+            return;
+        }
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::shutdown_audio\n");
+
+        is_audio_initialized_ = false;
+    }
+#endif
 
 } // namespace BVR
 
