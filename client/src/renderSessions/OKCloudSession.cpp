@@ -289,6 +289,14 @@ namespace igl::shell
 #endif
         renderPass_.depthAttachment.loadAction = LoadAction::Clear;
         renderPass_.depthAttachment.clearDepth = 1.0;
+
+#if 1
+        const bool init_cxr_ok = init_cxr();
+        if (!init_cxr_ok)
+        {
+            return;
+        }
+#endif
     }
 
     void OKCloudSession::setVertexParams()
@@ -585,14 +593,22 @@ namespace igl::shell
         cxrReceiverDesc receiver_desc = {0};
         receiver_desc.requestedVersion = CLOUDXR_VERSION_DWORD;
 
-#if 0
         Platform& platform = getPlatform();
-        igl::IDevice& device = platform.getDevice();
+        const igl::IDevice& device = platform.getDevice();
+        const IPlatformDevice& platform_device = device.getPlatformDevice();
+
+        //void* graphics_context =  getGraphicsContext() override;
+
+        //const XrGraphicsBindingOpenGLESAndroidKHR* gles =
+//                reinterpret_cast<const XrGraphicsBindingOpenGLESAndroidKHR *>(graphics_context});
+
+#if 0
+
+
 
         device.getBackendType()
 
-        const XrGraphicsBindingOpenGLESAndroidKHR *gles =
-                reinterpret_cast<const XrGraphicsBindingOpenGLESAndroidKHR *>(graphicsBinding);
+
 
         XrGraphicsBindingOpenGLESAndroidKHR* gles = impl_->Get
 
@@ -603,20 +619,21 @@ namespace igl::shell
         receiver_desc.shareContext = &graphics_context_;
 
         cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
-        device_desc.maxResFactor = 1.0f;
+        device_desc.maxResFactor = DEFAULT_CLOUDXR_MAX_RES_FACTOR;
 
-        float ipd_m = 67.0f / 1000.0f;
+        float ipd_m = DEFAULT_CLOUDXR_IPD_M;
         device_desc.ipd = ipd_m;
         device_desc.foveationModeCaps = cxrFoveation_PiecewiseQuadratic;
-
 
         const uint32_t number_of_streams = 2;
         device_desc.numVideoStreamDescs = number_of_streams;
 
-        uint32_t per_eye_width = 2064;
-        uint32_t per_eye_height = 2064;
+        uint32_t max_bitrate = DEFAULT_CLOUDXR_MAX_BITRATE;
+        float foveation = DEFAULT_CLOUDXR_FOVEATION;
 
-        const float fps = 90.0f;
+        uint32_t per_eye_width = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
+        uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
+        float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
         {
@@ -624,16 +641,22 @@ namespace igl::shell
             device_desc.videoStreamDescs[stream_index].height = per_eye_height;
             device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
             device_desc.videoStreamDescs[stream_index].fps = fps;
-            device_desc.videoStreamDescs[stream_index].maxBitrate = 100;
+            device_desc.videoStreamDescs[stream_index].maxBitrate = max_bitrate;
         }
 
         device_desc.disableVVSync = false;
         device_desc.embedInfoInVideo = false;
-        device_desc.foveatedScaleFactor = 0.0f;
+        device_desc.foveatedScaleFactor = foveation;
         device_desc.stereoDisplay = true;
-        device_desc.predOffset = 0.04f;
+        device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET;
+
+#if ENABLE_OBOE
+        device_desc.receiveAudio = enable_audio_playback_;
+        device_desc.sendAudio = enable_audio_recording_;
+#else
         device_desc.receiveAudio = false;
         device_desc.sendAudio = false;
+#endif
         device_desc.disablePosePrediction = false;
         device_desc.angularVelocityInDeviceSpace = false;
 
