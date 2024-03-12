@@ -673,6 +673,29 @@ namespace igl::shell
 #endif
         }
 
+        {
+            // Default Chaperone
+            device_desc.chaperone.universe = cxrUniverseOrigin_Standing;
+
+            device_desc.chaperone.origin.m[0][0] = 1.0f;
+            device_desc.chaperone.origin.m[0][1] = 0.0f;
+            device_desc.chaperone.origin.m[0][2] = 0.0f;
+            device_desc.chaperone.origin.m[0][3] = 0.0f;
+
+            device_desc.chaperone.origin.m[1][0] = 0.0f;
+            device_desc.chaperone.origin.m[1][1] = 1.0f;
+            device_desc.chaperone.origin.m[1][2] = 0.0f;
+            device_desc.chaperone.origin.m[1][3] = 0.0f;
+
+            device_desc.chaperone.origin.m[2][0] = 0.0f;
+            device_desc.chaperone.origin.m[2][1] = 0.0f;
+            device_desc.chaperone.origin.m[2][2] = 1.0f;
+            device_desc.chaperone.origin.m[2][3] = 0.0f;
+
+            device_desc.chaperone.playArea.v[0] = 1.5f;
+            device_desc.chaperone.playArea.v[1] = 1.5f;
+        }
+
         cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
 
         if (error)
