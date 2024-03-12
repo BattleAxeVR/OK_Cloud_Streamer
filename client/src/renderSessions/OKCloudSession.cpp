@@ -291,14 +291,6 @@ namespace igl::shell
 #endif
         renderPass_.depthAttachment.loadAction = LoadAction::Clear;
         renderPass_.depthAttachment.clearDepth = 1.0;
-
-#if AUTO_CONNECT_TO_CLOUDXR
-        const bool init_cxr_ok = init_cxr();
-        if (!init_cxr_ok)
-        {
-            return;
-        }
-#endif
     }
 
     void OKCloudSession::setVertexParams()
@@ -455,6 +447,18 @@ namespace igl::shell
         buffer->present(framebuffer_->getColorAttachment(0));
 
         commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
+
+#if AUTO_CONNECT_TO_CLOUDXR
+        if (!is_cxr_initialized_ && is_ready_to_connect())
+        {
+            const bool init_cxr_ok = init_cxr();
+
+            if (!init_cxr_ok)
+            {
+                return;
+            }
+        }
+#endif
     }
 
     bool OKCloudSession::init_cxr()
@@ -603,6 +607,28 @@ namespace igl::shell
         graphics_context_.egl.context = (void *)egl_context;
 
         receiver_desc.shareContext = &graphics_context_;
+
+        // Debug flags
+        receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;//cxrDebugFlags_FallbackDecoder; //
+
+
+        {
+            // Logging
+            receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
+
+#if 0
+            receiver_desc.logMaxSizeKB = CLOUDXR_LOG_MAX_DEFAULT;
+            receiver_desc.logMaxAgeDays = CLOUDXR_LOG_MAX_DEFAULT;
+
+            const std::string application_id = "OK Cloud Streamer v1.0";
+
+            std::string log_dir = "/sdcard/Android/data/com.facebook.igl.shell.openxr.gles/files/logs/";
+            strncpy(receiver_desc.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
+
+            receiver_desc.appOutputPath[CXR_MAX_PATH - 1] = 0;
+#endif
+        }
+
 
         cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
         device_desc.maxResFactor = DEFAULT_CLOUDXR_MAX_RES_FACTOR;
