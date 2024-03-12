@@ -453,9 +453,9 @@ namespace igl::shell
         {
             const bool init_cxr_ok = init_cxr();
 
-            if (!init_cxr_ok)
+            if (init_cxr_ok)
             {
-                return;
+                connect();
             }
         }
 #endif
@@ -540,14 +540,14 @@ namespace igl::shell
             return false;
         }
 
-        if (cxr_receiver_)
-        {
-            destroy_receiver();
-        }
-
         if (!cxr_receiver_)
         {
             create_receiver();
+
+            if (!cxr_receiver_)
+            {
+                return false;
+            }
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect IP = %s\n", ip_address_.c_str());
@@ -555,7 +555,7 @@ namespace igl::shell
         cxrConnectionDesc connection_desc = {0};
         connection_desc.async = true;
         connection_desc.useL4S = false;
-        connection_desc.clientNetwork = cxrNetworkInterface_Unknown;
+        connection_desc.clientNetwork = cxrNetworkInterface_WiFi5Ghz;
         connection_desc.topology = cxrNetworkTopology_LAN;
 
         cxrError error = cxrConnect(cxr_receiver_, ip_address_.c_str(), &connection_desc);
