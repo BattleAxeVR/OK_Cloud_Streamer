@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <glm/detail/qualifier.hpp>
 #include <igl/NameHandle.h>
 #include <igl/ShaderCreator.h>
@@ -860,19 +861,38 @@ namespace igl::shell
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
-
-        memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
+        //memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
 
         cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
 
-        const float time_offset_seconds =  DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
-        cxr_tracking_state.poseTimeOffset = time_offset_seconds;
+        cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
 
+        const uint64_t now_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+#if CLOUDXR_TRACK_HMD
         {
+            cxr_tracking_state.hmd.clientTimeNS = now_time_ns;
+
+            //flags |= cxrHmdTrackingFlags_HasProjection;
+            //cxr_tracking_state.hmd.proj[LEFT][4];      ///< If cxrHmdTrackingFlags_HasProjection is set, allows you to update the projection parameters specified in the device description at a per-pose granularity.
+            //cxr_tracking_state.hmd.proj[RIGHT][4];
+
+            //float ipd;             ///< If cxrHmdTrackingFlags_HasIPD is set, allows you to update the headset interpupilary distance parameters specified in the device description at a per-pose granularity.
+            //float displayRefresh;  ///< If cxrHmdTrackingFlags_HasRefresh is set, overrides the headset display target refresh/fps specified in the device description (up to per-pose granularity).
+            //uint64_t poseID;       ///< If cxrHmdTrackingFlags_HasPoseID is set, this contains a user-specified 64-bit value associated with this pose. The same value will be delivered to the client in the poseID of the cxrFramesLatched structure associated with this pose.
+            //float scaling;         ///< If cxrHmdTrackingFlags_HasScaling is set, allows you to specify an all-axis scale, defaults to 1.0.
+
+            //cxrTrackedDevicePose pose; ///< The headset's 3D pose.
+            //cxrDeviceActivityLevel activityLevel; ///< The headset's activity level.
+
             // HMD Pose
             cxr_tracking_state.hmd.flags = 0;
             cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasIPD;
             cxr_tracking_state.hmd.ipd = DEFAULT_CLOUDXR_IPD_M;
+
+
+            cxr_tracking_state.hmd.scaling = 100.0f;
+            cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasScaling;
 
 #if USE_CLOUDXR_POSE_ID
             cxr_tracking_state.hmd.poseID = poseID_++;
@@ -885,14 +905,27 @@ namespace igl::shell
             hmd_pose.trackingResult = cxrTrackingResult_Running_OK;
 
             hmd_pose.position = {0.0f, 0.0f, 0.0f};
-            hmd_pose.rotation =  {0.0f,0.0f,0.0f, 1.0f};
+            hmd_pose.rotation =  {1.0f,0.0f,0.0f, 0.0f};
             hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
             hmd_pose.angularVelocity = {0.0f, 0.0f, 0.0f};
             hmd_pose.acceleration = {0.0f, 0.0f, 0.0f};
             hmd_pose.angularAcceleration = {0.0f, 0.0f, 0.0f};
             hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
-        }
 
+#if 1
+            const igl::shell::ViewParams& left_eye_view_params = shellParams().viewParams[LEFT];
+            const igl::shell::ViewParams& right_eye_view_params = shellParams().viewParams[RIGHT];
+
+            const glm::vec3& left_eye_camera_position = left_eye_view_params.cameraPosition;
+            const glm::vec3& right_eye_camera_position = right_eye_view_params.cameraPosition;
+
+            const glm::vec3 hmd_position = (left_eye_camera_position + right_eye_camera_position) / 2.0f;
+            hmd_pose.position = { hmd_position.x, hmd_position.y, hmd_position.z };
+#endif
+        }
+#endif
+
+#if CLOUDXR_TRACK_CONTROLLERS
         {
             // Controllers
             for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
@@ -905,7 +938,7 @@ namespace igl::shell
                 controller_pose.poseIsValid = true;
                 controller_pose.trackingResult = cxrTrackingResult_Running_OK;
 
-                controller_pose.position = {0.0f, 0.0f, 0.0f};
+                controller_pose.position = {controller_id == LEFT ? -0.2f : 0.2f, 0.0f, -1.0f};
                 controller_pose.rotation =  {0.0f,0.0f,0.0f, 1.0f};
                 controller_pose.velocity = {0.0f, 0.0f, 0.0f};
                 controller_pose.angularVelocity = {0.0f, 0.0f, 0.0f};
@@ -914,6 +947,7 @@ namespace igl::shell
                 controller_pose.velocity = {0.0f, 0.0f, 0.0f};
             }
         }
+#endif
     }
 
 #if ENABLE_HAPTICS
