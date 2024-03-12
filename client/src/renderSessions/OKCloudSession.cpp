@@ -19,6 +19,8 @@
 #include <igl/opengl/RenderCommandEncoder.h>
 #include <igl/Log.h>
 
+#include <glm/glm/gtc/quaternion.hpp>
+
 #include <igl/opengl/egl/Context.h>
 
 #include "OKCloudSession.h"
@@ -389,7 +391,7 @@ namespace igl::shell
 
                 if (is_latched_)
                 {
-                    //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR FRAME IS LATCHED");
+
                 }
             }
         }
@@ -818,8 +820,6 @@ namespace igl::shell
             return false;
         }
 
-        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::latch_frame\n");
-
         uint32_t timeoutMS = DEFAULT_CLOUDXR_LATCH_TIMEOUT_MS;
         memset(&latched_frames_, 0, sizeof(latched_frames_));
         cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, cxrFrameMask_All, timeoutMS);
@@ -836,6 +836,7 @@ namespace igl::shell
             return false;
         }
 
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::latch_frame LATCHED\n");
         is_latched_ = true;
 
         return true;
@@ -891,8 +892,8 @@ namespace igl::shell
             cxr_tracking_state.hmd.ipd = DEFAULT_CLOUDXR_IPD_M;
 
 
-            cxr_tracking_state.hmd.scaling = 100.0f;
-            cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasScaling;
+            //cxr_tracking_state.hmd.scaling = 100.0f;
+            //cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasScaling;
 
 #if USE_CLOUDXR_POSE_ID
             cxr_tracking_state.hmd.poseID = poseID_++;
@@ -916,11 +917,29 @@ namespace igl::shell
             const igl::shell::ViewParams& left_eye_view_params = shellParams().viewParams[LEFT];
             const igl::shell::ViewParams& right_eye_view_params = shellParams().viewParams[RIGHT];
 
-            const glm::vec3& left_eye_camera_position = left_eye_view_params.cameraPosition;
-            const glm::vec3& right_eye_camera_position = right_eye_view_params.cameraPosition;
+            const glm::vec3 left_eye_camera_position = left_eye_view_params.viewMatrix[3];
+            const glm::vec3 right_eye_camera_position = right_eye_view_params.viewMatrix[3];
 
-            const glm::vec3 hmd_position = (left_eye_camera_position + right_eye_camera_position) / 2.0f;
-            hmd_pose.position = { hmd_position.x, hmd_position.y, hmd_position.z };
+            const glm::vec3 hmd_position = left_eye_camera_position;// (left_eye_camera_position + right_eye_camera_position) / 2.0f;
+
+            //const glm::vec3& left_eye_camera_position = left_eye_view_params.cameraPosition;
+            hmd_pose.position.v[0] = hmd_position.x;
+            hmd_pose.position.v[1] = hmd_position.y;
+            hmd_pose.position.v[2] = hmd_position.z;
+
+            //hmd_pose.position.v[2] = poseID_ % 100 * 1.0f;
+            //const glm::vec3& right_eye_camera_position = right_eye_view_params.cameraPosition;
+
+            //const glm::vec3 left_eye_camera_position = left_eye_view_params.viewMatrix[3];
+            //const glm::vec3 right_eye_camera_position = right_eye_view_params.viewMatrix[3];
+
+            //const glm::vec3 hmd_position = (left_eye_camera_position + right_eye_camera_position) / 2.0f;
+            //hmd_pose.position = { hmd_position.x, hmd_position.y, hmd_position.z };
+
+            glm::quat left_rotation = glm::quat_cast(left_eye_view_params.viewMatrix);
+            left_rotation =  glm::inverse(left_rotation) * glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+            //left_rotation = normalize(left_rotation);
+            hmd_pose.rotation = {left_rotation.w, left_rotation.x, left_rotation.y, left_rotation.z};
 #endif
         }
 #endif
