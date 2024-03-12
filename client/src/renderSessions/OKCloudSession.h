@@ -43,51 +43,56 @@ namespace igl::shell
         OKCloudSession(std::shared_ptr<Platform> platform);
 
         void initialize() noexcept override;
+
         void update(igl::SurfaceTextures surfaceTextures) noexcept override;
 
         // CloudXR stuff
         bool init_cxr();
+
         void update_cxr_state(cxrClientState state, cxrError error);
+
         void shutdown_cxr();
 
         bool connect();
+
         void disconnect();
 
-        void set_ip_address(const std::string& ip_address)
-        {
+        void set_ip_address(const std::string &ip_address) {
             ip_address_ = ip_address;
         }
 
-        bool is_cxr_initialized() const
-        {
+        bool is_cxr_initialized() const {
             return is_cxr_initialized_;
         }
 
-        bool is_ready_to_connect() const
-        {
+        bool is_ready_to_connect() const {
             return (cxr_client_state_ == cxrClientState::cxrClientState_ReadyToConnect);
         }
 
-        bool is_connected() const
-        {
+        bool is_connected() const {
             return (cxr_client_state_ == cxrClientState::cxrClientState_StreamingSessionInProgress);
         }
 
-        bool is_connecting() const
-        {
-            return (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptInProgress);
+        bool is_connecting() const {
+            return (cxr_client_state_ ==
+                    cxrClientState::cxrClientState_ConnectionAttemptInProgress);
         }
 
-        bool failed_to_connect() const
-        {
+        bool failed_to_connect() const {
             return (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptFailed);
         }
 
 #if ENABLE_OBOE
+
         bool init_audio();
+
         void shutdown_audio();
-        cxrBool render_audio(const cxrAudioFrame* audio_frame);
-        oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void *data, int32_t frame_count) override;
+
+        cxrBool render_audio(const cxrAudioFrame *audio_frame);
+
+        oboe::DataCallbackResult
+        onAudioReady(oboe::AudioStream *audio_stream, void *data, int32_t frame_count) override;
+
 #endif
 
     private:
@@ -103,7 +108,8 @@ namespace igl::shell
 
         VertexFormat vertexParameters_;
 
-        void createSamplerAndTextures(const IDevice& /*device*/);
+        void createSamplerAndTextures(const IDevice & /*device*/);
+
         void setVertexParams();
 
         bool is_cxr_initialized_ = false;
@@ -119,14 +125,19 @@ namespace igl::shell
         std::string ip_address_ = DEFAULT_IP_ADDRESS;
 
         bool create_receiver();
+
         void destroy_receiver();
 
         bool latch_frame();
+
         void release_frame();
-        void get_tracking_state(cxrVRTrackingState* cxr_tracking_state);
+
+        void get_tracking_state(cxrVRTrackingState *cxr_tracking_state_ptr);
 
 #if ENABLE_HAPTICS
-        void trigger_haptics(const cxrHapticFeedback* haptics);
+
+        void trigger_haptics(const cxrHapticFeedback *haptics);
+
 #endif
 
         CloudXR::ClientOptions cxr_options_ = {};
@@ -135,6 +146,10 @@ namespace igl::shell
         cxrClientState cxr_client_state_ = cxrClientState_ReadyToConnect;
         cxrFramesLatched latched_frames_ = {};
         bool is_latched_ = false;
+
+#if USE_CLOUDXR_POSE_ID
+        uint64_t poseID_ = 0;
+#endif
 
     };
 

@@ -694,8 +694,8 @@ namespace igl::shell
             };
 
 
-            receiver_callbacks.GetTrackingState = [](void *context, cxrVRTrackingState* cxr_tracking_state) {
-                reinterpret_cast<OKCloudSession*>(context)->get_tracking_state(cxr_tracking_state);
+            receiver_callbacks.GetTrackingState = [](void *context, cxrVRTrackingState* cxr_tracking_state_ptr) {
+                reinterpret_cast<OKCloudSession*>(context)->get_tracking_state(cxr_tracking_state_ptr);
             };
 
 #if ENABLE_OBOE
@@ -777,6 +777,10 @@ namespace igl::shell
         cxrDestroyReceiver(cxr_receiver_);
         cxr_receiver_ = nullptr;
 
+#if USE_CLOUDXR_POSE_ID
+        poseID_ = 0;
+#endif
+
         update_cxr_state(cxrClientState_Disconnected, cxrError_Success);
     }
 
@@ -802,21 +806,74 @@ namespace igl::shell
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::release_frame\n");
     }
 
-    void OKCloudSession::get_tracking_state(cxrVRTrackingState* cxr_tracking_state)
+    void OKCloudSession::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_ptr)
     {
-        if (!is_cxr_initialized_)
+        if (!is_cxr_initialized_ || !is_connected() || !cxr_tracking_state_ptr)
         {
             return;
         }
 
-        //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
 
+        memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
+
+        cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
+
+        const float time_offset_seconds =  DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
+        cxr_tracking_state.poseTimeOffset = time_offset_seconds;
+
+        {
+            // HMD Pose
+            cxr_tracking_state.hmd.flags = 0;
+            cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasIPD;
+            cxr_tracking_state.hmd.ipd = DEFAULT_CLOUDXR_IPD_M;
+
+#if USE_CLOUDXR_POSE_ID
+            cxr_tracking_state.hmd.poseID = poseID_++;
+            cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasPoseID;
+#endif
+
+            cxrTrackedDevicePose& hmd_pose = cxr_tracking_state.hmd.pose;
+            hmd_pose.deviceIsConnected = true;
+            hmd_pose.poseIsValid = true;
+            hmd_pose.trackingResult = cxrTrackingResult_Running_OK;
+
+            hmd_pose.position = {0.0f, 0.0f, 0.0f};
+            hmd_pose.rotation =  {0.0f,0.0f,0.0f, 1.0f};
+            hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
+            hmd_pose.angularVelocity = {0.0f, 0.0f, 0.0f};
+            hmd_pose.acceleration = {0.0f, 0.0f, 0.0f};
+            hmd_pose.angularAcceleration = {0.0f, 0.0f, 0.0f};
+            hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
+        }
+
+        {
+            // Controllers
+            for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+            {
+                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
+                cxr_controller = {};
+
+                cxrTrackedDevicePose& controller_pose = cxr_controller.pose;
+                controller_pose.deviceIsConnected = true;
+                controller_pose.poseIsValid = true;
+                controller_pose.trackingResult = cxrTrackingResult_Running_OK;
+
+                controller_pose.position = {0.0f, 0.0f, 0.0f};
+                controller_pose.rotation =  {0.0f,0.0f,0.0f, 1.0f};
+                controller_pose.velocity = {0.0f, 0.0f, 0.0f};
+                controller_pose.angularVelocity = {0.0f, 0.0f, 0.0f};
+                controller_pose.acceleration = {0.0f, 0.0f, 0.0f};
+                controller_pose.angularAcceleration = {0.0f, 0.0f, 0.0f};
+                controller_pose.velocity = {0.0f, 0.0f, 0.0f};
+            }
+        }
     }
 
 #if ENABLE_HAPTICS
     void OKCloudSession::trigger_haptics(const cxrHapticFeedback* haptics)
     {
-        if (!is_cxr_initialized_ || !haptics)
+        if (!is_cxr_initialized_ || !is_connected() || !haptics)
         {
             return;
         }
