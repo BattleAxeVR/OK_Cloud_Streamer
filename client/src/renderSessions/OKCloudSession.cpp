@@ -635,6 +635,7 @@ namespace igl::shell
         device_desc.foveatedScaleFactor = foveation;
         device_desc.stereoDisplay = true;
         device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET;
+        device_desc.posePollFreq = DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY;
 
 #if ENABLE_OBOE
         device_desc.receiveAudio = enable_audio_playback_;
