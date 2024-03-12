@@ -8,8 +8,6 @@
 
 #include <../../../external/igl/IGLU/managedUniformBuffer/ManagedUniformBuffer.h>
 
-#define protected public
-
 #include <algorithm>
 #include <cmath>
 #include <glm/detail/qualifier.hpp>
@@ -594,10 +592,8 @@ namespace igl::shell
 
         Platform& platform = getPlatform();
         const igl::IDevice& device = platform.getDevice();
-        const igl::opengl::Device* gl_device = (const igl::opengl::Device*)&device;
-
-        const std::shared_ptr<igl::opengl::IContext>& context = gl_device->getSharedContext();
-        const opengl::egl::Context* egl_context_ptr = (opengl::egl::Context*)( context.get());
+        const igl::opengl::Device* gl_device_ptr = (const igl::opengl::Device*)&device;
+        const opengl::egl::Context* egl_context_ptr = (opengl::egl::Context*)(&gl_device_ptr->getContext());
 
         EGLDisplay egl_display = egl_context_ptr->getDisplay();
         EGLContext egl_context = egl_context_ptr->get();
