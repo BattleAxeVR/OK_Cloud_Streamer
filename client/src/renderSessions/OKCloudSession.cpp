@@ -609,12 +609,12 @@ namespace igl::shell
         receiver_desc.shareContext = &graphics_context_;
 
         // Debug flags
-        receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;//cxrDebugFlags_FallbackDecoder; //
+        receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;
 
 
         {
             // Logging
-            receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
+            //receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
 
 #if 0
             receiver_desc.logMaxSizeKB = CLOUDXR_LOG_MAX_DEFAULT;
