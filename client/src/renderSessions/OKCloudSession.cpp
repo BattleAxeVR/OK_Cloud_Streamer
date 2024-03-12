@@ -666,7 +666,9 @@ namespace igl::shell
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::destroy_receiver\n");
 
-        //destroy_audio()
+#if ENABLE_OBOE
+       shutdown_audio();
+#endif
 
         cxrDestroyReceiver(cxr_receiver_);
         cxr_receiver_ = nullptr;
