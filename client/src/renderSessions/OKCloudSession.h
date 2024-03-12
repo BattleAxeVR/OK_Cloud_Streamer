@@ -111,7 +111,7 @@ namespace igl::shell
 #if ENABLE_OBOE
         bool is_audio_initialized_ = false;
         bool enable_audio_playback_ = true;
-        bool enable_audio_recording_ = true;
+        bool enable_audio_recording_ = false;
         std::shared_ptr<oboe::AudioStream> audio_playback_stream_;
         std::shared_ptr<oboe::AudioStream> audio_record_stream_;
 #endif
