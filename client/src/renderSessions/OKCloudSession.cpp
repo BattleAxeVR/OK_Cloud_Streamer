@@ -378,6 +378,22 @@ namespace igl::shell
         const std::shared_ptr<igl::IRenderCommandEncoder> commands =
                 buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
 
+#if RENDER_CLOUDXR_LATCHED_FRAMES
+        {
+            // CloudXR
+
+            if (is_cxr_initialized_ && is_connected())
+            {
+                latch_frame();
+
+                if (is_latched_)
+                {
+                    //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR FRAME IS LATCHED");
+                }
+            }
+        }
+#endif
+
         commands->bindBuffer(0, BindTarget::kVertex, vb0_, 0);
 
 #if defined(IGL_UWP_VS_FIX)
@@ -457,6 +473,16 @@ namespace igl::shell
             {
                 connect();
             }
+        }
+        else if (is_cxr_initialized_ && is_connected())
+        {
+#if RENDER_CLOUDXR_LATCHED_FRAMES
+            if (is_latched_)
+            {
+                release_frame();
+            }
+#endif
+            const bool latched = latch_frame();
         }
 #endif
     }
@@ -786,24 +812,44 @@ namespace igl::shell
 
     bool OKCloudSession::latch_frame()
     {
-        if (!is_cxr_initialized_)
+        if (!is_cxr_initialized_ || !is_connected() || is_latched_)
         {
             return false;
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::latch_frame\n");
 
+        uint32_t timeoutMS = DEFAULT_CLOUDXR_LATCH_TIMEOUT_MS;
+        memset(&latched_frames_, 0, sizeof(latched_frames_));
+        cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, cxrFrameMask_All, timeoutMS);
+
+        if (error)
+        {
+            const bool is_real_error = (error != cxrError_Frame_Not_Ready);
+
+            if (is_real_error)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "cxrLatchFrame error = %s\n", cxrErrorString(error));
+            }
+
+            return false;
+        }
+
+        is_latched_ = true;
+
         return true;
     }
 
     void OKCloudSession::release_frame()
     {
-        if (!is_cxr_initialized_)
+        if (!is_cxr_initialized_ || !is_connected() || !is_latched_)
         {
             return;
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::release_frame\n");
+        cxrReleaseFrame(cxr_receiver_, &latched_frames_);
+        is_latched_ = false;
     }
 
     void OKCloudSession::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_ptr)
