@@ -500,11 +500,11 @@ namespace igl::shell
                 break;
             case cxrClientState_Disconnected:
                 IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Disconnected, setting back to cxrClientState_ReadyToConnect");
-                cxr_client_state_ == cxrClientState_ReadyToConnect;
+                cxr_client_state_ = cxrClientState_ReadyToConnect;
                 return;
             case cxrClientState_Exiting:
                 IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting, setting back to cxrClientState_ReadyToConnect");
-                cxr_client_state_ == cxrClientState_ReadyToConnect;
+                cxr_client_state_ = cxrClientState_ReadyToConnect;
                 return;
         }
 
@@ -647,6 +647,32 @@ namespace igl::shell
         device_desc.disablePosePrediction = false;
         device_desc.angularVelocityInDeviceSpace = false;
 
+        {
+            cxrClientCallbacks& receiver_callbacks = receiver_desc.clientCallbacks;
+            receiver_callbacks.clientContext = this;
+
+            receiver_callbacks.UpdateClientState = [](void *context, cxrClientState cxr_client_state, cxrError error) {
+                reinterpret_cast<OKCloudSession*>(context)->update_cxr_state(cxr_client_state, error);
+            };
+
+
+            receiver_callbacks.GetTrackingState = [](void *context, cxrVRTrackingState* cxr_tracking_state) {
+                reinterpret_cast<OKCloudSession*>(context)->get_tracking_state(cxr_tracking_state);
+            };
+
+#if ENABLE_OBOE
+            receiver_callbacks.RenderAudio = [](void *context, const cxrAudioFrame *audioFrame) {
+                return reinterpret_cast<OKCloudSession*>(context)->render_audio(audioFrame);
+            };
+#endif
+
+#if ENABLE_HAPTICS
+            receiver_callbacks.TriggerHaptic = [](void *context, const cxrHapticFeedback* haptics) {
+                reinterpret_cast<OKCloudSession*>(context)->trigger_haptics(haptics);
+            };
+#endif
+        }
+
         cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
 
         if (error)
@@ -698,6 +724,35 @@ namespace igl::shell
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::release_frame\n");
     }
+
+    void OKCloudSession::get_tracking_state(cxrVRTrackingState* cxr_tracking_state)
+    {
+        if (!is_cxr_initialized_)
+        {
+            return;
+        }
+
+        //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
+
+    }
+
+#if ENABLE_HAPTICS
+    void OKCloudSession::trigger_haptics(const cxrHapticFeedback* haptics)
+    {
+        if (!is_cxr_initialized_ || !haptics)
+        {
+            return;
+        }
+
+        const int controller_id = haptics->deviceID;
+        const float duration_ms = haptics->seconds * 1e9;
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::trigger_haptics\n");
+
+        //apply_haptics(controller_id, haptics->amplitude, duration_ms, haptics->frequency);
+    }
+#endif
+
 
 #if ENABLE_OBOE
     bool OKCloudSession::init_audio()
@@ -829,7 +884,7 @@ namespace igl::shell
         is_audio_initialized_ = false;
     }
 
-    cxrBool OKCloudSession::RenderAudio(const cxrAudioFrame* audio_frame)
+    cxrBool OKCloudSession::render_audio(const cxrAudioFrame* audio_frame)
     {
         if (!audio_frame|| is_audio_initialized_ || !enable_audio_playback_ || !audio_playback_stream_)
         {
@@ -868,7 +923,6 @@ namespace igl::shell
 
         return oboe::DataCallbackResult::Continue;
     }
-
 #endif
 
 } // namespace BVR

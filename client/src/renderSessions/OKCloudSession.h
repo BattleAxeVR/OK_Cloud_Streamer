@@ -86,8 +86,8 @@ namespace igl::shell
 #if ENABLE_OBOE
         bool init_audio();
         void shutdown_audio();
-        cxrBool RenderAudio(const cxrAudioFrame* audio_frame);
-        oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void *data, int32_t frame_count);
+        cxrBool render_audio(const cxrAudioFrame* audio_frame);
+        oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void *data, int32_t frame_count) override;
 #endif
 
     private:
@@ -123,6 +123,11 @@ namespace igl::shell
 
         bool latch_frame();
         void release_frame();
+        void get_tracking_state(cxrVRTrackingState* cxr_tracking_state);
+
+#if ENABLE_HAPTICS
+        void trigger_haptics(const cxrHapticFeedback* haptics);
+#endif
 
         CloudXR::ClientOptions cxr_options_ = {};
         cxrGraphicsContext graphics_context_ = {};
