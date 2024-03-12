@@ -8,6 +8,8 @@
 
 #include <../../../external/igl/IGLU/managedUniformBuffer/ManagedUniformBuffer.h>
 
+#define protected public
+
 #include <algorithm>
 #include <cmath>
 #include <glm/detail/qualifier.hpp>
@@ -17,6 +19,8 @@
 #include <igl/opengl/GLIncludes.h>
 #include <igl/opengl/RenderCommandEncoder.h>
 #include <igl/Log.h>
+
+#include <igl/opengl/egl/Context.h>
 
 #include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
@@ -577,11 +581,6 @@ namespace igl::shell
 
     bool OKCloudSession::create_receiver()
     {
-        if (!is_cxr_initialized_)
-        {
-            return false;
-        }
-
         if (cxr_receiver_)
         {
             return false;
@@ -595,27 +594,18 @@ namespace igl::shell
 
         Platform& platform = getPlatform();
         const igl::IDevice& device = platform.getDevice();
-        const IPlatformDevice& platform_device = device.getPlatformDevice();
+        const igl::opengl::Device* gl_device = (const igl::opengl::Device*)&device;
 
-        //void* graphics_context =  getGraphicsContext() override;
+        const std::shared_ptr<igl::opengl::IContext>& context = gl_device->getSharedContext();
+        const opengl::egl::Context* egl_context_ptr = (opengl::egl::Context*)( context.get());
 
-        //const XrGraphicsBindingOpenGLESAndroidKHR* gles =
-//                reinterpret_cast<const XrGraphicsBindingOpenGLESAndroidKHR *>(graphics_context});
-
-#if 0
-
-
-
-        device.getBackendType()
-
-
-
-        XrGraphicsBindingOpenGLESAndroidKHR* gles = impl_->Get
+        EGLDisplay egl_display = egl_context_ptr->getDisplay();
+        EGLContext egl_context = egl_context_ptr->get();
 
         graphics_context_.type = cxrGraphicsContext_GLES;
-        graphics_context_.egl.display = (void *)gles->display;
-        graphics_context_.egl.context = (void *)gles->context;
-#endif
+        graphics_context_.egl.display = (void *)egl_display;
+        graphics_context_.egl.context = (void *)egl_context;
+
         receiver_desc.shareContext = &graphics_context_;
 
         cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
