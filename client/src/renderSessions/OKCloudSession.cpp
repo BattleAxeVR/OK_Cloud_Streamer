@@ -292,7 +292,7 @@ namespace igl::shell
         renderPass_.depthAttachment.loadAction = LoadAction::Clear;
         renderPass_.depthAttachment.clearDepth = 1.0;
 
-#if 1
+#if AUTO_CONNECT_TO_CLOUDXR
         const bool init_cxr_ok = init_cxr();
         if (!init_cxr_ok)
         {
@@ -619,6 +619,18 @@ namespace igl::shell
 
         uint32_t per_eye_width = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
         uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
+
+#if USE_MAIN_SURFACE_RENDER_RES_AS_CLOUDXR_RES
+        Result render_res_dimensions_result;
+        std::pair<EGLint, EGLint> render_res = egl_context_ptr->getDrawSurfaceDimensions(&render_res_dimensions_result);
+
+        if (render_res_dimensions_result.isOk())
+        {
+            per_eye_width = render_res.first;
+            per_eye_height = render_res.second;
+        }
+#endif
+
         float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
@@ -694,6 +706,22 @@ namespace igl::shell
 
             device_desc.chaperone.playArea.v[0] = 1.5f;
             device_desc.chaperone.playArea.v[1] = 1.5f;
+        }
+
+        {
+            //FOV
+            const Fov& fov_left_eye = shellParams().viewParams[LEFT].fov;
+            const Fov& fov_right_eye = shellParams().viewParams[RIGHT].fov;
+
+            device_desc.proj[LEFT][0] = tanf(fov_left_eye.angleLeft);
+            device_desc.proj[LEFT][1] = tanf(fov_left_eye.angleRight);
+            device_desc.proj[LEFT][2] = tanf(fov_left_eye.angleDown);
+            device_desc.proj[LEFT][3] = tanf(fov_left_eye.angleUp);
+
+            device_desc.proj[RIGHT][0] = tanf(fov_right_eye.angleLeft);
+            device_desc.proj[RIGHT][1] = tanf(fov_right_eye.angleRight);
+            device_desc.proj[RIGHT][2] = tanf(fov_right_eye.angleDown);
+            device_desc.proj[RIGHT][3] = tanf(fov_right_eye.angleUp);
         }
 
         cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
