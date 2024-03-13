@@ -33,6 +33,10 @@ namespace igl::shell
         float scaleZ{};
     };
 
+    inline float sign(float val)
+    {
+        return (val < 0.0f) ? -1.0f : 1.0f;
+    }
 
     class OKCloudSession : public RenderSession
 #if ENABLE_OBOE
@@ -83,16 +87,10 @@ namespace igl::shell
         }
 
 #if ENABLE_OBOE
-
         bool init_audio();
-
         void shutdown_audio();
-
-        cxrBool render_audio(const cxrAudioFrame *audio_frame);
-
-        oboe::DataCallbackResult
-        onAudioReady(oboe::AudioStream *audio_stream, void *data, int32_t frame_count) override;
-
+        cxrBool render_audio(const cxrAudioFrame* audio_frame);
+        oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void* data, int32_t frame_count) override;
 #endif
 
     private:

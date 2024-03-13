@@ -30,6 +30,22 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 {
 }
 
+cxrTrackedDevicePose convert_glm_to_cxr_pose(const GLMPose& glm_pose)
+{
+    cxrTrackedDevicePose cxr_pose = {};
+
+    cxr_pose.position.v[0] = glm_pose.translation_.x;
+    cxr_pose.position.v[1] = glm_pose.translation_.y;
+    cxr_pose.position.v[2] = glm_pose.translation_.z;
+
+    cxr_pose.rotation.w = glm_pose.rotation_.w;
+    cxr_pose.rotation.x = glm_pose.rotation_.x;
+    cxr_pose.rotation.y = glm_pose.rotation_.y;
+    cxr_pose.rotation.z = glm_pose.rotation_.z;
+
+    return cxr_pose;
+}
+
 namespace igl::shell
 {
     struct VertexPosUvw
@@ -512,7 +528,6 @@ namespace igl::shell
 
         is_cxr_initialized_ = init_ok;
         return init_ok;
-
     }
 
     void OKCloudSession::update_cxr_state(cxrClientState state, cxrError error)
@@ -609,7 +624,6 @@ namespace igl::shell
         destroy_receiver();
     }
 
-
     bool OKCloudSession::create_receiver()
     {
         if (cxr_receiver_)
@@ -674,18 +688,6 @@ namespace igl::shell
 
         uint32_t per_eye_width = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
         uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
-
-#if USE_MAIN_SURFACE_RENDER_RES_AS_CLOUDXR_RES
-        Result render_res_dimensions_result;
-        std::pair<EGLint, EGLint> render_res = egl_context_ptr->getDrawSurfaceDimensions(&render_res_dimensions_result);
-
-        if (render_res_dimensions_result.isOk())
-        {
-            per_eye_width = render_res.first;
-            per_eye_height = render_res.second;
-        }
-#endif
-
         float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
@@ -862,17 +864,15 @@ namespace igl::shell
         }
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
-        //memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
+        memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
 
         cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
 
         cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
 
-        const uint64_t now_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
 #if CLOUDXR_TRACK_HMD
         {
-            cxr_tracking_state.hmd.clientTimeNS = now_time_ns;
+            cxr_tracking_state.hmd.clientTimeNS = shellParams().head_pose_.timestamp_;
 
             //flags |= cxrHmdTrackingFlags_HasProjection;
             //cxr_tracking_state.hmd.proj[LEFT][4];      ///< If cxrHmdTrackingFlags_HasProjection is set, allows you to update the projection parameters specified in the device description at a per-pose granularity.
@@ -890,7 +890,6 @@ namespace igl::shell
             cxr_tracking_state.hmd.flags = 0;
             cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasIPD;
             cxr_tracking_state.hmd.ipd = DEFAULT_CLOUDXR_IPD_M;
-
 
             //cxr_tracking_state.hmd.scaling = 100.0f;
             //cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasScaling;
@@ -914,6 +913,8 @@ namespace igl::shell
             hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
 
 #if 1
+            hmd_pose = convert_glm_to_cxr_pose(shellParams().head_pose_);
+#else
             const igl::shell::ViewParams& left_eye_view_params = shellParams().viewParams[LEFT];
             const igl::shell::ViewParams& right_eye_view_params = shellParams().viewParams[RIGHT];
 
