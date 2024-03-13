@@ -30,24 +30,24 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 {
 }
 
-cxrTrackedDevicePose convert_glm_to_cxr_pose(const GLMPose& glm_pose)
-{
-    cxrTrackedDevicePose cxr_pose = {};
-
-    cxr_pose.position.v[0] = glm_pose.translation_.x;
-    cxr_pose.position.v[1] = glm_pose.translation_.y;
-    cxr_pose.position.v[2] = glm_pose.translation_.z;
-
-    cxr_pose.rotation.w = glm_pose.rotation_.w;
-    cxr_pose.rotation.x = glm_pose.rotation_.x;
-    cxr_pose.rotation.y = glm_pose.rotation_.y;
-    cxr_pose.rotation.z = glm_pose.rotation_.z;
-
-    return cxr_pose;
-}
-
 namespace igl::shell
 {
+    cxrTrackedDevicePose convert_glm_to_cxr_pose(const openxr::GLMPose& glm_pose)
+    {
+        cxrTrackedDevicePose cxr_pose = {};
+
+        cxr_pose.position.v[0] = glm_pose.translation_.x;
+        cxr_pose.position.v[1] = glm_pose.translation_.y;
+        cxr_pose.position.v[2] = glm_pose.translation_.z;
+
+        cxr_pose.rotation.w = glm_pose.rotation_.w;
+        cxr_pose.rotation.x = glm_pose.rotation_.x;
+        cxr_pose.rotation.y = glm_pose.rotation_.y;
+        cxr_pose.rotation.z = glm_pose.rotation_.z;
+
+        return cxr_pose;
+    }
+
     struct VertexPosUvw
     {
         glm::vec3 position;
