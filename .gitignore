@@ -31,3 +31,5 @@ google-services.json
 
 # Android Profiling
 *.hprof
+client/android/app-ok-cloud-streamer-gles/release/output-metadata.json
+client/android/app-ok-cloud-streamer-gles/release/app-ok-cloud-streamer-gles-release.apk
