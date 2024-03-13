@@ -133,9 +133,11 @@ namespace igl::shell
         void get_tracking_state(cxrVRTrackingState *cxr_tracking_state_ptr);
 
 #if ENABLE_HAPTICS
-
         void trigger_haptics(const cxrHapticFeedback *haptics);
+#endif
 
+#if CLOUDXR_TRACK_CONTROLLERS
+        cxrControllerHandle cxr_controller_handles_[NUM_SIDES] = {};
 #endif
 
         CloudXR::ClientOptions cxr_options_ = {};

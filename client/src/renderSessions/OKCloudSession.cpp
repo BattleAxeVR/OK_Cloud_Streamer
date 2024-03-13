@@ -32,6 +32,54 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 
 namespace igl::shell
 {
+    const char *cxr_input_paths[] = {
+            "/input/system/click",
+            "/input/application_menu/click",
+            "/input/trigger/click",
+            "/input/trigger/touch",
+            "/input/trigger/value",
+            "/input/grip/click",
+            "/input/grip/touch",
+            "/input/grip/value",
+            "/input/joystick/click",
+            "/input/joystick/touch",
+            "/input/joystick/x",
+            "/input/joystick/y",
+            "/input/a/click",
+            "/input/b/click",
+            "/input/x/click",
+            "/input/y/click",
+            "/input/a/touch",
+            "/input/b/touch",
+            "/input/x/touch",
+            "/input/y/touch",
+            "/input/thumb_rest/touch",
+    };
+
+    cxrInputValueType cxr_input_value_types[] = {
+            cxrInputValueType_boolean,  // input/system/click
+            cxrInputValueType_boolean,  // input/application_menu/click
+            cxrInputValueType_boolean,  // input/trigger/click
+            cxrInputValueType_boolean,  // input/trigger/touch
+            cxrInputValueType_float32,  // input/trigger/value
+            cxrInputValueType_boolean,  // input/grip/click
+            cxrInputValueType_boolean,  // input/grip/touch
+            cxrInputValueType_float32,  // input/grip/value
+            cxrInputValueType_boolean,  // input/joystick/click
+            cxrInputValueType_boolean,  // input/joystick/touch
+            cxrInputValueType_float32,  // input/joystick/x
+            cxrInputValueType_float32,  // input/joystick/y
+            cxrInputValueType_boolean,  // input/a/click
+            cxrInputValueType_boolean,  // input/b/click
+            cxrInputValueType_boolean,  // input/x/click
+            cxrInputValueType_boolean,  // input/y/click
+            cxrInputValueType_boolean,  // input/a/touch
+            cxrInputValueType_boolean,  // input/b/touch
+            cxrInputValueType_boolean,  // input/x/touch
+            cxrInputValueType_boolean,  // input/y/touch
+            cxrInputValueType_boolean,  // input/thumb_rest/touch
+    };
+
     cxrTrackedDevicePose convert_glm_to_cxr_pose(const openxr::GLMPose& glm_pose)
     {
         cxrTrackedDevicePose cxr_pose = {};
@@ -44,6 +92,10 @@ namespace igl::shell
         cxr_pose.rotation.x = glm_pose.rotation_.x;
         cxr_pose.rotation.y = glm_pose.rotation_.y;
         cxr_pose.rotation.z = glm_pose.rotation_.z;
+
+        cxr_pose.deviceIsConnected = true;
+        cxr_pose.poseIsValid = glm_pose.is_valid_;
+        cxr_pose.trackingResult = cxrTrackingResult_Running_OK;
 
         return cxr_pose;
     }
@@ -909,48 +961,7 @@ namespace igl::shell
 #endif
 
             cxrTrackedDevicePose& hmd_pose = cxr_tracking_state.hmd.pose;
-            hmd_pose.deviceIsConnected = true;
-            hmd_pose.poseIsValid = true;
-            hmd_pose.trackingResult = cxrTrackingResult_Running_OK;
-
-            hmd_pose.position = {0.0f, 0.0f, 0.0f};
-            hmd_pose.rotation =  {1.0f,0.0f,0.0f, 0.0f};
-            hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
-            hmd_pose.angularVelocity = {0.0f, 0.0f, 0.0f};
-            hmd_pose.acceleration = {0.0f, 0.0f, 0.0f};
-            hmd_pose.angularAcceleration = {0.0f, 0.0f, 0.0f};
-            hmd_pose.velocity = {0.0f, 0.0f, 0.0f};
-
-#if 1
             hmd_pose = convert_glm_to_cxr_pose(shellParams().head_pose_);
-#else
-            const igl::shell::ViewParams& left_eye_view_params = shellParams().viewParams[LEFT];
-            const igl::shell::ViewParams& right_eye_view_params = shellParams().viewParams[RIGHT];
-
-            const glm::vec3 left_eye_camera_position = left_eye_view_params.viewMatrix[3];
-            const glm::vec3 right_eye_camera_position = right_eye_view_params.viewMatrix[3];
-
-            const glm::vec3 hmd_position = left_eye_camera_position;// (left_eye_camera_position + right_eye_camera_position) / 2.0f;
-
-            //const glm::vec3& left_eye_camera_position = left_eye_view_params.cameraPosition;
-            hmd_pose.position.v[0] = hmd_position.x;
-            hmd_pose.position.v[1] = hmd_position.y;
-            hmd_pose.position.v[2] = hmd_position.z;
-
-            //hmd_pose.position.v[2] = poseID_ % 100 * 1.0f;
-            //const glm::vec3& right_eye_camera_position = right_eye_view_params.cameraPosition;
-
-            //const glm::vec3 left_eye_camera_position = left_eye_view_params.viewMatrix[3];
-            //const glm::vec3 right_eye_camera_position = right_eye_view_params.viewMatrix[3];
-
-            //const glm::vec3 hmd_position = (left_eye_camera_position + right_eye_camera_position) / 2.0f;
-            //hmd_pose.position = { hmd_position.x, hmd_position.y, hmd_position.z };
-
-            glm::quat left_rotation = glm::quat_cast(left_eye_view_params.viewMatrix);
-            left_rotation =  glm::inverse(left_rotation) * glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-            //left_rotation = normalize(left_rotation);
-            hmd_pose.rotation = {left_rotation.w, left_rotation.x, left_rotation.y, left_rotation.z};
-#endif
         }
 #endif
 
@@ -959,21 +970,29 @@ namespace igl::shell
             // Controllers
             for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
             {
-                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
-                cxr_controller = {};
+                if (cxr_controller_handles_[controller_id] == nullptr)
+                {
+                    cxrControllerDesc cxr_controller_desc = {};
+                    cxr_controller_desc.id = controller_id;
+                    cxr_controller_desc.role = controller_id ? "cxr://input/hand/right" : "cxr://input/hand/left";
+                    cxr_controller_desc.controllerName = "Oculus Touch";
+                    cxr_controller_desc.inputCount = sizeof(cxr_input_paths) / sizeof(const char *);
+                    cxr_controller_desc.inputPaths = cxr_input_paths;
+                    cxr_controller_desc.inputValueTypes = cxr_input_value_types;
 
-                cxrTrackedDevicePose& controller_pose = cxr_controller.pose;
-                controller_pose.deviceIsConnected = true;
-                controller_pose.poseIsValid = true;
-                controller_pose.trackingResult = cxrTrackingResult_Running_OK;
+                    cxrError error = cxrAddController(cxr_receiver_, &cxr_controller_desc,&cxr_controller_handles_[controller_id]);
 
-                controller_pose.position = {controller_id == LEFT ? -0.2f : 0.2f, 0.0f, -1.0f};
-                controller_pose.rotation =  {0.0f,0.0f,0.0f, 1.0f};
-                controller_pose.velocity = {0.0f, 0.0f, 0.0f};
-                controller_pose.angularVelocity = {0.0f, 0.0f, 0.0f};
-                controller_pose.acceleration = {0.0f, 0.0f, 0.0f};
-                controller_pose.angularAcceleration = {0.0f, 0.0f, 0.0f};
-                controller_pose.velocity = {0.0f, 0.0f, 0.0f};
+                    if (error)
+                    {
+                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n", cxrErrorString(error));
+                    }
+
+                    cxrControllerTrackingState &cxr_controller = cxr_tracking_state.controller[controller_id];
+                    cxr_controller = {};
+
+                    cxrTrackedDevicePose &cxr_controller_pose = cxr_controller.pose;
+                    cxr_controller_pose = convert_glm_to_cxr_pose({shellParams().controller_poses_[controller_id]});
+                }
             }
         }
 #endif
