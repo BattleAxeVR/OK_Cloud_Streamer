@@ -444,35 +444,40 @@ namespace igl::shell
             pipelineState_ = getPlatform().getDevice().createRenderPipeline(graphicsDesc, nullptr);
         }
 
+#if AUTO_CONNECT_TO_CLOUDXR
+        if (!is_cxr_initialized_ && is_ready_to_connect())
+        {
+            const bool init_cxr_ok = init_cxr();
+
+            if (init_cxr_ok)
+            {
+                connect();
+            }
+        }
+#endif
+
+#if RENDER_CLOUDXR_LATCHED_FRAMES
+        int view_id = shellParams().current_view_id_;
+        bool latched_now = is_connected() && (view_id == LEFT) ? latch_frame() : is_latched_;
+
+        if (latched_now)
+        {
+#if defined(ANDROID)
+            uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+            cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
+
+            if (blit_error)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
+            }
+#endif
+        }
+
+#endif
         // Command buffers (1-N per thread): create, submit and forget
         auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
         const std::shared_ptr<igl::IRenderCommandEncoder> commands =
                 buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
-
-#if RENDER_CLOUDXR_LATCHED_FRAMES
-        {
-            // CloudXR
-
-            if (is_cxr_initialized_ && is_connected())
-            {
-                latch_frame();
-
-                if (is_latched_)
-                {
-                    uint32_t frame_mask = (shellParams().current_view_id_ == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-
-#if defined(ANDROID)
-                    cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
-
-                    if (blit_error)
-                    {
-                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
-                    }
-#endif
-                }
-            }
-        }
-#endif
 
         commands->bindBuffer(0, BindTarget::kVertex, vb0_, 0);
 
@@ -540,32 +545,32 @@ namespace igl::shell
 
         commands->endEncoding();
 
+#if RENDER_CLOUDXR_LATCHED_FRAMES
+        if (is_connected() && is_latched_)
+        {
+#if defined(ANDROID)
+            uint32_t frame_mask = 1 << view_id;// (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+            cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
+
+            if (blit_error)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
+            }
+#endif
+        }
+#endif
+
         buffer->present(framebuffer_->getColorAttachment(0));
 
         commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
 
-#if AUTO_CONNECT_TO_CLOUDXR
-        if (!is_cxr_initialized_ && is_ready_to_connect())
-        {
-            const bool init_cxr_ok = init_cxr();
-
-            if (init_cxr_ok)
-            {
-                connect();
-            }
-        }
-        else if (is_cxr_initialized_ && is_connected())
-        {
 #if RENDER_CLOUDXR_LATCHED_FRAMES
-            if (is_latched_)
-            {
-                release_frame();
-            }
-#endif
-            const bool latched = latch_frame();
+        if (is_connected() && (view_id == RIGHT))
+        {
+            release_frame();
         }
 #endif
-    }
+        }
 
     bool OKCloudSession::init_cxr()
     {
@@ -884,11 +889,14 @@ namespace igl::shell
         }
 
         uint32_t timeoutMS = DEFAULT_CLOUDXR_LATCH_TIMEOUT_MS;
-        memset(&latched_frames_, 0, sizeof(latched_frames_));
-        cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, cxrFrameMask_All, timeoutMS);
+
+        uint32_t frame_mask = cxrFrameMask_All;//(view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+        cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, frame_mask, timeoutMS);
 
         if (error)
         {
+            //is_latched_[view_id] = false;
+
             const bool is_real_error = (error != cxrError_Frame_Not_Ready);
 
             if (is_real_error)
