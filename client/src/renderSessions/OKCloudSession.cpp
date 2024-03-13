@@ -407,7 +407,16 @@ namespace igl::shell
 
                 if (is_latched_)
                 {
+                    uint32_t frame_mask = (shellParams().current_view_id_ == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
 
+#if defined(ANDROID)
+                    cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
+
+                    if (blit_error)
+                    {
+                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
+                    }
+#endif
                 }
             }
         }
