@@ -1240,16 +1240,18 @@ namespace igl::shell
 
 #if ENABLE_CLOUDXR_HMD
         {
-            compute_ipd();
-
             // HMD Pose
             cxr_tracking_state.hmd.flags = 0;
+
+#if RECOMPUTE_IPD_EVERY_FRAME
+            compute_ipd();
             cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasIPD;
             cxr_tracking_state.hmd.ipd = ipd_meters_;
+#endif
 
 #if USE_CLOUDXR_POSE_ID
-            cxr_tracking_state.hmd.poseID = poseID_++;
             cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasPoseID;
+            cxr_tracking_state.hmd.poseID = poseID_++;
 #endif
 
             cxrTrackedDevicePose& cxr_hmd_pose = cxr_tracking_state.hmd.pose;
