@@ -1153,7 +1153,7 @@ namespace igl::shell
             // Hold the mutex for as little time as possible
             //std::lock_guard<std::mutex> lock(xr_inputs.polling_mutex_);
 
-#if CLOUDXR_TRACK_HMD
+#if ENABLE_CLOUDXR_HMD
             {
                 cxr_tracking_state.hmd.clientTimeNS = predicted_display_time;
 
@@ -1219,27 +1219,12 @@ namespace igl::shell
 #endif
         }
 
-#if CLOUDXR_TRACK_HMD
+#if ENABLE_CLOUDXR_HMD
         {
-            //flags |= cxrHmdTrackingFlags_HasProjection;
-            //cxr_tracking_state.hmd.proj[LEFT][4];      ///< If cxrHmdTrackingFlags_HasProjection is set, allows you to update the projection parameters specified in the device description at a per-pose granularity.
-            //cxr_tracking_state.hmd.proj[RIGHT][4];
-
-            //float ipd;             ///< If cxrHmdTrackingFlags_HasIPD is set, allows you to update the headset interpupilary distance parameters specified in the device description at a per-pose granularity.
-            //float displayRefresh;  ///< If cxrHmdTrackingFlags_HasRefresh is set, overrides the headset display target refresh/fps specified in the device description (up to per-pose granularity).
-            //uint64_t poseID;       ///< If cxrHmdTrackingFlags_HasPoseID is set, this contains a user-specified 64-bit value associated with this pose. The same value will be delivered to the client in the poseID of the cxrFramesLatched structure associated with this pose.
-            //float scaling;         ///< If cxrHmdTrackingFlags_HasScaling is set, allows you to specify an all-axis scale, defaults to 1.0.
-
-            //cxrTrackedDevicePose pose; ///< The headset's 3D pose.
-            //cxrDeviceActivityLevel activityLevel; ///< The headset's activity level.
-
             // HMD Pose
             cxr_tracking_state.hmd.flags = 0;
             cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasIPD;
             cxr_tracking_state.hmd.ipd = DEFAULT_CLOUDXR_IPD_M;
-
-            //cxr_tracking_state.hmd.scaling = 100.0f;
-            //cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasScaling;
 
 #if USE_CLOUDXR_POSE_ID
             cxr_tracking_state.hmd.poseID = poseID_++;
