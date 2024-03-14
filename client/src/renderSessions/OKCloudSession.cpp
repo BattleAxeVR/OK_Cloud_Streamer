@@ -1266,7 +1266,9 @@ namespace igl::shell
             {
                 openxr::GLMPose& glm_controller_pose = glm_controller_poses[controller_id];
                 cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
+                cxr_controller = {};
                 cxr_controller.pose = convert_glm_to_cxr_pose(glm_controller_pose);
+                cxr_controller.clientTimeNS = glm_controller_pose.timestamp_;
             }
         }
 #endif
