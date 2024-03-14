@@ -161,18 +161,34 @@ namespace igl::shell
         return cxr_pose;
     }
 
+    cxrVector3 convert_xr_to_cxr_vector3(const XrVector3f& input)
+    {
+        cxrVector3 output = {0};
+
+        output.v[0] = input.x;
+        output.v[1] = input.y;
+        output.v[2] = input.z;
+
+        return output;
+    }
+
+    cxrQuaternion convert_xr_to_cxr_quat(const XrQuaternionf& input)
+    {
+        cxrQuaternion output = {0};
+
+        output.w = input.w;
+        output.x = input.x;
+        output.y = input.y;
+        output.z = input.z;
+
+        return output;
+    }
+
     cxrTrackedDevicePose convert_xr_to_cxr_pose(const XrPosef& xr_pose)
     {
         cxrTrackedDevicePose cxr_pose = {};
-
-        cxr_pose.position.v[0] = xr_pose.position.x;
-        cxr_pose.position.v[1] = xr_pose.position.y;
-        cxr_pose.position.v[2] = xr_pose.position.z;
-
-        cxr_pose.rotation.w = xr_pose.orientation.w;
-        cxr_pose.rotation.x = xr_pose.orientation.x;
-        cxr_pose.rotation.y = xr_pose.orientation.y;
-        cxr_pose.rotation.z = xr_pose.orientation.z;
+        cxr_pose.position = convert_xr_to_cxr_vector3(xr_pose.position);
+        cxr_pose.rotation = convert_xr_to_cxr_quat(xr_pose.orientation);
 
         cxr_pose.deviceIsConnected = true;
         cxr_pose.poseIsValid = true;
@@ -181,7 +197,7 @@ namespace igl::shell
         return cxr_pose;
     }
 
-        struct VertexPosUvw
+    struct VertexPosUvw
     {
         glm::vec3 position;
         glm::vec3 uvw;
@@ -1050,8 +1066,10 @@ namespace igl::shell
             {
                 cxr_tracking_state.hmd.clientTimeNS = predicted_display_time;
 
-                XrSpaceLocation hmd_location = { .type = XR_TYPE_SPACE_LOCATION, };
-                xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, predicted_display_time, &hmd_location);
+                //XrSpaceVelocity hmd_velocity = {XR_TYPE_SPACE_VELOCITY};
+                //XrSpaceLocation hmd_location = {XR_TYPE_SPACE_LOCATION, &hmd_velocity};
+
+                XrSpaceLocation hmd_location = {XR_TYPE_SPACE_LOCATION};
 
                 XrResult hmd_result = xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, predicted_display_time, &hmd_location);
 
@@ -1061,6 +1079,12 @@ namespace igl::shell
                 if ((hmd_result == XR_SUCCESS) && location_ok)
                 {
                     glm_hmd_pose = openxr::convert_to_glm_pose(hmd_location.pose);
+
+                    //cxrTrackedDevicePose& cxr_hmd_pose = cxr_tracking_state.hmd.pose;
+                    //cxr_hmd_pose = convert_glm_to_cxr_pose(glm_hmd_pose);
+                    //cxr_hmd_pose.velocity = convert_xr_to_cxr_vector3(hmd_velocity.linearVelocity);
+                    //cxr_hmd_pose.angularVelocity = convert_xr_to_cxr_vector3(hmd_velocity.angularVelocity);
+
                     glm_hmd_pose.timestamp_ = predicted_display_time;
                 }
                 else
