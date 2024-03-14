@@ -33,9 +33,9 @@
 
 #define ENABLE_HAPTICS 1
 
-#define LEFT 0
-#define RIGHT 1
-#define NUM_SIDES 2
+//#define LEFT 0
+//#define RIGHT 1
+//#define NUM_SIDES 2
 
 #define AUTO_CONNECT_TO_CLOUDXR 1
 #define USE_CLOUDXR_POSE_ID 1
