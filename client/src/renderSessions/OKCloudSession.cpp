@@ -506,6 +506,10 @@ namespace igl::shell
 #if RENDER_CLOUDXR_LATCHED_FRAMES
         if (is_connected())
         {
+#if CLOUDXR_TRACK_CONTROLLERS
+            add_controllers();
+#endif
+
             release_frame();
             latch_frame();
         }
@@ -800,10 +804,12 @@ namespace igl::shell
 
     bool OKCloudSession::create_receiver()
     {
-        if (cxr_receiver_)
+        if (cxr_receiver_  || !shellParams().xr_app_ptr_)
         {
             return false;
         }
+
+        const openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
 
@@ -941,18 +947,15 @@ namespace igl::shell
 
         {
             //FOV
-            const Fov& fov_left_eye = shellParams().viewParams[LEFT].fov;
-            const Fov& fov_right_eye = shellParams().viewParams[RIGHT].fov;
+            for (int view_id = LEFT; view_id < NUM_SIDES; view_id++)
+            {
+                const XrFovf& fov = xr_app.views_[view_id].fov;
 
-            device_desc.proj[LEFT][0] = tanf(fov_left_eye.angleLeft);
-            device_desc.proj[LEFT][1] = tanf(fov_left_eye.angleRight);
-            device_desc.proj[LEFT][2] = tanf(fov_left_eye.angleDown);
-            device_desc.proj[LEFT][3] = tanf(fov_left_eye.angleUp);
-
-            device_desc.proj[RIGHT][0] = tanf(fov_right_eye.angleLeft);
-            device_desc.proj[RIGHT][1] = tanf(fov_right_eye.angleRight);
-            device_desc.proj[RIGHT][2] = tanf(fov_right_eye.angleDown);
-            device_desc.proj[RIGHT][3] = tanf(fov_right_eye.angleUp);
+                device_desc.proj[view_id][0] = tanf(fov.angleLeft);
+                device_desc.proj[view_id][1] = tanf(fov.angleRight);
+                device_desc.proj[view_id][2] = tanf(fov.angleDown);
+                device_desc.proj[view_id][3] = tanf(fov.angleUp);
+            }
         }
 
         cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
@@ -979,6 +982,10 @@ namespace igl::shell
        shutdown_audio();
 #endif
 
+#if CLOUDXR_TRACK_CONTROLLERS
+        remove_controllers();
+#endif
+
         cxrDestroyReceiver(cxr_receiver_);
         cxr_receiver_ = nullptr;
 
@@ -988,6 +995,86 @@ namespace igl::shell
 
         update_cxr_state(cxrClientState_Disconnected, cxrError_Success);
     }
+
+#if CLOUDXR_TRACK_CONTROLLERS
+    bool OKCloudSession::add_controllers()
+    {
+        if (!is_connected())
+        {
+            return false;
+        }
+
+        if (controllers_initialized_)
+        {
+            return true;
+        }
+
+        for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+        {
+            //assert(cxr_controller_handles_[controller_id] == nullptr);
+
+            //if (cxr_controller_handles_[controller_id] == nullptr)
+            {
+                cxrControllerDesc cxr_controller_desc = {};
+                cxr_controller_desc.id = controller_id;
+                cxr_controller_desc.role = controller_id ? "cxr://input/hand/right"
+                                                         : "cxr://input/hand/left";
+
+                cxr_controller_desc.controllerName = "Oculus Touch";
+                cxr_controller_desc.inputCount = sizeof(cxr_input_paths) / sizeof(const char *);
+                cxr_controller_desc.inputPaths = cxr_input_paths;
+                cxr_controller_desc.inputValueTypes = cxr_input_value_types;
+
+                cxrError add_controller_error = cxrAddController(cxr_receiver_,
+                                                                 &cxr_controller_desc,
+                                                                 &cxr_controller_handles_[controller_id]);
+
+                if (add_controller_error)
+                {
+                    IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n",
+                           cxrErrorString(add_controller_error));
+
+                    return false;
+                }
+            }
+        }
+
+        controllers_initialized_ = true;
+        return true;
+    }
+
+    void OKCloudSession::remove_controllers()
+    {
+        if (!controllers_initialized_)
+        {
+            return;
+        }
+
+        for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+        {
+            //assert(cxr_controller_handles_[controller_id] != nullptr);
+
+            if (cxr_controller_handles_[controller_id] != nullptr)
+            {
+                if (is_connected())
+                {
+                    cxrError remove_controller_error = cxrRemoveController(cxr_receiver_,
+                                                                           cxr_controller_handles_[controller_id]);
+
+                    if (remove_controller_error)
+                    {
+                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrRemoveController error = %s\n",
+                               cxrErrorString(remove_controller_error));
+                    }
+                }
+
+                cxr_controller_handles_[controller_id] = nullptr;
+            }
+        }
+
+        controllers_initialized_ = false;
+    }
+#endif
 
     bool OKCloudSession::latch_frame()
     {
