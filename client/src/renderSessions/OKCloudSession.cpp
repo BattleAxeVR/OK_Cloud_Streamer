@@ -26,7 +26,7 @@
 #include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
 #include <../../../external/igl/shell/openxr/src/XrApp.h>
-#include <../../../external/igl/shell/openxr/src/GLMPose.cpp>
+#include "GLMPose.cpp"
 
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
