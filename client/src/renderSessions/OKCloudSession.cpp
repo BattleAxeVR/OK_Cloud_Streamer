@@ -1009,7 +1009,7 @@ namespace igl::shell
             return true;
         }
 
-        for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
             //assert(cxr_controller_handles_[controller_id] == nullptr);
 
@@ -1050,7 +1050,7 @@ namespace igl::shell
             return;
         }
 
-        for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
             //assert(cxr_controller_handles_[controller_id] != nullptr);
 
@@ -1184,7 +1184,7 @@ namespace igl::shell
 #endif
 
 #if CLOUDXR_TRACK_CONTROLLERS
-            for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+            for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
             {
                 XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
                 XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
@@ -1250,32 +1250,10 @@ namespace igl::shell
 #endif
 
 #if CLOUDXR_TRACK_CONTROLLERS
+        if (controllers_initialized_)
         {
-            // Controllers
-            for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+            for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
             {
-                if (cxr_controller_handles_[controller_id] == nullptr)
-                {
-                    cxrControllerDesc cxr_controller_desc = {};
-                    cxr_controller_desc.id = controller_id;
-                    cxr_controller_desc.role = controller_id ? "cxr://input/hand/right"
-                                                             : "cxr://input/hand/left";
-
-                    cxr_controller_desc.controllerName = "Oculus Touch";
-                    cxr_controller_desc.inputCount = sizeof(cxr_input_paths) / sizeof(const char *);
-                    cxr_controller_desc.inputPaths = cxr_input_paths;
-                    cxr_controller_desc.inputValueTypes = cxr_input_value_types;
-
-                    cxrError error = cxrAddController(cxr_receiver_, &cxr_controller_desc,
-                                                      &cxr_controller_handles_[controller_id]);
-
-                    if (error)
-                    {
-                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n",
-                               cxrErrorString(error));
-                    }
-                }
-
                 openxr::GLMPose& glm_controller_pose = glm_controller_poses[controller_id];
                 cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
                 cxr_controller.pose = convert_glm_to_cxr_pose(glm_controller_pose);
