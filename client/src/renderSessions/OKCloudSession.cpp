@@ -489,16 +489,8 @@ namespace igl::shell
         vertexParameters_.scaleZ = scaleZ;
     }
 
-    void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
+    void OKCloudSession::pre_update() noexcept
     {
-
-        auto& device = getPlatform().getDevice();
-
-        if (!isDeviceCompatible(device))
-        {
-            return;
-        }
-
 #if AUTO_CONNECT_TO_CLOUDXR
         if (!is_cxr_initialized_ && is_ready_to_connect())
         {
@@ -510,6 +502,24 @@ namespace igl::shell
             }
         }
 #endif
+
+#if RENDER_CLOUDXR_LATCHED_FRAMES
+        if (is_connected())
+        {
+            release_frame();
+            latch_frame();
+        }
+#endif
+    }
+
+    void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
+    {
+        auto& device = getPlatform().getDevice();
+
+        if (!isDeviceCompatible(device))
+        {
+            return;
+        }
 
         igl::Result ret;
 
@@ -532,51 +542,37 @@ namespace igl::shell
         }
 
 #if RENDER_CLOUDXR_LATCHED_FRAMES
-        if (is_connected())
+        if (is_connected() && is_latched_ && (latched_frames_.count == 2))
         {
             int view_id = shellParams().current_view_id_;
 
-            if (view_id == LEFT)
+            auto command_buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
+
+            const std::shared_ptr<igl::IRenderCommandEncoder> commands =
+                    command_buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
+
+            //uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+            uint32_t frame_mask = 1 << view_id;
+
+            cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
+
+            if (blit_error)
             {
-                latch_frame();
+                IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
+            }
+            else
+            {
+                if (shellParams().xr_app_ptr_)
+                {
+                    shellParams().xr_app_ptr_->cloudxr_connected_ = true;
+                    shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
+                }
             }
 
-            if (is_latched_ && (latched_frames_.count == 2))
-            {
-                auto command_buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
-                const std::shared_ptr<igl::IRenderCommandEncoder> commands =
-                        command_buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
-
-                //uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-                uint32_t frame_mask =
-                        1 << view_id;// (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-                cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
-
-                if (blit_error)
-                {
-                    IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n",
-                           cxrErrorString(blit_error));
-                }
-                else
-                {
-                    if (shellParams().xr_app_ptr_)
-                    {
-                        shellParams().xr_app_ptr_->cloudxr_connected_ = true;
-                        shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
-                    }
-                }
-
-                commands->endEncoding();
-                command_buffer->present(framebuffer_->getColorAttachment(0));
-                commandQueue_->submit(*command_buffer);
-
-                if (view_id == RIGHT)
-                {
-                    release_frame();
-                }
-
-                return;
-            }
+            commands->endEncoding();
+            command_buffer->present(framebuffer_->getColorAttachment(0));
+            commandQueue_->submit(*command_buffer);
+            return;
         }
 #endif
 
@@ -645,18 +641,18 @@ namespace igl::shell
         info.index = 1;
         info.length = sizeof(VertexFormat);
         info.uniforms = std::vector<igl::UniformDesc>
-                {
-                igl::UniformDesc
-                {
-                        "modelMatrix", -1, igl::UniformType::Mat4x4, 1, offsetof(VertexFormat, modelMatrix), 0},
-                igl::UniformDesc{"viewProjectionMatrix",
-                                 -1,
-                                 igl::UniformType::Mat4x4,
-                                 2,
-                                 offsetof(VertexFormat, viewProjectionMatrix),
-                                 sizeof(glm::mat4)},
-                igl::UniformDesc{
-                        "scaleZ", -1, igl::UniformType::Float, 1, offsetof(VertexFormat, scaleZ), 0}};
+        {
+        igl::UniformDesc
+        {
+                "modelMatrix", -1, igl::UniformType::Mat4x4, 1, offsetof(VertexFormat, modelMatrix), 0},
+        igl::UniformDesc{"viewProjectionMatrix",
+                         -1,
+                         igl::UniformType::Mat4x4,
+                         2,
+                         offsetof(VertexFormat, viewProjectionMatrix),
+                         sizeof(glm::mat4)},
+        igl::UniformDesc{
+                "scaleZ", -1, igl::UniformType::Float, 1, offsetof(VertexFormat, scaleZ), 0}};
 #endif
 
         const auto vertUniformBuffer = std::make_shared<iglu::ManagedUniformBuffer>(device, info);
@@ -678,8 +674,11 @@ namespace igl::shell
         buffer->present(framebuffer_->getColorAttachment(0));
 
         commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
+    }
 
-        }
+    void OKCloudSession::post_update() noexcept
+    {
+    }
 
     bool OKCloudSession::init_cxr()
     {
