@@ -491,6 +491,7 @@ namespace igl::shell
 
     void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
     {
+
         auto& device = getPlatform().getDevice();
 
         if (!isDeviceCompatible(device))
@@ -498,8 +499,17 @@ namespace igl::shell
             return;
         }
 
-        // cube animation
-        setVertexParams();
+#if AUTO_CONNECT_TO_CLOUDXR
+        if (!is_cxr_initialized_ && is_ready_to_connect())
+        {
+            const bool init_cxr_ok = init_cxr();
+
+            if (init_cxr_ok)
+            {
+                connect();
+            }
+        }
+#endif
 
         igl::Result ret;
 
@@ -521,6 +531,58 @@ namespace igl::shell
             framebuffer_->updateDrawable(surfaceTextures.color);
         }
 
+#if RENDER_CLOUDXR_LATCHED_FRAMES
+        if (is_connected())
+        {
+            int view_id = shellParams().current_view_id_;
+
+            if (view_id == LEFT)
+            {
+                latch_frame();
+            }
+
+            if (is_latched_ && (latched_frames_.count == 2))
+            {
+                auto command_buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
+                const std::shared_ptr<igl::IRenderCommandEncoder> commands =
+                        command_buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
+
+                //uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+                uint32_t frame_mask =
+                        1 << view_id;// (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+                cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
+
+                if (blit_error)
+                {
+                    IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n",
+                           cxrErrorString(blit_error));
+                }
+                else
+                {
+                    if (shellParams().xr_app_ptr_)
+                    {
+                        shellParams().xr_app_ptr_->cloudxr_connected_ = true;
+                        shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
+                    }
+                }
+
+                commands->endEncoding();
+                command_buffer->present(framebuffer_->getColorAttachment(0));
+                commandQueue_->submit(*command_buffer);
+
+                if (view_id == RIGHT)
+                {
+                    release_frame();
+                }
+
+                return;
+            }
+        }
+#endif
+
+        // cube animation
+        setVertexParams();
+
         constexpr uint32_t textureUnit = 0;
 
         if (pipelineState_ == nullptr)
@@ -541,47 +603,9 @@ namespace igl::shell
             pipelineState_ = getPlatform().getDevice().createRenderPipeline(graphicsDesc, nullptr);
         }
 
-#if AUTO_CONNECT_TO_CLOUDXR
-        if (!is_cxr_initialized_ && is_ready_to_connect())
-        {
-            const bool init_cxr_ok = init_cxr();
-
-            if (init_cxr_ok)
-            {
-                connect();
-            }
-        }
-#endif
-
-#if RENDER_CLOUDXR_LATCHED_FRAMES
-        int view_id = shellParams().current_view_id_;
-        bool latched_now = is_connected() && (view_id == LEFT) ? latch_frame() : is_latched_;
-
-        if (latched_now)
-        {
-#if defined(ANDROID)
-            uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-            cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
-
-            if (blit_error)
-            {
-                IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
-            }
-            else
-            {
-
-                if (shellParams().xr_app_ptr_)
-                {
-                    //shellParams().xr_app_ptr_->cloudxr_connected_ = true;
-                    //shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
-                }
-            }
-#endif
-        }
-
-#endif
         // Command buffers (1-N per thread): create, submit and forget
         auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
+
         const std::shared_ptr<igl::IRenderCommandEncoder> commands =
                 buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
 
@@ -651,31 +675,10 @@ namespace igl::shell
 
         commands->endEncoding();
 
-#if RENDER_CLOUDXR_LATCHED_FRAMES
-        if (is_connected() && is_latched_)
-        {
-#if defined(ANDROID)
-            uint32_t frame_mask = 1 << view_id;// (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-            cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
-
-            if (blit_error)
-            {
-                IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
-            }
-#endif
-        }
-#endif
-
         buffer->present(framebuffer_->getColorAttachment(0));
 
         commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
 
-#if RENDER_CLOUDXR_LATCHED_FRAMES
-        if (is_connected() && (view_id == RIGHT))
-        {
-            release_frame();
-        }
-#endif
         }
 
     bool OKCloudSession::init_cxr()
