@@ -856,8 +856,8 @@ namespace igl::shell
         cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
         device_desc.maxResFactor = DEFAULT_CLOUDXR_MAX_RES_FACTOR;
 
-        float ipd_m = DEFAULT_CLOUDXR_IPD_M;
-        device_desc.ipd = ipd_m;
+        compute_ipd();
+        device_desc.ipd = ipd_meters_;
         device_desc.foveationModeCaps = cxrFoveation_PiecewiseQuadratic;
 
         const uint32_t number_of_streams = 2;
@@ -996,6 +996,28 @@ namespace igl::shell
         update_cxr_state(cxrClientState_Disconnected, cxrError_Success);
     }
 
+    void OKCloudSession::compute_ipd()
+    {
+        if (!shellParams().xr_app_ptr_)
+        {
+            return;
+        }
+
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+
+        const XrPosef& left_eye_pose = xr_app.views_[LEFT].pose;
+        const XrPosef& right_eye_pose = xr_app.views_[RIGHT].pose;
+
+        const XrVector3f delta = {(right_eye_pose.position.x - left_eye_pose.position.x),
+                                          (right_eye_pose.position.y - left_eye_pose.position.y),
+                                          (right_eye_pose.position.z - left_eye_pose.position.z)};
+
+        float ipd = sqrtf((delta.x * delta.x) + (delta.y * delta.y) + (delta.z * delta.z));
+        ipd_meters_ = roundf(ipd * 10000.0f) / 10000.0f;
+
+        //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::compute_ipd IPP =  %.7f meters (%.03f mm)\n", ipd_meters_, ipd_meters_ * MILLIMETERS_PER_METER);
+    }
+
 #if ENABLE_CLOUDXR_CONTROLLERS
     bool OKCloudSession::add_controllers()
     {
@@ -1129,18 +1151,15 @@ namespace igl::shell
             return;
         }
 
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
         memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
 
         cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
-
         cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
 
         // CloudXR polls the XR poses asynchronously from another thread at a higher polling rate (up to 1 Khz) than the main render loop, so we need a mutex and its own local timestamp, not predicted frame time
-        //const uint64_t now_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
-        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
-
         const float time_offset_NS = (0.004f * 1e9);
         const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
 
@@ -1221,10 +1240,12 @@ namespace igl::shell
 
 #if ENABLE_CLOUDXR_HMD
         {
+            compute_ipd();
+
             // HMD Pose
             cxr_tracking_state.hmd.flags = 0;
             cxr_tracking_state.hmd.flags |= cxrHmdTrackingFlags_HasIPD;
-            cxr_tracking_state.hmd.ipd = DEFAULT_CLOUDXR_IPD_M;
+            cxr_tracking_state.hmd.ipd = ipd_meters_;
 
 #if USE_CLOUDXR_POSE_ID
             cxr_tracking_state.hmd.poseID = poseID_++;

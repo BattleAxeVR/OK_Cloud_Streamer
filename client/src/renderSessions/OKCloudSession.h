@@ -128,6 +128,8 @@ namespace igl::shell
         bool create_receiver();
         void destroy_receiver();
 
+        void compute_ipd();
+
 #if ENABLE_CLOUDXR_FRAME_LATCH
         bool latch_frame();
         void release_frame();
@@ -151,6 +153,8 @@ namespace igl::shell
         cxrClientState cxr_client_state_ = cxrClientState_ReadyToConnect;
         cxrFramesLatched latched_frames_ = {};
         bool is_latched_ = false;
+
+        float ipd_meters_ = DEFAULT_CLOUDXR_IPD_M;
 
 #if USE_CLOUDXR_POSE_ID
         uint64_t poseID_ = 0;
