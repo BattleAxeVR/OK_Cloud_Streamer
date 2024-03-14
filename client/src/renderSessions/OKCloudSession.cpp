@@ -25,6 +25,7 @@
 
 #include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
+#include <../../../external/igl/shell/openxr/src/XrApp.h>
 
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
@@ -96,11 +97,9 @@ namespace igl::shell
         cxr_pose.deviceIsConnected = true;
         cxr_pose.poseIsValid = glm_pose.is_valid_;
         cxr_pose.trackingResult = cxrTrackingResult_Running_OK;
-
-        return cxr_pose;
     }
 
-    struct VertexPosUvw
+        struct VertexPosUvw
     {
         glm::vec3 position;
         glm::vec3 uvw;
@@ -469,6 +468,15 @@ namespace igl::shell
             if (blit_error)
             {
                 IGLLog(IGLLogLevel::LOG_ERROR, "cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
+            }
+            else
+            {
+
+                if (shellParams().xr_app_ptr_)
+                {
+                    shellParams().xr_app_ptr_->cloudxr_connected_ = true;
+                    shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
+                }
             }
 #endif
         }
@@ -927,7 +935,7 @@ namespace igl::shell
 
     void OKCloudSession::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_ptr)
     {
-        if (!is_cxr_initialized_ || !is_connected() || !cxr_tracking_state_ptr)
+        if (!is_cxr_initialized_ || !is_connected() || !cxr_tracking_state_ptr || !shellParams().xr_app_ptr_)
         {
             return;
         }
@@ -939,10 +947,61 @@ namespace igl::shell
 
         cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
 
+        // CloudXR polls the XR poses asynchronously from another thread at a higher polling rate (up to 1 Khz) than the main render loop, so we need a mutex and its own local timestamp, not predicted frame time
+        const uint64_t now_time_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+        openxr::GLMPose glm_hmd_pose;
+        openxr::GLMPose glm_controller_poses[NUM_SIDES];
+
+        {
+            openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+            openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
+
+            // Hold the mutex for as little time as possible
+            std::lock_guard<std::mutex> lock(xr_inputs.polling_mutex_);
+
+#if CLOUDXR_TRACK_HMD
+            {
+                cxr_tracking_state.hmd.clientTimeNS = now_time_ns;
+
+                XrSpaceLocation hmd_location = { XR_TYPE_SPACE_LOCATION };
+                XrResult hmd_result = xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, now_time_ns, &hmd_location);
+
+                if (hmd_result == XR_SUCCESS)
+                {
+                    glm_hmd_pose = openxr::convert_to_glm_pose(hmd_location.pose);
+                    glm_hmd_pose.timestamp_ = now_time_ns;
+                }
+                else
+                {
+                    glm_hmd_pose.is_valid_ = false;
+                }
+            }
+#endif
+
+#if CLOUDXR_TRACK_CONTROLLERS
+            for (int controller_id = LEFT; controller_id < NUM_SIDES; controller_id++)
+            {
+                openxr::GLMPose& glm_controller_pose = glm_controller_poses[controller_id];
+
+                XrSpaceLocation controller_location = { XR_TYPE_SPACE_LOCATION };
+                XrResult controller_result = xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_app.currentSpace_, now_time_ns, &controller_location);
+
+                if (controller_result == XR_SUCCESS)
+                {
+                    glm_controller_pose = openxr::convert_to_glm_pose(controller_location.pose);
+                    glm_controller_pose.timestamp_ = now_time_ns;
+                }
+                else
+                {
+                    glm_controller_pose.is_valid_ = false;
+                }
+            }
+#endif
+        }
+
 #if CLOUDXR_TRACK_HMD
         {
-            cxr_tracking_state.hmd.clientTimeNS = shellParams().head_pose_.timestamp_;
-
             //flags |= cxrHmdTrackingFlags_HasProjection;
             //cxr_tracking_state.hmd.proj[LEFT][4];      ///< If cxrHmdTrackingFlags_HasProjection is set, allows you to update the projection parameters specified in the device description at a per-pose granularity.
             //cxr_tracking_state.hmd.proj[RIGHT][4];
@@ -969,7 +1028,7 @@ namespace igl::shell
 #endif
 
             cxrTrackedDevicePose& hmd_pose = cxr_tracking_state.hmd.pose;
-            hmd_pose = convert_glm_to_cxr_pose(shellParams().head_pose_);
+            hmd_pose = convert_glm_to_cxr_pose(glm_hmd_pose);
         }
 #endif
 
@@ -982,25 +1041,27 @@ namespace igl::shell
                 {
                     cxrControllerDesc cxr_controller_desc = {};
                     cxr_controller_desc.id = controller_id;
-                    cxr_controller_desc.role = controller_id ? "cxr://input/hand/right" : "cxr://input/hand/left";
+                    cxr_controller_desc.role = controller_id ? "cxr://input/hand/right"
+                                                             : "cxr://input/hand/left";
+
                     cxr_controller_desc.controllerName = "Oculus Touch";
                     cxr_controller_desc.inputCount = sizeof(cxr_input_paths) / sizeof(const char *);
                     cxr_controller_desc.inputPaths = cxr_input_paths;
                     cxr_controller_desc.inputValueTypes = cxr_input_value_types;
 
-                    cxrError error = cxrAddController(cxr_receiver_, &cxr_controller_desc,&cxr_controller_handles_[controller_id]);
+                    cxrError error = cxrAddController(cxr_receiver_, &cxr_controller_desc,
+                                                      &cxr_controller_handles_[controller_id]);
 
                     if (error)
                     {
-                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n", cxrErrorString(error));
+                        IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n",
+                               cxrErrorString(error));
                     }
-
-                    cxrControllerTrackingState &cxr_controller = cxr_tracking_state.controller[controller_id];
-                    cxr_controller = {};
-
-                    cxrTrackedDevicePose &cxr_controller_pose = cxr_controller.pose;
-                    cxr_controller_pose = convert_glm_to_cxr_pose({shellParams().controller_poses_[controller_id]});
                 }
+
+                openxr::GLMPose& glm_controller_pose = glm_controller_poses[controller_id];
+                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
+                cxr_controller.pose = convert_glm_to_cxr_pose(glm_controller_pose);
             }
         }
 #endif

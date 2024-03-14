@@ -137,7 +137,7 @@ namespace igl::shell
 #endif
 
 #if CLOUDXR_TRACK_CONTROLLERS
-        cxrControllerHandle cxr_controller_handles_[NUM_SIDES] = {};
+        cxrControllerHandle cxr_controller_handles_[2] = {};
 #endif
 
         CloudXR::ClientOptions cxr_options_ = {};
