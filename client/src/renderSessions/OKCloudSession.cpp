@@ -491,29 +491,29 @@ namespace igl::shell
 
     void OKCloudSession::pre_update() noexcept
     {
-#if AUTO_CONNECT_TO_CLOUDXR
         if (!is_cxr_initialized_ && is_ready_to_connect())
         {
             const bool init_cxr_ok = init_cxr();
 
             if (init_cxr_ok)
             {
+#if AUTO_CONNECT_TO_CLOUDXR
                 connect();
+#endif
             }
         }
-#endif
 
-#if RENDER_CLOUDXR_LATCHED_FRAMES
         if (is_connected())
         {
-#if CLOUDXR_TRACK_CONTROLLERS
+#if ENABLE_CLOUDXR_CONTROLLERS
             add_controllers();
 #endif
 
+#if ENABLE_CLOUDXR_FRAME_LATCH
             release_frame();
             latch_frame();
-        }
 #endif
+        }
     }
 
     void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
@@ -545,7 +545,7 @@ namespace igl::shell
             framebuffer_->updateDrawable(surfaceTextures.color);
         }
 
-#if RENDER_CLOUDXR_LATCHED_FRAMES
+#if ENABLE_CLOUDXR_FRAME_BLIT
         if (is_connected() && is_latched_ && (latched_frames_.count == 2))
         {
             int view_id = shellParams().current_view_id_;
@@ -982,7 +982,7 @@ namespace igl::shell
        shutdown_audio();
 #endif
 
-#if CLOUDXR_TRACK_CONTROLLERS
+#if ENABLE_CLOUDXR_CONTROLLERS
         remove_controllers();
 #endif
 
@@ -996,7 +996,7 @@ namespace igl::shell
         update_cxr_state(cxrClientState_Disconnected, cxrError_Success);
     }
 
-#if CLOUDXR_TRACK_CONTROLLERS
+#if ENABLE_CLOUDXR_CONTROLLERS
     bool OKCloudSession::add_controllers()
     {
         if (!is_connected())
@@ -1076,6 +1076,7 @@ namespace igl::shell
     }
 #endif
 
+#if ENABLE_CLOUDXR_FRAME_LATCH
     bool OKCloudSession::latch_frame()
     {
         if (!is_cxr_initialized_ || !is_connected() || is_latched_)
@@ -1119,6 +1120,7 @@ namespace igl::shell
         cxrReleaseFrame(cxr_receiver_, &latched_frames_);
         is_latched_ = false;
     }
+#endif
 
     void OKCloudSession::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_ptr)
     {
@@ -1183,7 +1185,7 @@ namespace igl::shell
             }
 #endif
 
-#if CLOUDXR_TRACK_CONTROLLERS
+#if ENABLE_CLOUDXR_CONTROLLERS
             for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
             {
                 XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
@@ -1249,7 +1251,7 @@ namespace igl::shell
         }
 #endif
 
-#if CLOUDXR_TRACK_CONTROLLERS
+#if ENABLE_CLOUDXR_CONTROLLERS
         if (controllers_initialized_)
         {
             for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)

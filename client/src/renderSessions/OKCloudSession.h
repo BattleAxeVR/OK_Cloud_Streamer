@@ -89,9 +89,6 @@ namespace igl::shell
         }
 
 #if ENABLE_OBOE
-        bool init_audio();
-        void shutdown_audio();
-        cxrBool render_audio(const cxrAudioFrame* audio_frame);
         oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void* data, int32_t frame_count) override;
 #endif
 
@@ -115,6 +112,10 @@ namespace igl::shell
         bool is_cxr_initialized_ = false;
 
 #if ENABLE_OBOE
+        bool init_audio();
+        void shutdown_audio();
+        cxrBool render_audio(const cxrAudioFrame* audio_frame);
+
         bool is_audio_initialized_ = false;
         bool enable_audio_playback_ = true;
         bool enable_audio_recording_ = false;
@@ -125,26 +126,25 @@ namespace igl::shell
         std::string ip_address_ = DEFAULT_IP_ADDRESS;
 
         bool create_receiver();
-
         void destroy_receiver();
 
+#if ENABLE_CLOUDXR_FRAME_LATCH
         bool latch_frame();
-
         void release_frame();
+#endif
 
         void get_tracking_state(cxrVRTrackingState *cxr_tracking_state_ptr);
 
-#if ENABLE_HAPTICS
-        void trigger_haptics(const cxrHapticFeedback *haptics);
-#endif
-
-#if CLOUDXR_TRACK_CONTROLLERS
+#if ENABLE_CLOUDXR_CONTROLLERS
         bool controllers_initialized_ = false;
         cxrControllerHandle cxr_controller_handles_[CXR_NUM_CONTROLLERS] = {nullptr, nullptr};
         bool add_controllers();
         void remove_controllers();
 #endif
 
+#if ENABLE_HAPTICS
+        void trigger_haptics(const cxrHapticFeedback *haptics);
+#endif
         CloudXR::ClientOptions cxr_options_ = {};
         cxrGraphicsContext graphics_context_ = {};
         cxrReceiverHandle cxr_receiver_ = nullptr;
