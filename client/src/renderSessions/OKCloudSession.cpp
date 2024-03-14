@@ -26,6 +26,7 @@
 #include "OKCloudSession.h"
 #include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
 #include <../../../external/igl/shell/openxr/src/XrApp.h>
+
 #include "GLMPose.cpp"
 
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
@@ -98,6 +99,28 @@ namespace igl::shell
         cxr_pose.deviceIsConnected = true;
         cxr_pose.poseIsValid = glm_pose.is_valid_;
         cxr_pose.trackingResult = cxrTrackingResult_Running_OK;
+
+        return cxr_pose;
+    }
+
+    cxrTrackedDevicePose convert_xr_to_cxr_pose(const XrPosef& xr_pose)
+    {
+        cxrTrackedDevicePose cxr_pose = {};
+
+        cxr_pose.position.v[0] = xr_pose.position.x;
+        cxr_pose.position.v[1] = xr_pose.position.y;
+        cxr_pose.position.v[2] = xr_pose.position.z;
+
+        cxr_pose.rotation.w = xr_pose.orientation.w;
+        cxr_pose.rotation.x = xr_pose.orientation.x;
+        cxr_pose.rotation.y = xr_pose.orientation.y;
+        cxr_pose.rotation.z = xr_pose.orientation.z;
+
+        cxr_pose.deviceIsConnected = true;
+        cxr_pose.poseIsValid = true;
+        cxr_pose.trackingResult = cxrTrackingResult_Running_OK;
+
+        return cxr_pose;
     }
 
         struct VertexPosUvw
@@ -475,8 +498,8 @@ namespace igl::shell
 
                 if (shellParams().xr_app_ptr_)
                 {
-                    shellParams().xr_app_ptr_->cloudxr_connected_ = true;
-                    shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
+                    //shellParams().xr_app_ptr_->cloudxr_connected_ = true;
+                    //shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
                 }
             }
 #endif
