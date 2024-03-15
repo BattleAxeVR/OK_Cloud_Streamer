@@ -995,9 +995,10 @@ namespace igl::shell
         uint32_t per_eye_width = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
         uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
 
-        float fps = xr_app.getCurrentRefreshRate();
+        float fps = DEFAULT_CLOUDXR_FRAMERATE;
+        float current_refresh_rate = xr_app.getCurrentRefreshRate();
 
-        if (fps < 90.0f)
+        if (current_refresh_rate > 0.0f)
         {
             xr_app.querySupportedRefreshRates();
             xr_app.setMaxRefreshRate();
@@ -1018,7 +1019,7 @@ namespace igl::shell
         device_desc.foveatedScaleFactor = foveation;
         device_desc.stereoDisplay = true;
         device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET;
-        device_desc.posePollFreq = DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY;
+        device_desc.posePollFreq = (uint32_t)roundf(DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT * fps);
 
 #if ENABLE_OBOE
         device_desc.receiveAudio = enable_audio_playback_;
