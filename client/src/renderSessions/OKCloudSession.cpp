@@ -1686,7 +1686,7 @@ namespace igl::shell
 
     cxrBool OKCloudSession::render_audio(const cxrAudioFrame* audio_frame)
     {
-        if (!audio_frame|| is_audio_initialized_ || !enable_audio_playback_ || !audio_playback_stream_)
+        if (!audio_frame || !is_audio_initialized_ || !enable_audio_playback_ || !audio_playback_stream_)
         {
             return cxrFalse;
         }
