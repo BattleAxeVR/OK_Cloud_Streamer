@@ -57,4 +57,7 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #endif
 
+#define ENABLE_CLOUDXR_AUDIO_PLAYBACK (ENABLE_OBOE && 1)
+#define ENABLE_CLOUDXR_AUDIO_RECORDING (ENABLE_OBOE && 0)
+
 #endif // DEFINES_H

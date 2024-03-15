@@ -167,8 +167,8 @@ namespace igl::shell
         cxrBool render_audio(const cxrAudioFrame* audio_frame);
 
         bool is_audio_initialized_ = false;
-        bool enable_audio_playback_ = true;
-        bool enable_audio_recording_ = false;
+        bool enable_audio_playback_ = ENABLE_CLOUDXR_AUDIO_PLAYBACK;
+        bool enable_audio_recording_ = ENABLE_CLOUDXR_AUDIO_RECORDING;
         std::shared_ptr<oboe::AudioStream> audio_playback_stream_;
         std::shared_ptr<oboe::AudioStream> audio_record_stream_;
 #endif
