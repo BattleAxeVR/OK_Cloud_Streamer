@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include <../../../external/igl/IGLU/managedUniformBuffer/ManagedUniformBuffer.h>
+#include "../../android/app-ok-cloud-streamer-gles/igl/IGLU/managedUniformBuffer/ManagedUniformBuffer.h"
 
 #include <algorithm>
 #include <cmath>
@@ -16,8 +16,7 @@
 #include <igl/opengl/GLIncludes.h>
 #include <igl/opengl/RenderCommandEncoder.h>
 #include "HelloOpenXRSession.h"
-#include <../../../external/igl/shell/shared/renderSession/ShellParams.h>
-
+#include "../../android/app-ok-cloud-streamer-gles/igl/shell/shared/renderSession/ShellParams.h"
 
 #ifndef ENABLE_CLOUDXR
 #define ENABLE_CLOUDXR 1
