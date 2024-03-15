@@ -828,7 +828,7 @@ namespace igl::shell
             return false;
         }
 
-        const openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
 
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
 
@@ -887,7 +887,8 @@ namespace igl::shell
 
         uint32_t per_eye_width = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
         uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
-        float fps = DEFAULT_CLOUDXR_FRAMERATE;
+
+        float fps = xr_app.getCurrentRefreshRate();
 
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
         {
