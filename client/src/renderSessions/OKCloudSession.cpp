@@ -1005,6 +1005,8 @@ namespace igl::shell
             fps = xr_app.getCurrentRefreshRate();
         }
 
+        //xr_app.setSharpeningEnabled(true);
+
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
         {
             device_desc.videoStreamDescs[stream_index].width = per_eye_width;
