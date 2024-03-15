@@ -1,3 +1,3 @@
-[submodule "external/igl"]
-	path = external/igl
+[submodule "client/android/app-ok-cloud-streamer-gles/igl"]
+	path = client/android/app-ok-cloud-streamer-gles/igl
 	url = https://github.com/battleAxeVR/igl
