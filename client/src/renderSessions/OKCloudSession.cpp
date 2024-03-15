@@ -184,11 +184,28 @@ namespace igl::shell
         return output;
     }
 
-    cxrTrackedDevicePose convert_xr_to_cxr_pose(const XrPosef& xr_pose)
+    cxrTrackedDevicePose convert_xr_to_cxr_pose(XrSpaceLocation& location)
     {
+        const XrPosef& xr_pose = location.pose;
+
         cxrTrackedDevicePose cxr_pose = {};
         cxr_pose.position = convert_xr_to_cxr_vector3(xr_pose.position);
         cxr_pose.rotation = convert_xr_to_cxr_quat(xr_pose.orientation);
+
+        XrSpaceVelocity* velocity = (XrSpaceVelocity *)location.next;
+
+        if (velocity && velocity->type == XR_TYPE_SPACE_VELOCITY)
+        {
+            if (velocity->velocityFlags & XR_SPACE_VELOCITY_LINEAR_VALID_BIT)
+            {
+                cxr_pose.velocity = convert_xr_to_cxr_vector3(velocity->linearVelocity);
+            }
+
+            if (velocity->velocityFlags & XR_SPACE_VELOCITY_ANGULAR_VALID_BIT)
+            {
+                cxr_pose.angularVelocity = convert_xr_to_cxr_vector3(velocity->angularVelocity);
+            }
+        }
 
         cxr_pose.deviceIsConnected = true;
         cxr_pose.poseIsValid = true;
@@ -1163,84 +1180,13 @@ namespace igl::shell
         const float time_offset_NS = (0.004f * 1e9);
         const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
 
-        openxr::GLMPose glm_hmd_pose;
-        openxr::GLMPose glm_controller_poses[NUM_SIDES];
+        openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
 
-        {
-            openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
-
-            // Hold the mutex for as little time as possible
-            //std::lock_guard<std::mutex> lock(xr_inputs.polling_mutex_);
-
-#if ENABLE_CLOUDXR_HMD
-            {
-                cxr_tracking_state.hmd.clientTimeNS = predicted_display_time;
-
-                //XrSpaceVelocity hmd_velocity = {XR_TYPE_SPACE_VELOCITY};
-                //XrSpaceLocation hmd_location = {XR_TYPE_SPACE_LOCATION, &hmd_velocity};
-
-                XrSpaceLocation hmd_location = {XR_TYPE_SPACE_LOCATION};
-
-                XrResult hmd_result = xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, predicted_display_time, &hmd_location);
-
-                const bool location_ok = ((hmd_location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
-                                          (hmd_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0);
-
-                if ((hmd_result == XR_SUCCESS) && location_ok)
-                {
-                    glm_hmd_pose = openxr::convert_to_glm_pose(hmd_location.pose);
-
-                    //cxrTrackedDevicePose& cxr_hmd_pose = cxr_tracking_state.hmd.pose;
-                    //cxr_hmd_pose = convert_glm_to_cxr_pose(glm_hmd_pose);
-                    //cxr_hmd_pose.velocity = convert_xr_to_cxr_vector3(hmd_velocity.linearVelocity);
-                    //cxr_hmd_pose.angularVelocity = convert_xr_to_cxr_vector3(hmd_velocity.angularVelocity);
-
-                    glm_hmd_pose.timestamp_ = predicted_display_time;
-                }
-                else
-                {
-                    glm_hmd_pose.is_valid_ = false;
-                }
-            }
-#endif
-
-#if ENABLE_CLOUDXR_CONTROLLERS
-            for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
-            {
-                XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
-                XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
-
-                action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
-                action_info.action = xr_inputs.aimPoseAction;
-
-                XrResult result = xrGetActionStatePose(xr_app.session_, &action_info, &pose_state);
-
-                openxr::GLMPose& glm_controller_pose = glm_controller_poses[controller_id];
-                //glm_controller_pose.is_valid_ = false;
-
-                //if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
-                {
-                    XrSpaceVelocity controller_velocity = {XR_TYPE_SPACE_VELOCITY};
-                    XrSpaceLocation controller_location = {XR_TYPE_SPACE_LOCATION, &controller_velocity};
-
-                    XrResult controller_result =
-                            xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_app.currentSpace_, predicted_display_time, &controller_location);
-
-                    if (controller_result == XR_SUCCESS)
-                    {
-                        glm_controller_pose = openxr::convert_to_glm_pose(controller_location.pose);
-                        glm_controller_pose.timestamp_ = predicted_display_time;
-
-                        // patch in velocity too
-                    }
-                }
-            }
-#endif
-        }
+        // Hold the mutex for as little time as possible
+        //std::lock_guard<std::mutex> lock(xr_inputs.polling_mutex_);
 
 #if ENABLE_CLOUDXR_HMD
         {
-            // HMD Pose
             cxr_tracking_state.hmd.flags = 0;
 
 #if RECOMPUTE_IPD_EVERY_FRAME
@@ -1255,7 +1201,18 @@ namespace igl::shell
 #endif
 
             cxrTrackedDevicePose& cxr_hmd_pose = cxr_tracking_state.hmd.pose;
-            cxr_hmd_pose = convert_glm_to_cxr_pose(glm_hmd_pose);
+            cxr_hmd_pose = {};
+
+            XrSpaceVelocity hmd_velocity = {XR_TYPE_SPACE_VELOCITY};
+            XrSpaceLocation hmd_location = {XR_TYPE_SPACE_LOCATION, &hmd_velocity};
+
+            XrResult hmd_result = xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, predicted_display_time, &hmd_location);
+
+            if (XR_UNQUALIFIED_SUCCESS(hmd_result))
+            {
+                cxr_hmd_pose = convert_xr_to_cxr_pose(hmd_location);
+                cxr_tracking_state.hmd.clientTimeNS = predicted_display_time;
+            }
         }
 #endif
 
@@ -1264,11 +1221,35 @@ namespace igl::shell
         {
             for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
             {
-                openxr::GLMPose& glm_controller_pose = glm_controller_poses[controller_id];
-                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
+#if 0
+                XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
+                XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
+
+                action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
+                action_info.action = xr_inputs.aimPoseAction;
+
+                XrResult result = xrGetActionStatePose(xr_app.session_, &action_info,
+                                                       &pose_state);
+#endif
+                cxrControllerTrackingState &cxr_controller = cxr_tracking_state.controller[controller_id];
                 cxr_controller = {};
-                cxr_controller.pose = convert_glm_to_cxr_pose(glm_controller_pose);
-                cxr_controller.clientTimeNS = glm_controller_pose.timestamp_;
+
+                //if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
+                {
+                    XrSpaceVelocity controller_velocity = {XR_TYPE_SPACE_VELOCITY};
+                    XrSpaceLocation controller_location = {XR_TYPE_SPACE_LOCATION,
+                                                           &controller_velocity};
+
+                    XrResult controller_result =
+                            xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_app.currentSpace_,
+                                          predicted_display_time, &controller_location);
+
+                    if (controller_result == XR_SUCCESS)
+                    {
+                        cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
+                        cxr_controller.clientTimeNS = predicted_display_time;
+                    }
+                }
             }
         }
 #endif
@@ -1290,7 +1271,6 @@ namespace igl::shell
         //apply_haptics(controller_id, haptics->amplitude, duration_ms, haptics->frequency);
     }
 #endif
-
 
 #if ENABLE_OBOE
     bool OKCloudSession::init_audio()
