@@ -1358,8 +1358,8 @@ namespace igl::shell
         static int frame_id = 0;
         frame_id++;
 
-        const bool is_down = ((frame_id % 2) == 1) ? true : false;
-        const bool was_changed = true;
+        const bool is_down = ((frame_id % 1000) == 0) ? true : false;
+        const bool was_changed = ((frame_id % 1000) == 0) || ((frame_id % 100) == 1);
 
         for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
