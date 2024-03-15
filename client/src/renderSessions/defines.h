@@ -50,4 +50,11 @@
 #define ENABLE_CLOUDXR_CONTROLLERS (ENABLE_CLOUDXR_HMD && 1)
 #define ENABLE_HAPTICS (ENABLE_CLOUDXR_CONTROLLERS && 1)
 
+#define INVALID_INDEX -1
+#define MAX_CLOUDXR_CONTROLLER_EVENTS 128
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#endif
+
 #endif // DEFINES_H

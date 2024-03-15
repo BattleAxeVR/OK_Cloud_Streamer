@@ -525,7 +525,7 @@ namespace igl::shell
 #if ENABLE_CLOUDXR_CONTROLLERS
             add_controllers();
             send_controller_poses();
-            send_controller_events();
+            fire_controller_events();
 #endif
 
 #if ENABLE_CLOUDXR_FRAME_LATCH
@@ -1062,7 +1062,7 @@ namespace igl::shell
                                                          : "cxr://input/hand/left";
 
                 cxr_controller_desc.controllerName = "Oculus Touch";
-                cxr_controller_desc.inputCount = sizeof(cxr_input_paths) / sizeof(const char *);
+                cxr_controller_desc.inputCount = ARRAY_SIZE(cxr_input_paths);
                 cxr_controller_desc.inputPaths = cxr_input_paths;
                 cxr_controller_desc.inputValueTypes = cxr_input_value_types;
 
@@ -1297,7 +1297,7 @@ namespace igl::shell
         }
     }
 
-    void OKCloudSession::send_controller_events()
+    void OKCloudSession::fire_controller_events()
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
         {
@@ -1305,8 +1305,114 @@ namespace igl::shell
         }
 
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::fire_controller_events\n");
 
-        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::send_controller_poses\n");
+        const float time_offset_NS = (0.004f * 1e9);
+        const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
+
+        static DigitalButtonToCloudXR_Map digital_button_maps[][NUM_SIDES] = {{{DigitalButton_ApplicationMenu, 0},
+                                                                                        { DigitalButton_System,
+                                                                                                INVALID_INDEX }},
+                                                                                {{DigitalButton_Trigger_Click, 2},
+                                                                                        { DigitalButton_Trigger_Click,
+                                                                                                2 }},
+                                                                                {{DigitalButton_Trigger_Touch, 3},
+                                                                                        { DigitalButton_Trigger_Touch,
+                                                                                                3 }},
+                                                                                {{DigitalButton_Grip_Click, 5},
+                                                                                        { DigitalButton_Grip_Click,
+                                                                                                5 }},
+                                                                                {{DigitalButton_Grip_Touch, 6},
+                                                                                        { DigitalButton_Grip_Touch,
+                                                                                                6 }},
+                                                                                {{DigitalButton_Joystick_Click, 8},
+                                                                                        { DigitalButton_Joystick_Click,
+                                                                                                8 }},
+                                                                                {{DigitalButton_Joystick_Touch, 9},
+                                                                                        { DigitalButton_Joystick_Touch,
+                                                                                                9 }},
+                                                                                {{DigitalButton_A_Click, 14},
+                                                                                        { DigitalButton_A_Click,
+                                                                                                12 }},
+                                                                                {{DigitalButton_A_Touch, 18},
+                                                                                        { DigitalButton_A_Touch,
+                                                                                                16 }},
+                                                                                {{DigitalButton_B_Click, 15},
+                                                                                        { DigitalButton_B_Click,
+                                                                                                13 }},
+                                                                                { {DigitalButton_B_Touch, 19},
+                                                                                        { DigitalButton_B_Touch,
+                                                                                                17 } }};
+
+        static AnalogAxisToCloudXRMap analog_axis_maps[] = {{AnalogAxis_Trigger, 4},
+                                                                  {AnalogAxis_Grip, 7},
+                                                                  {AnalogAxis_JoystickX, 10},
+                                                                  {AnalogAxis_JoystickY,
+                                                                          11 }};
+
+        cxrControllerEvent cxr_events[MAX_CLOUDXR_CONTROLLER_EVENTS] = {};
+        uint32_t cxr_event_count = 0;
+
+        const uint32_t num_digital_button_maps = ARRAY_SIZE(digital_button_maps);
+
+        static int frame_id = 0;
+        frame_id++;
+
+        const bool is_down = ((frame_id % 2) == 1) ? true : false;
+        const bool was_changed = true;
+
+        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
+        {
+            for (uint32_t map_id = 0; map_id < num_digital_button_maps; map_id++)
+            {
+                const DigitalButtonToCloudXR_Map& digital_button_map = digital_button_maps[map_id][controller_id];
+
+                if (digital_button_map.cloudxr_path_id_ == INVALID_INDEX)
+                {
+                    continue;
+                }
+
+                if (was_changed)
+                {
+                    cxrControllerEvent& event = cxr_events[cxr_event_count++];
+                    event.clientTimeNS = predicted_display_time;
+                    event.clientInputIndex = digital_button_map.cloudxr_path_id_;
+                    event.inputValue.valueType = cxrInputValueType_boolean;
+                    event.inputValue.vBool = is_down;
+                }
+            }
+
+            const uint32_t num_analog_axis_maps = ARRAY_SIZE(analog_axis_maps);
+
+            for (uint32_t map_id = 0; map_id < num_analog_axis_maps; map_id++)
+            {
+                const AnalogAxisToCloudXRMap& analog_axis_map = analog_axis_maps[map_id];
+
+                if (analog_axis_map.cloudxr_path_id_ == INVALID_INDEX)
+                {
+                    continue;
+                }
+
+                if (was_changed)
+                {
+                    float analog_axis_value = (frame_id % 10) / 10.0f;
+
+                    cxrControllerEvent& event = cxr_events[cxr_event_count++];
+                    event.clientTimeNS = predicted_display_time;
+                    event.clientInputIndex = analog_axis_map.cloudxr_path_id_;
+                    event.inputValue.valueType = cxrInputValueType_float32;
+                    event.inputValue.vF32 = analog_axis_value;
+                }
+            }
+
+            cxrError fire_controller_events_result = cxrFireControllerEvents(cxr_receiver_, cxr_controller_handles_[controller_id], cxr_events, cxr_event_count);
+
+            if (fire_controller_events_result)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "cxrFireControllerEvents error = %s\n",
+                       cxrErrorString(fire_controller_events_result));
+            }
+        }
     }
 #endif
 
