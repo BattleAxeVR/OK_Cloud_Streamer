@@ -8,4 +8,4 @@ project("OK_Cloud_Streamer_Client" CXX C)
 
 option(ENABLE_CLOUDXR "Enable CloudXR Integration" ON)
 
-add_subdirectory(external/igl)
+add_subdirectory(igl)
