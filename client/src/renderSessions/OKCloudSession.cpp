@@ -41,7 +41,7 @@
 #endif
 
 
-#if 1
+#if 0
 namespace igl::shell::openxr{
 XrTime XrApp::get_predicted_display_time()
 {
@@ -996,6 +996,8 @@ namespace igl::shell
         uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
 
         float fps = DEFAULT_CLOUDXR_FRAMERATE;
+
+#if 0
         float current_refresh_rate = xr_app.getCurrentRefreshRate();
 
         if (current_refresh_rate > 0.0f)
@@ -1006,6 +1008,7 @@ namespace igl::shell
         }
 
         //xr_app.setSharpeningEnabled(true);
+#endif
 
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
         {
@@ -1297,8 +1300,8 @@ namespace igl::shell
         cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
 
         // CloudXR polls the XR poses asynchronously from another thread at a higher polling rate (up to 1 Khz) than the main render loop, so we need a mutex and its own local timestamp, not predicted frame time
-        const float time_offset_NS = (0.004f * 1e9);
-        const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
+        const float time_offset_NS = 0.0f;//(0.004f * 1e9);
+        const XrTime predicted_display_time = xr_app.headPoseTime_;// xr_app.get_predicted_display_time() + time_offset_NS;
 
         openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
 
@@ -1388,8 +1391,8 @@ namespace igl::shell
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::send_controller_poses\n");
 
-        const float time_offset_NS = (0.004f * 1e9);
-        const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
+        const float time_offset_NS = 0.0f;//(0.004f * 1e9);
+        const XrTime predicted_display_time = xr_app.headPoseTime_;//  xr_app.get_predicted_display_time() + time_offset_NS;
 
         static int val = 0;
 
@@ -1425,8 +1428,8 @@ namespace igl::shell
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::fire_controller_events\n");
 
-        const float time_offset_NS = (0.004f * 1e9);
-        const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
+        const float time_offset_NS = 0.0f;// (0.004f * 1e9);
+        const XrTime predicted_display_time = xr_app.headPoseTime_;// xr_app.get_predicted_display_time() + time_offset_NS;
 
         static DigitalButtonToCloudXR_Map digital_button_maps[][NUM_SIDES] = {{{DigitalButton_ApplicationMenu, 0},
                                                                                         { DigitalButton_System,
