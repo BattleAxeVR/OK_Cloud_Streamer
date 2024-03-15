@@ -1274,20 +1274,22 @@ namespace igl::shell
         static cxrControllerTrackingState cxr_controller_states[CXR_NUM_CONTROLLERS] = {};
 
         openxr::GLMPose left_pose;
+        left_pose.translation_.x = poseID_ % 10;
         left_pose.timestamp_  = predicted_display_time;
         cxr_controller_states[LEFT].pose = convert_glm_to_cxr_pose(left_pose);
         cxr_controller_states[LEFT].clientTimeNS = predicted_display_time;
 
         openxr::GLMPose right_pose;
+        right_pose.translation_.x = poseID_ % 10;
         right_pose.timestamp_  = predicted_display_time;
         cxr_controller_states[RIGHT].pose = convert_glm_to_cxr_pose(right_pose);
         cxr_controller_states[RIGHT].clientTimeNS = predicted_display_time;
 
-        const uint32_t pose_count = CXR_NUM_CONTROLLERS;
+        const uint32_t pose_count = 1;
         const cxrControllerTrackingState *first_controller_ptr = &cxr_controller_states[LEFT];
         const cxrControllerTrackingState *const *controller_states_ptr = &first_controller_ptr;
 
-        cxrError send_controller_pose_result = cxrSendControllerPoses(cxr_receiver_, pose_count, cxr_controller_handles_, controller_states_ptr);
+        cxrError send_controller_pose_result = cxrSendControllerPoses(cxr_receiver_, pose_count, &cxr_controller_handles_[0], controller_states_ptr);
 
         if (send_controller_pose_result)
         {
