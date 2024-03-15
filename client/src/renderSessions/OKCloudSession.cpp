@@ -1258,6 +1258,8 @@ namespace igl::shell
     }
 
 #if ENABLE_CLOUDXR_CONTROLLERS
+    cxrControllerTrackingState cxr_controller_states_[CXR_NUM_CONTROLLERS] = {{}, {}};
+
     void OKCloudSession::send_controller_poses()
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
@@ -1271,30 +1273,27 @@ namespace igl::shell
         const float time_offset_NS = (0.004f * 1e9);
         const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
 
-        static cxrControllerTrackingState cxr_controller_states[CXR_NUM_CONTROLLERS] = {};
+        static int val = 0;
 
-        openxr::GLMPose left_pose;
-        left_pose.translation_.x = poseID_ % 10;
-        left_pose.timestamp_  = predicted_display_time;
-        cxr_controller_states[LEFT].pose = convert_glm_to_cxr_pose(left_pose);
-        cxr_controller_states[LEFT].clientTimeNS = predicted_display_time;
-
-        openxr::GLMPose right_pose;
-        right_pose.translation_.x = poseID_ % 10;
-        right_pose.timestamp_  = predicted_display_time;
-        cxr_controller_states[RIGHT].pose = convert_glm_to_cxr_pose(right_pose);
-        cxr_controller_states[RIGHT].clientTimeNS = predicted_display_time;
-
-        const uint32_t pose_count = 1;
-        const cxrControllerTrackingState *first_controller_ptr = &cxr_controller_states[LEFT];
-        const cxrControllerTrackingState *const *controller_states_ptr = &first_controller_ptr;
-
-        cxrError send_controller_pose_result = cxrSendControllerPoses(cxr_receiver_, pose_count, &cxr_controller_handles_[0], controller_states_ptr);
-
-        if (send_controller_pose_result)
+        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "cxrSendControllerPoses error = %s\n",
-                   cxrErrorString(send_controller_pose_result));
+            openxr::GLMPose glm_pose;
+            glm_pose.translation_.z = (val++ % 100) / 100.0f;
+            glm_pose.timestamp_  = predicted_display_time;
+            cxr_controller_states_[controller_id].pose = convert_glm_to_cxr_pose(glm_pose);
+            cxr_controller_states_[controller_id].clientTimeNS = predicted_display_time;
+
+            const uint32_t pose_count = 1;
+            const cxrControllerTrackingState* controller_ptr = &cxr_controller_states_[controller_id];
+            const cxrControllerTrackingState ** controller_states_ptr = &controller_ptr;
+
+            cxrError send_controller_pose_result = cxrSendControllerPoses(cxr_receiver_, pose_count, &cxr_controller_handles_[controller_id], controller_states_ptr);
+
+            if (send_controller_pose_result)
+            {
+                IGLLog(IGLLogLevel::LOG_ERROR, "cxrSendControllerPoses error = %s\n",
+                       cxrErrorString(send_controller_pose_result));
+            }
         }
     }
 
