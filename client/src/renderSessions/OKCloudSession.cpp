@@ -524,6 +524,8 @@ namespace igl::shell
         {
 #if ENABLE_CLOUDXR_CONTROLLERS
             add_controllers();
+            send_controller_poses();
+            send_controller_events();
 #endif
 
 #if ENABLE_CLOUDXR_FRAME_LATCH
@@ -1231,7 +1233,7 @@ namespace igl::shell
                 XrResult result = xrGetActionStatePose(xr_app.session_, &action_info,
                                                        &pose_state);
 #endif
-                cxrControllerTrackingState &cxr_controller = cxr_tracking_state.controller[controller_id];
+                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
                 cxr_controller = {};
 
                 //if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
@@ -1254,6 +1256,58 @@ namespace igl::shell
         }
 #endif
     }
+
+#if ENABLE_CLOUDXR_CONTROLLERS
+    void OKCloudSession::send_controller_poses()
+    {
+        if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
+        {
+            return;
+        }
+
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::send_controller_poses\n");
+
+        const float time_offset_NS = (0.004f * 1e9);
+        const XrTime predicted_display_time = xr_app.get_predicted_display_time() + time_offset_NS;
+
+        static cxrControllerTrackingState cxr_controller_states[CXR_NUM_CONTROLLERS] = {};
+
+        openxr::GLMPose left_pose;
+        left_pose.timestamp_  = predicted_display_time;
+        cxr_controller_states[LEFT].pose = convert_glm_to_cxr_pose(left_pose);
+        cxr_controller_states[LEFT].clientTimeNS = predicted_display_time;
+
+        openxr::GLMPose right_pose;
+        right_pose.timestamp_  = predicted_display_time;
+        cxr_controller_states[RIGHT].pose = convert_glm_to_cxr_pose(right_pose);
+        cxr_controller_states[RIGHT].clientTimeNS = predicted_display_time;
+
+        const uint32_t pose_count = CXR_NUM_CONTROLLERS;
+        const cxrControllerTrackingState *first_controller_ptr = &cxr_controller_states[LEFT];
+        const cxrControllerTrackingState *const *controller_states_ptr = &first_controller_ptr;
+
+        cxrError send_controller_pose_result = cxrSendControllerPoses(cxr_receiver_, pose_count, cxr_controller_handles_, controller_states_ptr);
+
+        if (send_controller_pose_result)
+        {
+            IGLLog(IGLLogLevel::LOG_ERROR, "cxrSendControllerPoses error = %s\n",
+                   cxrErrorString(send_controller_pose_result));
+        }
+    }
+
+    void OKCloudSession::send_controller_events()
+    {
+        if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
+        {
+            return;
+        }
+
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::send_controller_poses\n");
+    }
+#endif
 
 #if ENABLE_HAPTICS
     void OKCloudSession::trigger_haptics(const cxrHapticFeedback* haptics)

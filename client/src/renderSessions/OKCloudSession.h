@@ -142,6 +142,8 @@ namespace igl::shell
         cxrControllerHandle cxr_controller_handles_[CXR_NUM_CONTROLLERS] = {nullptr, nullptr};
         bool add_controllers();
         void remove_controllers();
+        void send_controller_poses();
+        void send_controller_events();
 #endif
 
 #if ENABLE_HAPTICS
