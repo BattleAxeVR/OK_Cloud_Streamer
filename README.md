@@ -32,3 +32,11 @@ Full Source + prebuilt APKs/.exe for the waist-loco demo (which will be ported i
 https://github.com/BattleAxeVR/OpenXR-SDK-Source
 
 NOTE: The actual OpenXR implementation isn't pushed yet, I'm still debugging / tweaking it. I pushed the reference Oculus OVR sample client as APKs, that I built as a convenience. There is another README in the directory. The SteamVR Plugin supplied by Nvidia as part of their CloudXR SDK. The sample does not work very reliably, and it has some wavey lines. The final client won't have such obvious visual defects.
+
+------
+
+Funding:
+
+Hi, I'm working overtime to get this out to the public so you can get full body tracking and eye-tracking and various other features, but I could use some help! Here's my Patreon page, I would appreciate some tips to encourage my work on this project and other VR gaming projects.
+
+https://www.patreon.com/posts/ok-cloud-about-100392912?utm_medium=social&utm_source=twitter&utm_campaign=postshare_creator&utm_content=join_link
