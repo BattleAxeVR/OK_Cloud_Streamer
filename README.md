@@ -26,6 +26,15 @@ https://github.com/BattleAxeVR/igl/tree/ok_cloud_streamer
 
 -The client being open source means you can enable platform-wide features for PC VR gaming, such as waist-oriented locomotion (a software-only version of Decamove). 
 
+Design Philosophy:
+
+-Keep things as simple and "Plug n Play" as possible.
+-Reduce clicks ("time to fun") needed to achieve something to a bare minimum, ideally zero. 
+
+For ex: the first time you start the app, you set the IP address once and forget about it. Subsequent times can automatically log-in to the same IP. This IP and auto-connect feature can be changed manually using the UI control panel.
+
+-Support as many pieces of hardware and user configurations as possible: input bindings remapping, multiple joysticks (paired via Bluetooth or USB port), Android gamepads, HOTAS, Steering wheels. This may be achieved via either SDL3 or AnyHere USB forwarding to PC (for 1:1 support on remote PC as if it were connected locally, w/o any code needed).
+
 See here:
 
 https://twitter.com/BattleAxeVR/status/1683233951614107648
