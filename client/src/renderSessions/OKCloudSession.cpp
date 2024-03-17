@@ -195,6 +195,18 @@ XrTime get_predicted_display_time(XrInstance instance)
 }
 #endif
 
+static double GetTimeInSeconds() {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (now.tv_sec * 1e9 + now.tv_nsec) * 0.000000001;
+}
+
+static uint64_t GetTimeInNS() {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return ((uint64_t)(now.tv_sec * 1e9) + now.tv_nsec);
+}
+
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
 }
@@ -632,8 +644,10 @@ namespace igl::shell
         {
 #if ENABLE_CLOUDXR_CONTROLLERS
             add_controllers();
-            send_controller_poses();
-            fire_controller_events();
+
+            const uint64_t predicted_display_time_ns = GetTimeInNS();
+            send_controller_poses(predicted_display_time_ns);
+            fire_controller_events(predicted_display_time_ns);
 #endif
 
 #if ENABLE_CLOUDXR_FRAME_LATCH
@@ -1296,7 +1310,7 @@ namespace igl::shell
 
         // CloudXR polls the XR poses asynchronously from another thread at a higher polling rate (up to 1 Khz) than the main render loop, so we need a mutex and its own local timestamp, not predicted frame time
         const float time_offset_NS = 0.0f;//(0.004f * 1e9);
-        const XrTime predicted_display_time = xr_app.headPoseTime_;// xr_app.get_predicted_display_time() + time_offset_NS;
+        const XrTime predicted_display_time_ns = GetTimeInNS();
 
         openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
 
@@ -1324,12 +1338,12 @@ namespace igl::shell
             XrSpaceVelocity hmd_velocity = {XR_TYPE_SPACE_VELOCITY};
             XrSpaceLocation hmd_location = {XR_TYPE_SPACE_LOCATION, &hmd_velocity};
 
-            XrResult hmd_result = xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, predicted_display_time, &hmd_location);
+            XrResult hmd_result = xrLocateSpace(xr_app.headSpace_, xr_app.currentSpace_, predicted_display_time_ns, &hmd_location);
 
             if (XR_UNQUALIFIED_SUCCESS(hmd_result))
             {
                 cxr_hmd_pose = convert_xr_to_cxr_pose(hmd_location);
-                cxr_tracking_state.hmd.clientTimeNS = predicted_display_time;
+                cxr_tracking_state.hmd.clientTimeNS = predicted_display_time_ns;
             }
         }
 #endif
@@ -1360,12 +1374,12 @@ namespace igl::shell
 
                     XrResult controller_result =
                             xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_app.currentSpace_,
-                                          predicted_display_time, &controller_location);
+                                          predicted_display_time_ns, &controller_location);
 
                     if (controller_result == XR_SUCCESS)
                     {
                         cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
-                        cxr_controller.clientTimeNS = predicted_display_time;
+                        cxr_controller.clientTimeNS = predicted_display_time_ns;
                     }
                 }
             }
@@ -1376,7 +1390,7 @@ namespace igl::shell
 #if ENABLE_CLOUDXR_CONTROLLERS
     cxrControllerTrackingState cxr_controller_states_[CXR_NUM_CONTROLLERS] = {{}, {}};
 
-    void OKCloudSession::send_controller_poses()
+    void OKCloudSession::send_controller_poses(const uint64_t predicted_display_time_ns)
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
         {
@@ -1386,18 +1400,15 @@ namespace igl::shell
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::send_controller_poses\n");
 
-        const float time_offset_NS = 0.0f;//(0.004f * 1e9);
-        const XrTime predicted_display_time = xr_app.headPoseTime_;//  xr_app.get_predicted_display_time() + time_offset_NS;
-
         static int val = 0;
 
         for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
             openxr::GLMPose glm_pose;
             glm_pose.translation_.z = (val++ % 100) / 100.0f;
-            glm_pose.timestamp_  = predicted_display_time;
+            glm_pose.timestamp_  = predicted_display_time_ns;
             cxr_controller_states_[controller_id].pose = convert_glm_to_cxr_pose(glm_pose);
-            cxr_controller_states_[controller_id].clientTimeNS = predicted_display_time;
+            cxr_controller_states_[controller_id].clientTimeNS = predicted_display_time_ns;
 
             const uint32_t pose_count = 1;
             const cxrControllerTrackingState* controller_ptr = &cxr_controller_states_[controller_id];
@@ -1413,7 +1424,7 @@ namespace igl::shell
         }
     }
 
-    void OKCloudSession::fire_controller_events()
+    void OKCloudSession::fire_controller_events(const uint64_t predicted_display_time_ns)
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
         {
@@ -1422,9 +1433,6 @@ namespace igl::shell
 
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::fire_controller_events\n");
-
-        const float time_offset_NS = 0.0f;// (0.004f * 1e9);
-        const XrTime predicted_display_time = xr_app.headPoseTime_;// xr_app.get_predicted_display_time() + time_offset_NS;
 
         static DigitalButtonToCloudXR_Map digital_button_maps[][NUM_SIDES] = {{{DigitalButton_ApplicationMenu, 0},
                                                                                         { DigitalButton_System,
@@ -1491,7 +1499,7 @@ namespace igl::shell
                 if (was_changed)
                 {
                     cxrControllerEvent& event = cxr_events[cxr_event_count++];
-                    event.clientTimeNS = predicted_display_time;
+                    event.clientTimeNS = predicted_display_time_ns;
                     event.clientInputIndex = digital_button_map.cloudxr_path_id_;
                     event.inputValue.valueType = cxrInputValueType_boolean;
                     event.inputValue.vBool = is_down;
@@ -1514,7 +1522,7 @@ namespace igl::shell
                     float analog_axis_value = (frame_id % 10) / 10.0f;
 
                     cxrControllerEvent& event = cxr_events[cxr_event_count++];
-                    event.clientTimeNS = predicted_display_time;
+                    event.clientTimeNS = predicted_display_time_ns;
                     event.clientInputIndex = analog_axis_map.cloudxr_path_id_;
                     event.inputValue.valueType = cxrInputValueType_float32;
                     event.inputValue.vF32 = analog_axis_value;
