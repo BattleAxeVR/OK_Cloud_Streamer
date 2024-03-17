@@ -1316,8 +1316,8 @@ cxrDeviceDesc OKCloudStreamer::GetDeviceDesc(float fovX, float fovY)
     uint32_t height = texH;
 #else
     // TODO: This is trying to use display-native per eye w/h instead.
-    uint32_t width = dispW / 2;
-    uint32_t height = dispH;
+    uint32_t width = 1920;// dispW / 2;
+    uint32_t height = 1920;//dispH;
 #endif
 
     desc.numVideoStreamDescs = CXR_NUM_VIDEO_STREAMS_XR;
@@ -1331,7 +1331,7 @@ cxrDeviceDesc OKCloudStreamer::GetDeviceDesc(float fovX, float fovY)
     }
     desc.stereoDisplay = true;
 
-    desc.maxResFactor = GOptions.mMaxResFactor;
+    desc.maxResFactor = 1.0f;//GOptions.mMaxResFactor;
 
     const int maxWidth = (int)(desc.maxResFactor * (float)width);
     const int maxHeight = (int)(desc.maxResFactor * (float)height);
@@ -1348,7 +1348,7 @@ cxrDeviceDesc OKCloudStreamer::GetDeviceDesc(float fovX, float fovY)
     desc.posePollFreq = 0;
     desc.disablePosePrediction = false;
     desc.angularVelocityInDeviceSpace = false;
-    desc.foveatedScaleFactor = (GOptions.mFoveation < 100) ? GOptions.mFoveation : 0;
+    desc.foveatedScaleFactor = 0;//(GOptions.mFoveation < 100) ? GOptions.mFoveation : 0;
 
     const float halfFOVTanX = tanf(VRAPI_PI/360.f * fovX);
     const float halfFOVTanY = tanf(VRAPI_PI/360.f * fovY);
