@@ -821,12 +821,7 @@ namespace igl::shell
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::init_cxr\n");
 
 #if ENABLE_OBOE
-        const bool audio_ok = init_audio();
-
-        if (!audio_ok)
-        {
-            return false;
-        }
+        init_audio();
 #endif
 
         const bool init_ok = create_receiver();
