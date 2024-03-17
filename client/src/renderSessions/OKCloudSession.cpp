@@ -36,6 +36,9 @@
 
 #include <openxr/openxr_platform.h>
 
+cxrControllerTrackingState cxr_controller_states_[CXR_NUM_CONTROLLERS] = {{}, {}};
+
+
 #ifndef XR_LOAD
 #define XR_LOAD(instance, fn) xrGetInstanceProcAddr(instance, #fn, reinterpret_cast<PFN_xrVoidFunction*>(&fn))
 #endif
@@ -642,14 +645,6 @@ namespace igl::shell
 
         if (is_connected())
         {
-#if ENABLE_CLOUDXR_CONTROLLERS
-            add_controllers();
-
-            const uint64_t predicted_display_time_ns = GetTimeInNS();
-            send_controller_poses(predicted_display_time_ns);
-            fire_controller_events(predicted_display_time_ns);
-#endif
-
 #if ENABLE_CLOUDXR_FRAME_LATCH
             release_frame();
             latch_frame();
@@ -1032,7 +1027,8 @@ namespace igl::shell
         device_desc.embedInfoInVideo = false;
         device_desc.foveatedScaleFactor = foveation;
         device_desc.stereoDisplay = true;
-        device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET;
+        const float NS_TO_SEC = (1.0f / 1000000000.0f);
+        device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
         device_desc.posePollFreq = (uint32_t)roundf(DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT * fps);
 
 #if ENABLE_OBOE
@@ -1300,19 +1296,63 @@ namespace igl::shell
             return;
         }
 
+        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
+
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
 
-        IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::get_tracking_state\n");
-        memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
+        const uint64_t predicted_display_time_ns = GetTimeInNS() + DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS;
+        openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
 
         cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
+        memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
+
         cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
 
-        // CloudXR polls the XR poses asynchronously from another thread at a higher polling rate (up to 1 Khz) than the main render loop, so we need a mutex and its own local timestamp, not predicted frame time
-        const float time_offset_NS = 0.0f;//(0.004f * 1e9);
-        const XrTime predicted_display_time_ns = GetTimeInNS();
+#if ENABLE_CLOUDXR_CONTROLLERS
+        add_controllers();
 
-        openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
+        if (controllers_initialized_)
+        {
+            for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
+            {
+#if 0
+                XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
+                XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
+
+                action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
+                action_info.action = xr_inputs.aimPoseAction;
+
+                XrResult result = xrGetActionStatePose(xr_app.session_, &action_info,
+                                                       &pose_state);
+#endif
+                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
+                cxr_controller = {};
+
+                //if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
+                {
+                    XrSpaceVelocity controller_velocity = {XR_TYPE_SPACE_VELOCITY};
+                    XrSpaceLocation controller_location = {XR_TYPE_SPACE_LOCATION,
+                                                           &controller_velocity};
+
+                    XrResult controller_result =
+                            xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_app.currentSpace_,
+                                          predicted_display_time_ns, &controller_location);
+
+                    if (controller_result == XR_SUCCESS)
+                    {
+                        cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
+                        cxr_controller.clientTimeNS = predicted_display_time_ns;
+
+                        cxr_controller_states_[controller_id] = cxr_controller;
+                    }
+                }
+            }
+        }
+
+        //send_controller_poses(predicted_display_time_ns);
+        fire_controller_events(predicted_display_time_ns);
+
+#endif
 
         // Hold the mutex for as little time as possible
         //std::lock_guard<std::mutex> lock(xr_inputs.polling_mutex_);
@@ -1348,48 +1388,9 @@ namespace igl::shell
         }
 #endif
 
-#if ENABLE_CLOUDXR_CONTROLLERS
-        if (controllers_initialized_)
-        {
-            for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
-            {
-#if 0
-                XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
-                XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
-
-                action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
-                action_info.action = xr_inputs.aimPoseAction;
-
-                XrResult result = xrGetActionStatePose(xr_app.session_, &action_info,
-                                                       &pose_state);
-#endif
-                cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
-                cxr_controller = {};
-
-                //if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
-                {
-                    XrSpaceVelocity controller_velocity = {XR_TYPE_SPACE_VELOCITY};
-                    XrSpaceLocation controller_location = {XR_TYPE_SPACE_LOCATION,
-                                                           &controller_velocity};
-
-                    XrResult controller_result =
-                            xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_app.currentSpace_,
-                                          predicted_display_time_ns, &controller_location);
-
-                    if (controller_result == XR_SUCCESS)
-                    {
-                        cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
-                        cxr_controller.clientTimeNS = predicted_display_time_ns;
-                    }
-                }
-            }
-        }
-#endif
     }
 
 #if ENABLE_CLOUDXR_CONTROLLERS
-    cxrControllerTrackingState cxr_controller_states_[CXR_NUM_CONTROLLERS] = {{}, {}};
-
     void OKCloudSession::send_controller_poses(const uint64_t predicted_display_time_ns)
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
@@ -1404,12 +1405,6 @@ namespace igl::shell
 
         for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
-            openxr::GLMPose glm_pose;
-            glm_pose.translation_.z = (val++ % 100) / 100.0f;
-            glm_pose.timestamp_  = predicted_display_time_ns;
-            cxr_controller_states_[controller_id].pose = convert_glm_to_cxr_pose(glm_pose);
-            cxr_controller_states_[controller_id].clientTimeNS = predicted_display_time_ns;
-
             const uint32_t pose_count = 1;
             const cxrControllerTrackingState* controller_ptr = &cxr_controller_states_[controller_id];
             const cxrControllerTrackingState ** controller_states_ptr = &controller_ptr;
