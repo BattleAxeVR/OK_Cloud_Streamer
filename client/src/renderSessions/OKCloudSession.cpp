@@ -1027,7 +1027,6 @@ namespace igl::shell
         device_desc.embedInfoInVideo = false;
         device_desc.foveatedScaleFactor = foveation;
         device_desc.stereoDisplay = true;
-        const float NS_TO_SEC = (1.0f / 1000000000.0f);
         device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
         device_desc.posePollFreq = (uint32_t)roundf(DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT * fps);
 
