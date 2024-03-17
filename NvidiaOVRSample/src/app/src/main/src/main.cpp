@@ -595,7 +595,7 @@ cxrError OKCloudStreamer::CreateReceiver()
     desc.deviceDesc = mDeviceDesc;
     desc.clientCallbacks = s_clientProxy;
     desc.shareContext = &context;
-    desc.debugFlags = GOptions.mDebugFlags;
+    desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;//GOptions.mDebugFlags;
     desc.logMaxSizeKB = CLOUDXR_LOG_MAX_DEFAULT;
     desc.logMaxAgeDays = CLOUDXR_LOG_MAX_DEFAULT;
     strncpy(desc.appOutputPath, mAppOutputPath.c_str(), CXR_MAX_PATH - 1);
