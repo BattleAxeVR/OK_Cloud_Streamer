@@ -1314,20 +1314,18 @@ namespace igl::shell
         {
             for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
             {
-#if 0
                 XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
                 XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
 
                 action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
                 action_info.action = xr_inputs.aimPoseAction;
 
-                XrResult result = xrGetActionStatePose(xr_app.session_, &action_info,
-                                                       &pose_state);
-#endif
+                XrResult result = xrGetActionStatePose(xr_app.session_, &action_info,  &pose_state);
+
                 cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
                 cxr_controller = {};
 
-                //if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
+                if (XR_UNQUALIFIED_SUCCESS(result))// && pose_state.isActive)
                 {
                     XrSpaceVelocity controller_velocity = {XR_TYPE_SPACE_VELOCITY};
                     XrSpaceLocation controller_location = {XR_TYPE_SPACE_LOCATION,
@@ -1343,6 +1341,17 @@ namespace igl::shell
                         cxr_controller.clientTimeNS = predicted_display_time_ns;
 
                         cxr_controller_states_[controller_id] = cxr_controller;
+
+                        if (controller_id == LEFT)
+                        {
+                            static XrSpaceLocation last_location = controller_location;
+
+                            if (fabs(last_location.pose.position.x - controller_location.pose.position.x) > 0.01f)
+                            {
+                                IGL_LOG_INFO("LEFT CONTROLLER POSITION x = %.2f, y = %.2f, z = %.2f", controller_location.pose.position.x, controller_location.pose.position.y, controller_location.pose.position.z);
+                                last_location = controller_location;
+                            }
+                        }
                     }
                 }
             }
@@ -1350,7 +1359,6 @@ namespace igl::shell
 
         //send_controller_poses(predicted_display_time_ns);
         fire_controller_events(predicted_display_time_ns);
-
 #endif
 
         // Hold the mutex for as little time as possible
