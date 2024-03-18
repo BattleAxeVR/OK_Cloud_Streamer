@@ -25,7 +25,6 @@
 
 #include "OKCloudSession.h"
 #include "shell/shared/renderSession/ShellParams.h"
-//#include "shell/openxr/src/XrApp.h"
 
 #define EXTERNAL_XR_BUILD
 #undef IGL_DEBUG
@@ -74,35 +73,6 @@ XrQuaternionf convert_cxr_to_xr(const cxrQuaternion &cxr_quat) {
     xr_quat.z = cxr_quat.z;
     return xr_quat;
 }
-
-cxrControllerTrackingState cxr_controller_states_[CXR_NUM_CONTROLLERS] = {{}, {}};
-
-#if 0
-#ifndef XR_LOAD
-#define XR_LOAD(instance, fn) xrGetInstanceProcAddr(instance, #fn, reinterpret_cast<PFN_xrVoidFunction*>(&fn))
-
-PFN_xrConvertTimespecTimeToTimeKHR xrConvertTimespecTimeToTimeKHR = nullptr;
-
-XrTime get_predicted_display_time(XrInstance instance)
-{
-    XrTime time;
-    struct timespec timespec;
-    clock_gettime(CLOCK_MONOTONIC, &timespec);
-
-    if (!xrConvertTimespecTimeToTimeKHR)
-    {
-        XR_LOAD(instance, xrConvertTimespecTimeToTimeKHR);
-    }
-
-    if (xrConvertTimespecTimeToTimeKHR)
-    {
-        xrConvertTimespecTimeToTimeKHR(instance, &timespec, &time);
-    }
-
-    return time;
-}
-#endif
-#endif
 
 static double GetTimeInSeconds() {
     struct timespec now;
@@ -1272,6 +1242,8 @@ namespace igl::shell
 
                     if (controller_result == XR_SUCCESS)
                     {
+                        cxr_controller.clientTimeNS = predicted_display_time_ns;
+
 #if ENABLE_CLOUDXR_CONTROLLER_FIX
                         openxr::GLMPose cloudxr_controller_offset;
 
@@ -1297,26 +1269,13 @@ namespace igl::shell
 #else
                         cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
 #endif
-                        cxr_controller.clientTimeNS = predicted_display_time_ns;
 
-                        //cxr_controller_states_[controller_id] = cxr_controller;
-
-                        if (controller_id == LEFT)
-                        {
-                            static XrSpaceLocation last_location = controller_location;
-
-                            if (fabs(last_location.pose.position.x - controller_location.pose.position.x) > 0.01f)
-                            {
-                                IGL_LOG_INFO("LEFT CONTROLLER POSITION x = %.2f, y = %.2f, z = %.2f", controller_location.pose.position.x, controller_location.pose.position.y, controller_location.pose.position.z);
-                                last_location = controller_location;
-                            }
-                        }
+                        //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
                     }
                 }
             }
         }
 
-        //send_controller_poses(predicted_display_time_ns);
         //fire_controller_events(predicted_display_time_ns);
 #endif
 
@@ -1357,7 +1316,7 @@ namespace igl::shell
     }
 
 #if ENABLE_CLOUDXR_CONTROLLERS
-    void OKCloudSession::send_controller_poses(const uint64_t predicted_display_time_ns)
+    void OKCloudSession::send_controller_poses(cxrControllerTrackingState& cxr_controller, const int controller_id, const uint64_t predicted_display_time_ns)
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
         {
@@ -1369,10 +1328,9 @@ namespace igl::shell
 
         static int val = 0;
 
-        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
             const uint32_t pose_count = 1;
-            const cxrControllerTrackingState* controller_ptr = &cxr_controller_states_[controller_id];
+            const cxrControllerTrackingState* controller_ptr = &cxr_controller;
             const cxrControllerTrackingState ** controller_states_ptr = &controller_ptr;
 
             cxrError send_controller_pose_result = cxrSendControllerPoses(cxr_receiver_, pose_count, &cxr_controller_handles_[controller_id], controller_states_ptr);

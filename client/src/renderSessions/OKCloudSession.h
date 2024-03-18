@@ -192,7 +192,7 @@ namespace igl::shell
         cxrControllerHandle cxr_controller_handles_[CXR_NUM_CONTROLLERS] = {nullptr, nullptr};
         bool add_controllers();
         void remove_controllers();
-        void send_controller_poses(const uint64_t predicted_display_time_ns);
+        void send_controller_poses(cxrControllerTrackingState& cxr_controller, const int controller_id, const uint64_t predicted_display_time_ns);
         void fire_controller_events(const uint64_t predicted_display_time_ns);
 #endif
 
