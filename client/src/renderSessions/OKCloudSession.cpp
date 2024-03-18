@@ -20,7 +20,7 @@
 #include <igl/Log.h>
 
 #include <glm/glm/gtc/quaternion.hpp>
-
+#include "CloudXRMatrixHelpers.h"
 #include <igl/opengl/egl/Context.h>
 
 #include "OKCloudSession.h"
@@ -40,6 +40,40 @@
 #endif
 
 #include <openxr/openxr_platform.h>
+
+cxrVector3 convert_xr_to_cxr(const XrVector3f &xr_vec) {
+    cxrVector3 cxr_vec;
+    cxr_vec.v[0] = xr_vec.x;
+    cxr_vec.v[1] = xr_vec.y;
+    cxr_vec.v[2] = xr_vec.z;
+    return cxr_vec;
+}
+
+XrVector3f convert_cxr_to_xr(const cxrVector3 &cxr_vec) {
+    XrVector3f xr_vec;
+    xr_vec.x = cxr_vec.v[0];
+    xr_vec.y = cxr_vec.v[1];
+    xr_vec.z = cxr_vec.v[2];
+    return xr_vec;
+}
+
+cxrQuaternion convert_xr_to_cxr(const XrQuaternionf &xr_quat) {
+    cxrQuaternion cxr_quat;
+    cxr_quat.w = xr_quat.w;
+    cxr_quat.x = xr_quat.x;
+    cxr_quat.y = xr_quat.y;
+    cxr_quat.z = xr_quat.z;
+    return cxr_quat;
+}
+
+XrQuaternionf convert_cxr_to_xr(const cxrQuaternion &cxr_quat) {
+    XrQuaternionf xr_quat;
+    xr_quat.w = cxr_quat.w;
+    xr_quat.x = cxr_quat.x;
+    xr_quat.y = cxr_quat.y;
+    xr_quat.z = cxr_quat.z;
+    return xr_quat;
+}
 
 cxrControllerTrackingState cxr_controller_states_[CXR_NUM_CONTROLLERS] = {{}, {}};
 
@@ -570,8 +604,26 @@ namespace igl::shell
             {
                 if (shellParams().xr_app_ptr_)
                 {
-                    shellParams().xr_app_ptr_->cloudxr_connected_ = true;
-                    shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
+                    openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+
+                    xr_app.cloudxr_connected_ = true;
+
+                    cxrVector3 cxr_hmd_position = {};
+                    cxrQuaternion cxr_hmd_rotation = {};
+                    cxrMatrixToVecQuat(&latched_frames_.poseMatrix, &cxr_hmd_position, &cxr_hmd_rotation);
+
+                    XrVector3f xr_hmd_position = convert_cxr_to_xr(cxr_hmd_position);
+                    XrQuaternionf xr_hmd_rotation = convert_cxr_to_xr(cxr_hmd_rotation);
+
+                    const openxr::GLMPose hmd_pose(openxr::convert_to_glm(xr_hmd_position), openxr::convert_to_glm(xr_hmd_rotation));
+                    openxr::GLMPose eye_pose = hmd_pose;
+
+                    const float half_ipd = ipd_meters_ * 0.5f;
+                    const float ipd_offset = (view_id == LEFT) ? -half_ipd : half_ipd;
+                    const glm::vec3 ipd_offset_vec = glm::vec3(ipd_offset, 0.0f, 0.0f);
+                    eye_pose.translation_ += eye_pose.rotation_ * ipd_offset_vec;
+
+                    xr_app.override_hmd_poses_[view_id] = openxr::convert_to_xr_pose(eye_pose);
                 }
             }
             return;
@@ -1241,7 +1293,7 @@ namespace igl::shell
         }
 
         //send_controller_poses(predicted_display_time_ns);
-        fire_controller_events(predicted_display_time_ns);
+        //fire_controller_events(predicted_display_time_ns);
 #endif
 
         // Hold the mutex for as little time as possible
