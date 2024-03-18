@@ -47,6 +47,8 @@ https://github.com/BattleAxeVR/OpenXR-SDK-Source
 
 Funding:
 
-Hi, I'm working overtime to get this out to the public so you can get full body tracking and eye-tracking and various other features, but I could use some help! Here's my Patreon page, I would appreciate some tips to encourage my work on this project and other VR gaming projects.
+Hi, if you find this software useful and would like to contribute to further development (or need new features added), here are my Github Sponsor and Patreon pages:
+
+https://github.com/sponsors/BattleAxeVR
 
 https://www.patreon.com/posts/ok-cloud-about-100392912?utm_medium=social&utm_source=twitter&utm_campaign=postshare_creator&utm_content=join_link
