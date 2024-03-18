@@ -518,7 +518,6 @@ namespace igl::shell
         if (is_connected())
         {
 #if ENABLE_CLOUDXR_FRAME_LATCH
-            release_frame();
             latch_frame();
 #endif
         }
@@ -690,6 +689,12 @@ namespace igl::shell
 
     void OKCloudSession::post_update() noexcept
     {
+        if (is_connected())
+        {
+#if ENABLE_CLOUDXR_FRAME_LATCH
+            release_frame();
+#endif
+        }
     }
 
     bool OKCloudSession::init_cxr()
