@@ -15,11 +15,11 @@ def OBOE_SDK_ROOT = file("${project.buildDir}/tmp/oboe")
 def EXTERNAL_SRC_ROOT = file("${project.rootDir}/../src")
 
 android {
-    namespace 'com.facebook.igl.shell.openxr.gles'
+    namespace 'com.battleaxevr.okcloudstreamer.gles'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.facebook.igl.shell.openxr.gles"
+        applicationId "com.battleaxevr.okcloudstreamer.gles"
         minSdk 25
         targetSdk 33
         versionCode 1

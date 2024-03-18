@@ -876,7 +876,7 @@ namespace igl::shell
 
             const std::string application_id = "OK Cloud Streamer v1.0";
 
-            std::string log_dir = "/sdcard/Android/data/com.facebook.igl.shell.openxr.gles/files/logs/";
+            std::string log_dir = "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/logs/";
             strncpy(receiver_desc.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
 
             receiver_desc.appOutputPath[CXR_MAX_PATH - 1] = 0;
