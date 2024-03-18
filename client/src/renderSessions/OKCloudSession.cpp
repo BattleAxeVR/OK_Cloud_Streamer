@@ -557,11 +557,6 @@ namespace igl::shell
         {
             int view_id = shellParams().current_view_id_;
 
-            auto command_buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
-
-            const std::shared_ptr<igl::IRenderCommandEncoder> commands =
-                    command_buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
-
             //uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
             uint32_t frame_mask = 1 << view_id;
 
@@ -579,10 +574,6 @@ namespace igl::shell
                     shellParams().xr_app_ptr_->override_display_time_ = latched_frames_.frames[view_id].timeStamp;
                 }
             }
-
-            commands->endEncoding();
-            command_buffer->present(framebuffer_->getColorAttachment(0));
-            commandQueue_->submit(*command_buffer);
             return;
         }
 #endif
