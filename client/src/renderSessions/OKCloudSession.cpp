@@ -521,8 +521,8 @@ namespace igl::shell
 
         if (is_connected())
         {
-#if ENABLE_CLOUDXR_FRAME_LATCH
-            latch_frame();
+#if LATCH_FRAMES_BOTH_EYES
+            latch_frame(INVALID_INDEX);
             //return is_latched_;
 #endif
         }
@@ -560,13 +560,15 @@ namespace igl::shell
         }
 
 #if ENABLE_CLOUDXR_FRAME_BLIT
+        int view_id = shellParams().current_view_id_;
+
+#if LATCH_FRAMES_PER_EYE
+        latch_frame(view_id);
+#endif
+
         if (is_connected() && is_latched_)// && (latched_frames_.count == 2))
         {
-            int view_id = shellParams().current_view_id_;
-
-            //uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-            uint32_t frame_mask = 1 << view_id;
-
+            uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
             cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
 
             if (blit_error)
@@ -598,6 +600,11 @@ namespace igl::shell
 
                     xr_app.override_eye_poses_[view_id] = openxr::convert_to_xr_pose(eye_pose);
                 }
+
+#if LATCH_FRAMES_PER_EYE
+                release_frame();
+#endif
+
             }
             return;
         }
@@ -1164,7 +1171,7 @@ namespace igl::shell
 #endif
 
 #if ENABLE_CLOUDXR_FRAME_LATCH
-    bool OKCloudSession::latch_frame()
+    bool OKCloudSession::latch_frame(int view_id)
     {
         if (!is_cxr_initialized_ || !is_connected() || is_latched_)
         {
@@ -1173,7 +1180,17 @@ namespace igl::shell
 
         uint32_t timeoutMS = DEFAULT_CLOUDXR_LATCH_TIMEOUT_MS;
 
-        uint32_t frame_mask = cxrFrameMask_All;//(view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+        uint32_t frame_mask = cxrFrameMask_All;
+
+        if (view_id == INVALID_INDEX)
+        {
+            frame_mask = cxrFrameMask_All;
+        }
+        else
+        {
+            frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+        }
+
         cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, frame_mask, timeoutMS);
 
         if (error)

@@ -181,7 +181,7 @@ namespace igl::shell
         void compute_ipd();
 
 #if ENABLE_CLOUDXR_FRAME_LATCH
-        bool latch_frame();
+        bool latch_frame(int view_id);
         void release_frame();
 #endif
 
