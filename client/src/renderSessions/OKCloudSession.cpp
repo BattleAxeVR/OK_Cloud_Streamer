@@ -471,7 +471,7 @@ namespace igl::shell
 #if defined(IGL_OPENXR_MR_MODE)
         renderPass_.colorAttachments[0].clearColor = {0.0, 0.0, 1.0, 0.0f};
 #else
-        renderPass_.colorAttachments[0].clearColor = {0.0, 0.0, 1.0, 1.0f};
+        renderPass_.colorAttachments[0].clearColor = {0.0, 0.0, 0.0, 0.0f};
 #endif
         renderPass_.depthAttachment.loadAction = LoadAction::Clear;
         renderPass_.depthAttachment.clearDepth = 1.0;
@@ -505,7 +505,7 @@ namespace igl::shell
         vertexParameters_.scaleZ = scaleZ;
     }
 
-    void OKCloudSession::pre_update() noexcept
+    bool OKCloudSession::pre_update() noexcept
     {
         if (!is_cxr_initialized_ && is_ready_to_connect())
         {
@@ -523,8 +523,11 @@ namespace igl::shell
         {
 #if ENABLE_CLOUDXR_FRAME_LATCH
             latch_frame();
+            //return is_latched_;
 #endif
         }
+
+        return true;
     }
 
     void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
@@ -557,7 +560,7 @@ namespace igl::shell
         }
 
 #if ENABLE_CLOUDXR_FRAME_BLIT
-        if (is_connected() && is_latched_ && (latched_frames_.count == 2))
+        if (is_connected() && is_latched_)// && (latched_frames_.count == 2))
         {
             int view_id = shellParams().current_view_id_;
 
@@ -596,6 +599,21 @@ namespace igl::shell
                     xr_app.override_eye_poses_[view_id] = openxr::convert_to_xr_pose(eye_pose);
                 }
             }
+            return;
+        }
+        else if (is_connected()) {
+
+#if 1
+            auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
+
+            const std::shared_ptr<igl::IRenderCommandEncoder> commands =
+                    buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
+
+            commands->endEncoding();
+            buffer->present(framebuffer_->getColorAttachment(0));
+            commandQueue_->submit(*buffer);
+#endif
+
             return;
         }
 #endif
@@ -700,7 +718,7 @@ namespace igl::shell
         commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
     }
 
-    void OKCloudSession::post_update() noexcept
+    bool OKCloudSession::post_update() noexcept
     {
         if (is_connected())
         {
@@ -708,6 +726,8 @@ namespace igl::shell
             release_frame();
 #endif
         }
+
+        return true;
     }
 
     bool OKCloudSession::init_cxr()
@@ -1214,7 +1234,6 @@ namespace igl::shell
         if (controllers_initialized_)
         {
             // Poll from async thread, possibly much higher Hz (up to 1 Khz) than main render thread (to reduce latency)
-            //xr_app.update();
             xr_app.pollActions(false);
 
             for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)

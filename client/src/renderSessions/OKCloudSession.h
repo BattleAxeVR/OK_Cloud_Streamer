@@ -98,9 +98,9 @@ namespace igl::shell
 
         void initialize() noexcept override;
 
-        void pre_update() noexcept override;
+        bool pre_update() noexcept override;
         void update(igl::SurfaceTextures surfaceTextures) noexcept override;
-        void post_update() noexcept override;
+        bool post_update() noexcept override;
 
         // CloudXR stuff
         bool init_cxr();
