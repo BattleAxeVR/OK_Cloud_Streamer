@@ -608,8 +608,10 @@ namespace igl::shell
             }
             return;
         }
-        else if (is_connected()) {
-
+#if DRAW_CUBE_UNTIL_CONNECTED
+        else if (is_connected())
+#endif
+        {
 #if 1
             auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
 
@@ -625,6 +627,7 @@ namespace igl::shell
         }
 #endif
 
+#if DRAW_CUBE_UNTIL_CONNECTED
         // cube animation
         setVertexParams();
 
@@ -722,7 +725,8 @@ namespace igl::shell
 
         buffer->present(framebuffer_->getColorAttachment(0));
 
-        commandQueue_->submit(*buffer); // Guarantees ordering between command buffers
+        commandQueue_->submit(*buffer);
+#endif
     }
 
     bool OKCloudSession::post_update() noexcept
