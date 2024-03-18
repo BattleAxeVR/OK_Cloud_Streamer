@@ -29,6 +29,7 @@ https://github.com/BattleAxeVR/igl/tree/ok_cloud_streamer
 Design Philosophy:
 
 -Keep things as simple and "Plug n Play" as possible.
+
 -Reduce clicks ("time to fun") needed to achieve something to a bare minimum, ideally zero. 
 
 For ex: the first time you start the app, you set the IP address once and forget about it. Subsequent times can automatically log-in to the same IP. This IP and auto-connect feature can be changed manually using the UI control panel.
