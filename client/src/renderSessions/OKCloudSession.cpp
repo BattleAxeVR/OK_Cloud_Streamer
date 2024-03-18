@@ -1272,10 +1272,28 @@ namespace igl::shell
 
                     if (controller_result == XR_SUCCESS)
                     {
+#if ENABLE_CLOUDXR_CONTROLLER_FIX
+                        openxr::GLMPose cloudxr_controller_offset;
+
+                        cloudxr_controller_offset.euler_angles_degrees_ =
+                                glm::vec3(CLOUDXR_CONTROLLER_ROTATION_EULER_X, CLOUDXR_CONTROLLER_ROTATION_EULER_Y,
+                                          CLOUDXR_CONTROLLER_ROTATION_EULER_Z);
+
+                        cloudxr_controller_offset.update_rotation_from_euler();
+
+                        openxr::GLMPose final_controller_pose = openxr::convert_to_glm_pose(controller_location.pose);
+
+                        const glm::vec3 offset_ws = final_controller_pose.rotation_ * cloudxr_controller_offset.translation_;
+                        final_controller_pose.translation_ += offset_ws;
+                        final_controller_pose.rotation_ = glm::normalize(final_controller_pose.rotation_ * cloudxr_controller_offset.rotation_);
+
+                        cxr_controller.pose = convert_glm_to_cxr_pose(final_controller_pose);
+#else
                         cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
+#endif
                         cxr_controller.clientTimeNS = predicted_display_time_ns;
 
-                        cxr_controller_states_[controller_id] = cxr_controller;
+                        //cxr_controller_states_[controller_id] = cxr_controller;
 
                         if (controller_id == LEFT)
                         {
