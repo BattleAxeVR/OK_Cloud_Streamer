@@ -593,7 +593,7 @@ namespace igl::shell
                     const glm::vec3 ipd_offset_vec = glm::vec3(ipd_offset, 0.0f, 0.0f);
                     eye_pose.translation_ += eye_pose.rotation_ * ipd_offset_vec;
 
-                    xr_app.override_hmd_poses_[view_id] = openxr::convert_to_xr_pose(eye_pose);
+                    xr_app.override_eye_poses_[view_id] = openxr::convert_to_xr_pose(eye_pose);
                 }
             }
             return;
