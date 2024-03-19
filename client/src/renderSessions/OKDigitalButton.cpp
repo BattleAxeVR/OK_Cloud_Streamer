@@ -23,6 +23,11 @@ bool OKDigitalButton::was_released() const
 	return released_;
 }
 
+bool OKDigitalButton::was_changed() const
+{
+    return (pressed_ || released_);
+}
+
 bool OKDigitalButton::is_active() const 
 {
 	return (down_ || released_ || released_);
@@ -48,7 +53,7 @@ void OKDigitalButton::set_state(const bool down)
 		pressed_ = false;
 		released_ = false;
 	} 
-	else if ((down == true) && (down_ == false)) 
+	else if ((down == true) && (down_ == false))
 	{
 		pressed_ = true;
 		released_ = false;

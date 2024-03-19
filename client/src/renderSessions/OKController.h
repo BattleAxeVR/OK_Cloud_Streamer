@@ -66,7 +66,7 @@ namespace BVR
 
     struct AnalogAxisToCloudXRMap
             {
-        AnalogAxisID vr_analog_id_;
+        AnalogAxisID analog_axis_id_;
         int cloudxr_path_id_;
     };
 

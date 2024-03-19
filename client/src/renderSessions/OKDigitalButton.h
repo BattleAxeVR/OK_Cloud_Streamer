@@ -21,6 +21,7 @@ class OKDigitalButton
 		bool is_down() const;
 		bool was_pressed() const;
 		bool was_released() const;
+		bool was_changed() const;
 		bool is_active() const;
 
 		void clear();

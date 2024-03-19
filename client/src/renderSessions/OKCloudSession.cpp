@@ -1432,14 +1432,10 @@ namespace igl::shell
 
         const uint32_t num_digital_button_maps = ARRAY_SIZE(BVR::digital_button_maps);
 
-        static int frame_id = 0;
-        frame_id++;
-
-        const bool is_down = ((frame_id % 1000) == 0) ? true : false;
-        const bool was_changed = ((frame_id % 1000) == 0) || ((frame_id % 100) == 1);
-
         for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
+            const BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+
             for (uint32_t map_id = 0; map_id < num_digital_button_maps; map_id++)
             {
                 const BVR::DigitalButtonToCloudXR_Map& digital_button_map = BVR::digital_button_maps[map_id][controller_id];
@@ -1448,6 +1444,11 @@ namespace igl::shell
                 {
                     continue;
                 }
+
+                const BVR::OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[digital_button_map.digital_button_id_];
+
+                const bool is_down = ok_digital_button.is_down();
+                const bool was_changed = ok_digital_button.was_changed();
 
                 if (was_changed)
                 {
@@ -1470,9 +1471,12 @@ namespace igl::shell
                     continue;
                 }
 
+                const BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[analog_axis_map.analog_axis_id_];
+                const bool was_changed = ok_analog_axis.was_value_changed();
+
                 if (was_changed)
                 {
-                    float analog_axis_value = (frame_id % 10) / 10.0f;
+                    const float analog_axis_value = ok_analog_axis.get_current_value();
 
                     cxrControllerEvent& event = cxr_events[cxr_event_count++];
                     event.clientTimeNS = predicted_display_time_ns;
