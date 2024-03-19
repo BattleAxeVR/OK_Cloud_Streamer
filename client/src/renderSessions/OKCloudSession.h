@@ -8,6 +8,9 @@
 #include "defines.h"
 
 #if ENABLE_CLOUDXR
+#include "OKConfig.h"
+#include "OKPlayerState.h"
+
 #include <shell/shared/renderSession/RenderSession.h>
 
 #include <glm/glm.hpp>

@@ -33,6 +33,8 @@
 #undef EXTERNAL_XR_BUILD
 
 #include "GLMPose.cpp"
+#include "OKConfig.cpp"
+#include "OKPlayerState.cpp"
 
 #ifndef XR_USE_TIMESPEC
 #define XR_USE_TIMESPEC
