@@ -1316,6 +1316,21 @@ namespace igl::shell
                         //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
                     }
                 }
+
+#if SQUEEZE_LEFT_GRIP_TO_ENABLE_SHARPENING
+                if (controller_id == LEFT)
+                {
+                    XrActionStateGetInfo getInfo{XR_TYPE_ACTION_STATE_GET_INFO};
+                    getInfo.action = xr_inputs.grabAction;
+                    getInfo.subactionPath = xr_inputs.handSubactionPath[controller_id];
+
+                    XrActionStateFloat grabValue{XR_TYPE_ACTION_STATE_FLOAT};
+                    XR_CHECK(xrGetActionStateFloat(xr_app.session_, &getInfo, &grabValue));
+
+                    const bool enable_sharpening = ((grabValue.isActive == XR_TRUE) && (grabValue.currentState > 0.9f));
+                    xr_app.setSharpeningEnabled(enable_sharpening);
+                }
+#endif
             }
         }
 
