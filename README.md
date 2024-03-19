@@ -32,8 +32,7 @@ https://developer.nvidia.com/cloudxr-sdk
 
 -Graphics library is Facebook IGL:
 
-https://github.com/BattleAxeVR/igl/tree/ok_cloud_streamer
-
+https://github.com/BattleAxeVR/igl
 
 -Support any and all Quest (or other) standalone features available over OpenXR, such as eye-tracking, full body tracking simultaneous hands + controller tracking, via the custom non-VR Controller input data and server-side API functionality. 
 
