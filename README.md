@@ -3,9 +3,7 @@ An Open-source CloudXR 4 client, based on OpenXR with OK performance and feature
 
 ![OK_Cloud_Streamer](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/89819682-e770-4f56-b47f-4752f4646db0)
 
-![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/4e429c06-a221-4944-b847-1d788794a9d5)
-
-![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/9ac42c49-8ae9-412f-b3e6-c7c82dd78a2f)
+![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/b176601e-75b2-49f8-8154-93ebf30cc419)
 
 
 Goals:
