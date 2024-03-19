@@ -24,8 +24,8 @@ namespace BVR
         DigitalButton_Trigger_Touch,
         DigitalButton_Trigger_Click,
 
-        DigitalButton_Grip_Click,
         DigitalButton_Grip_Touch,
+        DigitalButton_Grip_Click,
 
         DigitalButton_Touchpad_Touch,
         DigitalButton_Touchpad_Click,

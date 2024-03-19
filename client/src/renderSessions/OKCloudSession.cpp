@@ -1331,6 +1331,9 @@ namespace igl::shell
 
                         cxr_controller.pose = convert_glm_to_cxr_pose(ok_controller.pose_);
 
+                        update_controller_digital_buttons(controller_id);
+                        update_controller_analog_axes(controller_id);
+
                         //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
                     }
                 }
@@ -1399,8 +1402,6 @@ namespace igl::shell
 
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::send_controller_poses\n");
-
-        static int val = 0;
 
         {
             const uint32_t pose_count = 1;
@@ -1495,6 +1496,105 @@ namespace igl::shell
             }
         }
     }
+
+    void OKCloudSession::update_controller_digital_buttons(const int controller_id)
+    {
+        if (!is_cxr_initialized_ || !is_connected() || !shellParams().xr_app_ptr_)
+        {
+            return;
+        }
+
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
+
+        struct XRActionToDigitalButtonID_Mapping
+        {
+            XrAction action;
+            BVR::DigitalButtonID digital_button_id;
+        };
+
+        XRActionToDigitalButtonID_Mapping xr_to_ok_button_mappings[] =
+        {
+                {xr_inputs.menuClickAction, BVR::DigitalButton_ApplicationMenu},
+                {xr_inputs.triggerTouchAction, BVR::DigitalButton_Trigger_Touch},
+                {xr_inputs.triggerClickAction, BVR::DigitalButton_Trigger_Click},
+                {xr_inputs.squeezeTouchAction, BVR::DigitalButton_Grip_Touch},
+                {xr_inputs.squeezeClickAction, BVR::DigitalButton_Grip_Click},
+                {xr_inputs.thumbstickTouchAction, BVR::DigitalButton_Joystick_Touch},
+                {xr_inputs.thumbstickClickAction, BVR::DigitalButton_Joystick_Click},
+                {xr_inputs.buttonAXTouchAction, BVR::DigitalButton_A_Touch},
+                {xr_inputs.buttonAXClickAction, BVR::DigitalButton_A_Click},
+                {xr_inputs.buttonBYTouchAction, BVR::DigitalButton_B_Touch},
+                {xr_inputs.buttonBYClickAction, BVR::DigitalButton_B_Click}
+        };
+
+        BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+
+        XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
+        action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
+
+        XrActionStateBoolean button_state = {XR_TYPE_ACTION_STATE_BOOLEAN};
+
+        for (uint32_t j = 0; j < ARRAY_SIZE(xr_to_ok_button_mappings); j++)
+        {
+            action_info.action = xr_to_ok_button_mappings[j].action;
+            XR_CHECK(xrGetActionStateBoolean(xr_app.session_, &action_info, &button_state));
+
+            if (!button_state.isActive)
+            {
+                continue;
+            }
+
+            BVR::OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[xr_to_ok_button_mappings[j].digital_button_id];
+            ok_digital_button.set_state(button_state.currentState);
+        }
+    }
+
+    void OKCloudSession::update_controller_analog_axes(const int controller_id)
+    {
+        if (!is_cxr_initialized_ || !is_connected() || !shellParams().xr_app_ptr_)
+        {
+            return;
+        }
+
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
+
+        struct XRActionToAnalogAxisID_Mapping
+        {
+            XrAction action;
+            BVR::AnalogAxisID analog_axis_id;
+        };
+
+        XRActionToAnalogAxisID_Mapping xr_to_ok_analog_mappings[] =
+        {
+                {xr_inputs.triggerValueAction, BVR::AnalogAxis_Trigger},
+                {xr_inputs.squeezeValueAction, BVR::AnalogAxis_Grip},
+                {xr_inputs.thumbstickXAction, BVR::AnalogAxis_JoystickX},
+                {xr_inputs.thumbstickYAction, BVR::AnalogAxis_JoystickY}
+        };
+
+        BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+
+        XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
+        action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
+        XrActionStateFloat axis_state = {XR_TYPE_ACTION_STATE_FLOAT};
+
+        for (uint32_t j = 0; j < ARRAY_SIZE(xr_to_ok_analog_mappings); j++)
+        {
+            action_info.action = xr_to_ok_analog_mappings[j].action;
+            XR_CHECK(xrGetActionStateFloat(xr_app.session_, &action_info, &axis_state));
+
+            if (!axis_state.isActive)
+            {
+                continue;
+            }
+
+            BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[xr_to_ok_analog_mappings[j].analog_axis_id];
+            ok_analog_axis.set_value(axis_state.currentState);
+        }
+    }
+
 #endif
 
 #if ENABLE_HAPTICS
