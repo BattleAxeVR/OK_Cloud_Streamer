@@ -1309,8 +1309,6 @@ namespace igl::shell
                         cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
 #endif
 
-                        cxr_controller.activityLevel = cxrDeviceActivityLevel_UserInteraction;
-
                         //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
                     }
                 }
