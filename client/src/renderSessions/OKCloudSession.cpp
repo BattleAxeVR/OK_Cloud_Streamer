@@ -840,7 +840,7 @@ namespace igl::shell
         cxrConnectionDesc connection_desc = {0};
         connection_desc.async = true;
         connection_desc.useL4S = false;
-        connection_desc.clientNetwork = cxrNetworkInterface_WiFi5Ghz;
+        connection_desc.clientNetwork = cxrNetworkInterface_Unknown;
         connection_desc.topology = cxrNetworkTopology_LAN;
 
         cxrError error = cxrConnect(cxr_receiver_, ip_address_.c_str(), &connection_desc);
@@ -897,11 +897,11 @@ namespace igl::shell
         // Debug flags
         receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;
 
+#if ENABLE_CLOUDXR_LOGGING
         {
             // Logging
             //receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
 
-#if 0
             receiver_desc.logMaxSizeKB = CLOUDXR_LOG_MAX_DEFAULT;
             receiver_desc.logMaxAgeDays = CLOUDXR_LOG_MAX_DEFAULT;
 
@@ -911,9 +911,8 @@ namespace igl::shell
             strncpy(receiver_desc.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
 
             receiver_desc.appOutputPath[CXR_MAX_PATH - 1] = 0;
-#endif
         }
-
+#endif
 
         cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
         device_desc.maxResFactor = DEFAULT_CLOUDXR_MAX_RES_FACTOR;
@@ -1310,6 +1309,8 @@ namespace igl::shell
                         cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
 #endif
 
+                        cxr_controller.activityLevel = cxrDeviceActivityLevel_UserInteraction;
+
                         //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
                     }
                 }
@@ -1349,6 +1350,7 @@ namespace igl::shell
             {
                 cxr_hmd_pose = convert_xr_to_cxr_pose(hmd_location);
                 cxr_tracking_state.hmd.clientTimeNS = predicted_display_time_ns;
+                cxr_tracking_state.hmd.activityLevel = cxrDeviceActivityLevel_UserInteraction;
             }
         }
 #endif
