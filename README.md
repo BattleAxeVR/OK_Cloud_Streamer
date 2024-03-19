@@ -13,6 +13,17 @@ Video showing Link Sharpening on/off:
 https://twitter.com/BattleAxeVR/status/1769914456786473179
 
 ------
+LEGAL:
+
+MIT License: I was told by Nvidia reps on their forums that it's ok if I share the SteamVR plugin installer and libraries for CXR, as long as I use a permissive license such as MIT, which I am. 
+
+All rights reserved and credit due to NV for their CloudXR library. 
+
+WARRANTY: THERE IS NONE. USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK. I'M SERIOUS, if a lag spike causes you to drop your sword, you're on your own! 
+
+But seriously, if you download the code here or an APK, just assume it's a) got bugs in it, b) could overheat your PC or Quest if you run settings too high, or you could have a large cloud server bill. None of these are my responsibility or fault. BE WARNED.
+
+------
 Goals:
 
 -Provide an Open Source OpenXR-based client for CloudXR 4.0
@@ -23,7 +34,6 @@ https://developer.nvidia.com/cloudxr-sdk
 
 https://github.com/BattleAxeVR/igl/tree/ok_cloud_streamer
 
--Legal / licensing: I was told by Nvidia reps on their forums that it's ok if I share the SteamVR plugin installer and libraries for CXR, as long as I use a permissive license such as MIT, which I am. All rights reserved and credit due to NV for their CloudXR library. 
 
 -Support any and fall Quest (or other) standalone features available over OpenXR, such as eye-tracking, full body tracking simultaneous hands + controller tracking, via the custom non-VR Controller input data and server-side API functionality. 
 
