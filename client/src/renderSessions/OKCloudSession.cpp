@@ -1335,6 +1335,8 @@ namespace igl::shell
                         update_controller_analog_axes(controller_id);
 
                         //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
+
+                        fire_controller_events(controller_id, predicted_display_time_ns);
                     }
                 }
 
@@ -1354,8 +1356,6 @@ namespace igl::shell
 #endif
             }
         }
-
-        fire_controller_events(predicted_display_time_ns);
 #endif
 
 #if ENABLE_CLOUDXR_HMD
@@ -1418,7 +1418,7 @@ namespace igl::shell
         }
     }
 
-    void OKCloudSession::fire_controller_events(const uint64_t predicted_display_time_ns)
+    void OKCloudSession::fire_controller_events(const int controller_id, const uint64_t predicted_display_time_ns)
     {
         if (!is_cxr_initialized_ || !is_connected() || !controllers_initialized_ || !shellParams().xr_app_ptr_)
         {
@@ -1431,11 +1431,38 @@ namespace igl::shell
         cxrControllerEvent cxr_events[MAX_CLOUDXR_CONTROLLER_EVENTS] = {};
         uint32_t cxr_event_count = 0;
 
-        const uint32_t num_digital_button_maps = ARRAY_SIZE(BVR::digital_button_maps);
+        const BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
 
-        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
-            const BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+            const uint32_t num_analog_axis_maps = ARRAY_SIZE(BVR::analog_axis_maps);
+
+            for (uint32_t map_id = 0; map_id < num_analog_axis_maps; map_id++)
+            {
+                const BVR::AnalogAxisToCloudXRMap &analog_axis_map = BVR::analog_axis_maps[map_id];
+
+                if (analog_axis_map.cloudxr_path_id_ == INVALID_INDEX)
+                {
+                    continue;
+                }
+
+                const BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[analog_axis_map.analog_axis_id_];
+                const bool was_changed = ok_analog_axis.was_value_changed();
+
+                if (was_changed)
+                {
+                    const float analog_axis_value = ok_analog_axis.get_current_value();
+
+                    cxrControllerEvent &event = cxr_events[cxr_event_count++];
+                    event.clientTimeNS = predicted_display_time_ns;
+                    event.clientInputIndex = analog_axis_map.cloudxr_path_id_;
+                    event.inputValue.valueType = cxrInputValueType_float32;
+                    event.inputValue.vF32 = analog_axis_value;
+                }
+            }
+        }
+
+        {
+            const uint32_t num_digital_button_maps = ARRAY_SIZE(BVR::digital_button_maps);
 
             for (uint32_t map_id = 0; map_id < num_digital_button_maps; map_id++)
             {
@@ -1460,33 +1487,10 @@ namespace igl::shell
                     event.inputValue.vBool = is_down;
                 }
             }
+        }
 
-            const uint32_t num_analog_axis_maps = ARRAY_SIZE(BVR::analog_axis_maps);
-
-            for (uint32_t map_id = 0; map_id < num_analog_axis_maps; map_id++)
-            {
-                const BVR::AnalogAxisToCloudXRMap& analog_axis_map = BVR::analog_axis_maps[map_id];
-
-                if (analog_axis_map.cloudxr_path_id_ == INVALID_INDEX)
-                {
-                    continue;
-                }
-
-                const BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[analog_axis_map.analog_axis_id_];
-                const bool was_changed = ok_analog_axis.was_value_changed();
-
-                if (was_changed)
-                {
-                    const float analog_axis_value = ok_analog_axis.get_current_value();
-
-                    cxrControllerEvent& event = cxr_events[cxr_event_count++];
-                    event.clientTimeNS = predicted_display_time_ns;
-                    event.clientInputIndex = analog_axis_map.cloudxr_path_id_;
-                    event.inputValue.valueType = cxrInputValueType_float32;
-                    event.inputValue.vF32 = analog_axis_value;
-                }
-            }
-
+        if (cxr_event_count > 0)
+        {
             cxrError fire_controller_events_result = cxrFireControllerEvents(cxr_receiver_, cxr_controller_handles_[controller_id], cxr_events, cxr_event_count);
 
             if (fire_controller_events_result)

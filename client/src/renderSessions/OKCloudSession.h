@@ -146,7 +146,7 @@ namespace igl::shell
         bool add_controllers();
         void remove_controllers();
         void send_controller_poses(cxrControllerTrackingState& cxr_controller, const int controller_id, const uint64_t predicted_display_time_ns);
-        void fire_controller_events(const uint64_t predicted_display_time_ns);
+        void fire_controller_events(const int controller_id, const uint64_t predicted_display_time_ns);
 
         void update_controller_digital_buttons(const int controller_id);
         void update_controller_analog_axes(const int controller_id);
