@@ -45,7 +45,8 @@
 
 #include <openxr/openxr_platform.h>
 
-cxrVector3 convert_xr_to_cxr(const XrVector3f &xr_vec) {
+cxrVector3 convert_xr_to_cxr(const XrVector3f &xr_vec)
+{
     cxrVector3 cxr_vec;
     cxr_vec.v[0] = xr_vec.x;
     cxr_vec.v[1] = xr_vec.y;
@@ -53,7 +54,8 @@ cxrVector3 convert_xr_to_cxr(const XrVector3f &xr_vec) {
     return cxr_vec;
 }
 
-XrVector3f convert_cxr_to_xr(const cxrVector3 &cxr_vec) {
+XrVector3f convert_cxr_to_xr(const cxrVector3 &cxr_vec)
+{
     XrVector3f xr_vec;
     xr_vec.x = cxr_vec.v[0];
     xr_vec.y = cxr_vec.v[1];
@@ -61,7 +63,8 @@ XrVector3f convert_cxr_to_xr(const cxrVector3 &cxr_vec) {
     return xr_vec;
 }
 
-cxrQuaternion convert_xr_to_cxr(const XrQuaternionf &xr_quat) {
+cxrQuaternion convert_xr_to_cxr(const XrQuaternionf &xr_quat)
+{
     cxrQuaternion cxr_quat;
     cxr_quat.w = xr_quat.w;
     cxr_quat.x = xr_quat.x;
@@ -70,7 +73,8 @@ cxrQuaternion convert_xr_to_cxr(const XrQuaternionf &xr_quat) {
     return cxr_quat;
 }
 
-XrQuaternionf convert_cxr_to_xr(const cxrQuaternion &cxr_quat) {
+XrQuaternionf convert_cxr_to_xr(const cxrQuaternion &cxr_quat)
+{
     XrQuaternionf xr_quat;
     xr_quat.w = cxr_quat.w;
     xr_quat.x = cxr_quat.x;
@@ -79,13 +83,15 @@ XrQuaternionf convert_cxr_to_xr(const cxrQuaternion &cxr_quat) {
     return xr_quat;
 }
 
-static double GetTimeInSeconds() {
+static double GetTimeInSeconds()
+{
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     return (now.tv_sec * 1e9 + now.tv_nsec) * 0.000000001;
 }
 
-static uint64_t GetTimeInNS() {
+static uint64_t GetTimeInNS()
+{
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
     return ((uint64_t)(now.tv_sec * 1e9) + now.tv_nsec);
@@ -95,8 +101,10 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 {
 }
 
-namespace BVR {
-    const char *cxr_input_paths[] = {
+namespace BVR
+{
+    const char *cxr_input_paths[] =
+    {
             "/input/system/click",
             "/input/application_menu/click",
             "/input/trigger/click",
@@ -120,7 +128,8 @@ namespace BVR {
             "/input/thumb_rest/touch",
     };
 
-    cxrInputValueType cxr_input_value_types[] = {
+    cxrInputValueType cxr_input_value_types[] =
+    {
             cxrInputValueType_boolean,  // input/system/click
             cxrInputValueType_boolean,  // input/application_menu/click
             cxrInputValueType_boolean,  // input/trigger/click
@@ -144,7 +153,8 @@ namespace BVR {
             cxrInputValueType_boolean,  // input/thumb_rest/touch
     };
 
-    cxrTrackedDevicePose convert_glm_to_cxr_pose(const GLMPose &glm_pose) {
+    cxrTrackedDevicePose convert_glm_to_cxr_pose(const GLMPose &glm_pose)
+    {
         cxrTrackedDevicePose cxr_pose = {};
 
         cxr_pose.position.v[0] = glm_pose.translation_.x;
@@ -163,7 +173,8 @@ namespace BVR {
         return cxr_pose;
     }
 
-    cxrVector3 convert_xr_to_cxr_vector3(const XrVector3f &input) {
+    cxrVector3 convert_xr_to_cxr_vector3(const XrVector3f &input)
+    {
         cxrVector3 output = {0};
 
         output.v[0] = input.x;
@@ -173,7 +184,8 @@ namespace BVR {
         return output;
     }
 
-    cxrQuaternion convert_xr_to_cxr_quat(const XrQuaternionf &input) {
+    cxrQuaternion convert_xr_to_cxr_quat(const XrQuaternionf &input)
+    {
         cxrQuaternion output = {0};
 
         output.w = input.w;
@@ -184,7 +196,8 @@ namespace BVR {
         return output;
     }
 
-    cxrTrackedDevicePose convert_xr_to_cxr_pose(XrSpaceLocation &location) {
+    cxrTrackedDevicePose convert_xr_to_cxr_pose(XrSpaceLocation &location)
+    {
         const XrPosef &xr_pose = location.pose;
 
         cxrTrackedDevicePose cxr_pose = {};
@@ -193,12 +206,15 @@ namespace BVR {
 
         XrSpaceVelocity *velocity = (XrSpaceVelocity *) location.next;
 
-        if (velocity && velocity->type == XR_TYPE_SPACE_VELOCITY) {
-            if (velocity->velocityFlags & XR_SPACE_VELOCITY_LINEAR_VALID_BIT) {
+        if (velocity && velocity->type == XR_TYPE_SPACE_VELOCITY)
+        {
+            if (velocity->velocityFlags & XR_SPACE_VELOCITY_LINEAR_VALID_BIT)
+            {
                 cxr_pose.velocity = convert_xr_to_cxr_vector3(velocity->linearVelocity);
             }
 
-            if (velocity->velocityFlags & XR_SPACE_VELOCITY_ANGULAR_VALID_BIT) {
+            if (velocity->velocityFlags & XR_SPACE_VELOCITY_ANGULAR_VALID_BIT)
+            {
                 cxr_pose.angularVelocity = convert_xr_to_cxr_vector3(velocity->angularVelocity);
             }
         }
