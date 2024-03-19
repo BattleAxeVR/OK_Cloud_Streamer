@@ -582,7 +582,7 @@ namespace igl::shell
         latch_frame(view_id);
 #endif
 
-        if (is_connected() && is_latched_)// && (latched_frames_.count == 2))
+        if (is_connected() && is_latched_)
         {
             uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
             cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
