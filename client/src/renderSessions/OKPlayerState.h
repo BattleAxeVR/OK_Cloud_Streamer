@@ -6,6 +6,7 @@
 #define OK_PLAYER_STATE_H
 
 #include "GLMPose.h"
+#include "OKController.h"
 
 namespace BVR 
 {
@@ -19,7 +20,11 @@ public:
 	void shutdown();
 	
 	bool update();
-	
+
+    OKController controllers_[NUM_CONTROLLERS];
+
+    GLMPose hmd_pose_;
+    GLMPose waist_pose_;
 };
 
 } // namespace BVR

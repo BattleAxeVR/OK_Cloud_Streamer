@@ -35,6 +35,9 @@
 #include "GLMPose.cpp"
 #include "OKConfig.cpp"
 #include "OKPlayerState.cpp"
+#include "OKController.cpp"
+#include "OKDigitalButton.cpp"
+#include "OKAnalogAxis.cpp"
 
 #ifndef XR_USE_TIMESPEC
 #define XR_USE_TIMESPEC
@@ -92,8 +95,7 @@ extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, v
 {
 }
 
-namespace igl::shell
-{
+namespace BVR {
     const char *cxr_input_paths[] = {
             "/input/system/click",
             "/input/application_menu/click",
@@ -142,8 +144,7 @@ namespace igl::shell
             cxrInputValueType_boolean,  // input/thumb_rest/touch
     };
 
-    cxrTrackedDevicePose convert_glm_to_cxr_pose(const openxr::GLMPose& glm_pose)
-    {
+    cxrTrackedDevicePose convert_glm_to_cxr_pose(const GLMPose &glm_pose) {
         cxrTrackedDevicePose cxr_pose = {};
 
         cxr_pose.position.v[0] = glm_pose.translation_.x;
@@ -162,8 +163,7 @@ namespace igl::shell
         return cxr_pose;
     }
 
-    cxrVector3 convert_xr_to_cxr_vector3(const XrVector3f& input)
-    {
+    cxrVector3 convert_xr_to_cxr_vector3(const XrVector3f &input) {
         cxrVector3 output = {0};
 
         output.v[0] = input.x;
@@ -173,8 +173,7 @@ namespace igl::shell
         return output;
     }
 
-    cxrQuaternion convert_xr_to_cxr_quat(const XrQuaternionf& input)
-    {
+    cxrQuaternion convert_xr_to_cxr_quat(const XrQuaternionf &input) {
         cxrQuaternion output = {0};
 
         output.w = input.w;
@@ -185,25 +184,21 @@ namespace igl::shell
         return output;
     }
 
-    cxrTrackedDevicePose convert_xr_to_cxr_pose(XrSpaceLocation& location)
-    {
-        const XrPosef& xr_pose = location.pose;
+    cxrTrackedDevicePose convert_xr_to_cxr_pose(XrSpaceLocation &location) {
+        const XrPosef &xr_pose = location.pose;
 
         cxrTrackedDevicePose cxr_pose = {};
         cxr_pose.position = convert_xr_to_cxr_vector3(xr_pose.position);
         cxr_pose.rotation = convert_xr_to_cxr_quat(xr_pose.orientation);
 
-        XrSpaceVelocity* velocity = (XrSpaceVelocity *)location.next;
+        XrSpaceVelocity *velocity = (XrSpaceVelocity *) location.next;
 
-        if (velocity && velocity->type == XR_TYPE_SPACE_VELOCITY)
-        {
-            if (velocity->velocityFlags & XR_SPACE_VELOCITY_LINEAR_VALID_BIT)
-            {
+        if (velocity && velocity->type == XR_TYPE_SPACE_VELOCITY) {
+            if (velocity->velocityFlags & XR_SPACE_VELOCITY_LINEAR_VALID_BIT) {
                 cxr_pose.velocity = convert_xr_to_cxr_vector3(velocity->linearVelocity);
             }
 
-            if (velocity->velocityFlags & XR_SPACE_VELOCITY_ANGULAR_VALID_BIT)
-            {
+            if (velocity->velocityFlags & XR_SPACE_VELOCITY_ANGULAR_VALID_BIT) {
                 cxr_pose.angularVelocity = convert_xr_to_cxr_vector3(velocity->angularVelocity);
             }
         }
@@ -214,7 +209,10 @@ namespace igl::shell
 
         return cxr_pose;
     }
+}
 
+namespace igl::shell
+{
     struct VertexPosUvw
     {
         glm::vec3 position;
@@ -332,7 +330,7 @@ namespace igl::shell
                       })";
     }
 
-    std::unique_ptr<IShaderStages> getShaderStagesForBackend(igl::IDevice& device)
+    std::unique_ptr<igl::IShaderStages> getShaderStagesForBackend(igl::IDevice& device)
     {
         switch (device.getBackendType())
         {
@@ -592,15 +590,15 @@ namespace igl::shell
                     XrVector3f xr_hmd_position = convert_cxr_to_xr(cxr_hmd_position);
                     XrQuaternionf xr_hmd_rotation = convert_cxr_to_xr(cxr_hmd_rotation);
 
-                    const openxr::GLMPose hmd_pose(openxr::convert_to_glm(xr_hmd_position), openxr::convert_to_glm(xr_hmd_rotation));
-                    openxr::GLMPose eye_pose = hmd_pose;
+                    const BVR::GLMPose hmd_pose(BVR::convert_to_glm(xr_hmd_position), BVR::convert_to_glm(xr_hmd_rotation));
+                    BVR::GLMPose eye_pose = hmd_pose;
 
                     const float half_ipd = ipd_meters_ * 0.5f;
                     const float ipd_offset = (view_id == LEFT) ? -half_ipd : half_ipd;
                     const glm::vec3 ipd_offset_vec = glm::vec3(ipd_offset, 0.0f, 0.0f);
                     eye_pose.translation_ += eye_pose.rotation_ * ipd_offset_vec;
 
-                    xr_app.override_eye_poses_[view_id] = openxr::convert_to_xr_pose(eye_pose);
+                    xr_app.override_eye_poses_[view_id] = BVR::convert_to_xr_pose(eye_pose);
                 }
 
 #if LATCH_FRAMES_PER_EYE
@@ -1124,9 +1122,9 @@ namespace igl::shell
                                                          : "cxr://input/hand/left";
 
                 cxr_controller_desc.controllerName = "Oculus Touch";
-                cxr_controller_desc.inputCount = ARRAY_SIZE(cxr_input_paths);
-                cxr_controller_desc.inputPaths = cxr_input_paths;
-                cxr_controller_desc.inputValueTypes = cxr_input_value_types;
+                cxr_controller_desc.inputCount = ARRAY_SIZE(BVR::cxr_input_paths);
+                cxr_controller_desc.inputPaths = BVR::cxr_input_paths;
+                cxr_controller_desc.inputValueTypes = BVR::cxr_input_value_types;
 
                 cxrError add_controller_error = cxrAddController(cxr_receiver_,
                                                                  &cxr_controller_desc,
@@ -1290,7 +1288,7 @@ namespace igl::shell
                         cxr_controller.clientTimeNS = predicted_display_time_ns;
 
 #if ENABLE_CLOUDXR_CONTROLLER_FIX
-                        openxr::GLMPose cloudxr_controller_offset;
+                        BVR::GLMPose cloudxr_controller_offset;
 
                         const float x_offset = (controller_id == LEFT) ? -CLOUDXR_CONTROLLER_OFFSET_X : CLOUDXR_CONTROLLER_OFFSET_X;
 
@@ -1304,7 +1302,7 @@ namespace igl::shell
 
                         cloudxr_controller_offset.update_rotation_from_euler();
 
-                        openxr::GLMPose final_controller_pose = openxr::convert_to_glm_pose(controller_location.pose);
+                        BVR::GLMPose final_controller_pose = BVR::convert_to_glm_pose(controller_location.pose);
 
                         const glm::vec3 offset_ws = final_controller_pose.rotation_ * cloudxr_controller_offset.translation_;
                         final_controller_pose.translation_ += offset_ws;
@@ -1364,7 +1362,7 @@ namespace igl::shell
 
             if (XR_UNQUALIFIED_SUCCESS(hmd_result))
             {
-                cxr_hmd_pose = convert_xr_to_cxr_pose(hmd_location);
+                cxr_hmd_pose = BVR::convert_xr_to_cxr_pose(hmd_location);
                 cxr_tracking_state.hmd.clientTimeNS = predicted_display_time_ns;
                 cxr_tracking_state.hmd.activityLevel = cxrDeviceActivityLevel_UserInteraction;
             }
@@ -1411,50 +1409,10 @@ namespace igl::shell
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::fire_controller_events\n");
 
-        static DigitalButtonToCloudXR_Map digital_button_maps[][NUM_SIDES] = {{{DigitalButton_ApplicationMenu, 0},
-                                                                                        { DigitalButton_System,
-                                                                                                INVALID_INDEX }},
-                                                                                {{DigitalButton_Trigger_Click, 2},
-                                                                                        { DigitalButton_Trigger_Click,
-                                                                                                2 }},
-                                                                                {{DigitalButton_Trigger_Touch, 3},
-                                                                                        { DigitalButton_Trigger_Touch,
-                                                                                                3 }},
-                                                                                {{DigitalButton_Grip_Click, 5},
-                                                                                        { DigitalButton_Grip_Click,
-                                                                                                5 }},
-                                                                                {{DigitalButton_Grip_Touch, 6},
-                                                                                        { DigitalButton_Grip_Touch,
-                                                                                                6 }},
-                                                                                {{DigitalButton_Joystick_Click, 8},
-                                                                                        { DigitalButton_Joystick_Click,
-                                                                                                8 }},
-                                                                                {{DigitalButton_Joystick_Touch, 9},
-                                                                                        { DigitalButton_Joystick_Touch,
-                                                                                                9 }},
-                                                                                {{DigitalButton_A_Click, 14},
-                                                                                        { DigitalButton_A_Click,
-                                                                                                12 }},
-                                                                                {{DigitalButton_A_Touch, 18},
-                                                                                        { DigitalButton_A_Touch,
-                                                                                                16 }},
-                                                                                {{DigitalButton_B_Click, 15},
-                                                                                        { DigitalButton_B_Click,
-                                                                                                13 }},
-                                                                                { {DigitalButton_B_Touch, 19},
-                                                                                        { DigitalButton_B_Touch,
-                                                                                                17 } }};
-
-        static AnalogAxisToCloudXRMap analog_axis_maps[] = {{AnalogAxis_Trigger, 4},
-                                                                  {AnalogAxis_Grip, 7},
-                                                                  {AnalogAxis_JoystickX, 10},
-                                                                  {AnalogAxis_JoystickY,
-                                                                          11 }};
-
         cxrControllerEvent cxr_events[MAX_CLOUDXR_CONTROLLER_EVENTS] = {};
         uint32_t cxr_event_count = 0;
 
-        const uint32_t num_digital_button_maps = ARRAY_SIZE(digital_button_maps);
+        const uint32_t num_digital_button_maps = ARRAY_SIZE(BVR::digital_button_maps);
 
         static int frame_id = 0;
         frame_id++;
@@ -1466,7 +1424,7 @@ namespace igl::shell
         {
             for (uint32_t map_id = 0; map_id < num_digital_button_maps; map_id++)
             {
-                const DigitalButtonToCloudXR_Map& digital_button_map = digital_button_maps[map_id][controller_id];
+                const BVR::DigitalButtonToCloudXR_Map& digital_button_map = BVR::digital_button_maps[map_id][controller_id];
 
                 if (digital_button_map.cloudxr_path_id_ == INVALID_INDEX)
                 {
@@ -1483,11 +1441,11 @@ namespace igl::shell
                 }
             }
 
-            const uint32_t num_analog_axis_maps = ARRAY_SIZE(analog_axis_maps);
+            const uint32_t num_analog_axis_maps = ARRAY_SIZE(BVR::analog_axis_maps);
 
             for (uint32_t map_id = 0; map_id < num_analog_axis_maps; map_id++)
             {
-                const AnalogAxisToCloudXRMap& analog_axis_map = analog_axis_maps[map_id];
+                const BVR::AnalogAxisToCloudXRMap& analog_axis_map = BVR::analog_axis_maps[map_id];
 
                 if (analog_axis_map.cloudxr_path_id_ == INVALID_INDEX)
                 {

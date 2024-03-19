@@ -29,56 +29,6 @@
 
 namespace igl::shell
 {
-    typedef enum {
-        DigitalButton_System,
-        DigitalButton_ApplicationMenu,
-
-        DigitalButton_Trigger_Touch,
-        DigitalButton_Trigger_Click,
-
-        DigitalButton_Grip_Click,
-        DigitalButton_Grip_Touch,
-
-        DigitalButton_Touchpad_Touch,
-        DigitalButton_Touchpad_Click,
-
-        DigitalButton_Joystick_Touch,
-        DigitalButton_Joystick_Click,
-
-        DigitalButton_A_Touch,
-        DigitalButton_A_Click,
-
-        DigitalButton_B_Touch,
-        DigitalButton_B_Click,
-
-        DIGITAL_BUTTON_COUNT
-    } DigitalButtonID;
-
-    typedef enum {
-        AnalogAxis_Trigger,
-
-        AnalogAxis_TouchpadX,
-        AnalogAxis_TouchpadY,
-
-        AnalogAxis_JoystickX,
-        AnalogAxis_JoystickY,
-
-        AnalogAxis_Grip,
-        AnalogAxis_Grip_Force,
-
-        ANALOG_AXIS_COUNT
-    } AnalogAxisID;
-
-    struct DigitalButtonToCloudXR_Map {
-        DigitalButtonID digital_button_id_;
-        int cloudxr_path_id_;
-    };
-
-    struct AnalogAxisToCloudXRMap {
-        AnalogAxisID vr_analog_id_;
-        int cloudxr_path_id_;
-    };
-
     struct VertexFormat
     {
         glm::mat4 modelMatrix = glm::mat4(1.0);
@@ -215,6 +165,8 @@ namespace igl::shell
         uint64_t poseID_ = 0;
 #endif
 
+        BVR::OKConfig ok_config_;
+        BVR::OKPlayerState ok_player_state_;
     };
 
 } // namespace igl::shell

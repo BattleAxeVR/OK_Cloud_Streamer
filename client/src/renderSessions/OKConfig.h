@@ -17,7 +17,7 @@ public:
 	void shutdown();
 	
 	bool update();
-	
+
 };
 
 } // namespace BVR

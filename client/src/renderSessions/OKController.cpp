@@ -3,32 +3,15 @@
 //--------------------------------------------------------------------------------------
 
 #include "defines.h"
-
-#include "OKPlayerState.h"
 #include "OKController.h"
+#include "OKPlayerState.h"
 
 namespace BVR 
 {
 
-OKPlayerState::OKPlayerState() : controllers_{{*this, LEFT}, {*this, RIGHT}}
+OKController::OKController(OKPlayerState& ok_player, const int controller_id) : ok_player_(ok_player), controller_id_(controller_id)
 {
-	
+
 }
 
-bool OKPlayerState::init()
-{
-	return true;
-}
-
-void OKPlayerState::shutdown()
-{
-	
-}
-
-bool OKPlayerState::update()
-{
-	return true;
-}
-
-} // namespace BVR
-
+}  // namespace BVR

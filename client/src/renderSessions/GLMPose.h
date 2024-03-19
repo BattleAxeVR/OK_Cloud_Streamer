@@ -17,7 +17,8 @@ inline float sign(float val)
     return (val < 0.0f) ? -1.0f : 1.0f;
 }
 
-namespace igl::shell::openxr {
+namespace BVR
+{
 
 const float ROOT_OF_HALF = 0.7071067690849304f;
 
@@ -57,12 +58,15 @@ const glm::fquat ceiling_rotation = CCW_90_rotation_about_x;
 const glm::fquat down_rotation = CW_90_rotation_about_x;
 const glm::fquat up_rotation = CCW_90_rotation_about_x;
 
-struct GLMPose {
-    GLMPose() {
+struct GLMPose
+{
+    GLMPose()
+    {
     }
 
     GLMPose(const glm::vec3 &translation, const glm::fquat &rotation) : translation_(
-            translation), rotation_(rotation) {
+            translation), rotation_(rotation)
+    {
     }
 
     glm::vec3 translation_ = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -98,6 +102,7 @@ GLMPose convert_to_glm_pose(const XrVector3f &position, const XrQuaternionf &rot
 GLMPose convert_to_glm_pose(const XrPosef &xr_pose);
 
 XrPosef convert_to_xr_pose(const GLMPose &glm_pose);
-} // namespace igl::shell::openxr
+
+} // BVR
 
 #endif
