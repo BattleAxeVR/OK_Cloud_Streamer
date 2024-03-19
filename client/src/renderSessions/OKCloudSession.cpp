@@ -1337,9 +1337,6 @@ namespace igl::shell
         //fire_controller_events(predicted_display_time_ns);
 #endif
 
-        // Hold the mutex for as little time as possible
-        //std::lock_guard<std::mutex> lock(xr_inputs.polling_mutex_);
-
 #if ENABLE_CLOUDXR_HMD
         {
             cxr_tracking_state.hmd.flags = 0;
