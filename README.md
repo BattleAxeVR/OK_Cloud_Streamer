@@ -5,7 +5,7 @@ An Open-source CloudXR 4 client, based on OpenXR with OK performance and feature
 
 ![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/b176601e-75b2-49f8-8154-93ebf30cc419)
 
-
+------
 Goals:
 
 -Provide an Open Source OpenXR-based client for CloudXR 4.0
@@ -24,6 +24,7 @@ https://github.com/BattleAxeVR/igl/tree/ok_cloud_streamer
 
 -The client being open source means you can enable platform-wide features for PC VR gaming, such as waist-oriented locomotion (a software-only version of Decamove). 
 
+------
 Design Philosophy:
 
 -Keep things as simple and "Plug n Play" as possible.
@@ -43,8 +44,33 @@ Full Source + prebuilt APKs/.exe for the waist-loco demo (which will be ported i
 https://github.com/BattleAxeVR/OpenXR-SDK-Source
 
 ------
+Build from source:
 
-Funding:
+-Open client/Android in Android Studio (latest). Built it. For release, you will need to sign it as debug or create your own local keystore. The instructions how to do this are out of scope for this repo (just google it).
+
+------
+
+Running the OK Cloud Streamer app:
+
+-First you must find and write the IP address of your server (the PC running SteamVR) in the JSON configuration file provided in client/config. You can find your IP using a command prompt and typing "ipconfig". It's usually a 192.X.X.X or similar. You can also specify an IP on the internet (indeed that's the purpose of this app, to work over local wifi or the cloud).
+
+-Next, install the APK using ADB or Sidequest / Applab / whatever. Run it once, it will make the app's directory (but fail to connect). It may ask for microphone permission (not implemented yet, but soon).
+
+-Next, install the JSON config file using the batch file or SideQuest/ADB to put it in the app's files/ folder.
+
+-Install the CloudXR 4.0 server plugin on the PC running SteamVR (you may have to uninstall/reinstall or switch to Beta SteamVR). To get audio recording it also needs the server plugin configuration. See the README in the OVR sample, it's the same process.
+
+-Run the app, it should connect within 5 seconds or so, automatically. If it fails or crashes, try connecting again. If that doesn't work restart SteamVR, or reinstall the plugin, or try connecting with the OVR sample and the same IP address (in a different config file, see OVR dir).
+
+NOTES: 
+
+-If you change your CloudXR resolution or refresh rate / streaming framerate in the config, you must restart SteamVR for the changes to take effect the next time it connects. There is currently no way around this limitation, it's how CloudXR SteamVR plugin was designed.
+
+-Running without SteamVR running at all, should be possible "soon", when Nvidia releases their Monado-based PC side OpenXR runtime which has direct CloudXR server integration. 
+
+------
+
+Funding and further development:
 
 Hi, if you find this software useful and would like to contribute to further development (or need new features added), here are my Github Sponsor and Patreon pages:
 
