@@ -797,6 +797,10 @@ namespace igl::shell
 
             xr_app.enableAsyncPolling_ = is_connected_now;
             xr_app.enableMainThreadPolling_ = !xr_app.enableAsyncPolling_;
+
+#if ENABLE_CLOUDXR_LINK_SHARPENING
+            xr_app.setSharpeningEnabled(is_connected_now);
+#endif
         }
     }
 
