@@ -1289,6 +1289,9 @@ namespace igl::shell
                 cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
                 cxr_controller = {};
 
+                BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+                ok_controller.pose_.is_valid_ = false;
+
                 if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
                 {
                     XrSpaceVelocity controller_velocity = {XR_TYPE_SPACE_VELOCITY};
@@ -1302,6 +1305,7 @@ namespace igl::shell
                     if (controller_result == XR_SUCCESS)
                     {
                         cxr_controller.clientTimeNS = predicted_display_time_ns;
+                        ok_controller.pose_ = BVR::convert_to_glm_pose(controller_location.pose);
 
 #if ENABLE_CLOUDXR_CONTROLLER_FIX
                         BVR::GLMPose cloudxr_controller_offset;
@@ -1318,16 +1322,14 @@ namespace igl::shell
 
                         cloudxr_controller_offset.update_rotation_from_euler();
 
-                        BVR::GLMPose final_controller_pose = BVR::convert_to_glm_pose(controller_location.pose);
+                        const glm::vec3 offset_ws = ok_controller.pose_.rotation_ * cloudxr_controller_offset.translation_;
+                        ok_controller.pose_.translation_ += offset_ws;
+                        ok_controller.pose_.rotation_ = glm::normalize(ok_controller.pose_.rotation_ * cloudxr_controller_offset.rotation_);
 
-                        const glm::vec3 offset_ws = final_controller_pose.rotation_ * cloudxr_controller_offset.translation_;
-                        final_controller_pose.translation_ += offset_ws;
-                        final_controller_pose.rotation_ = glm::normalize(final_controller_pose.rotation_ * cloudxr_controller_offset.rotation_);
-
-                        cxr_controller.pose = convert_glm_to_cxr_pose(final_controller_pose);
-#else
-                        cxr_controller.pose = convert_xr_to_cxr_pose(controller_location);
+                        cxr_controller.pose = convert_glm_to_cxr_pose(ok_controller.pose_);
 #endif
+
+                        cxr_controller.pose = convert_glm_to_cxr_pose(ok_controller.pose_);
 
                         //send_controller_poses(cxr_controller, controller_id, predicted_display_time_ns);
                     }
@@ -1350,7 +1352,7 @@ namespace igl::shell
             }
         }
 
-        //fire_controller_events(predicted_display_time_ns);
+        fire_controller_events(predicted_display_time_ns);
 #endif
 
 #if ENABLE_CLOUDXR_HMD
