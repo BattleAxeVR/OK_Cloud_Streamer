@@ -5,6 +5,10 @@ An Open-source CloudXR 4 client, based on OpenXR with OK performance and feature
 
 ![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/b176601e-75b2-49f8-8154-93ebf30cc419)
 
+Video showing Link Sharpening on/off:
+
+https://twitter.com/BattleAxeVR/status/1769914456786473179
+
 ------
 Goals:
 
