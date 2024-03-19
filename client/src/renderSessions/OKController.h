@@ -59,13 +59,13 @@ namespace BVR
     } AnalogAxisID;
 
     struct DigitalButtonToCloudXR_Map
-            {
+    {
         DigitalButtonID digital_button_id_;
         int cloudxr_path_id_;
     };
 
     struct AnalogAxisToCloudXRMap
-            {
+    {
         AnalogAxisID analog_axis_id_;
         int cloudxr_path_id_;
     };
