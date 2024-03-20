@@ -80,7 +80,10 @@ You can find your IP by opening a command prompt and typing "ipconfig". It's usu
 
 ![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/c8eb2576-44ef-4a77-8722-995cb7cdbc5c)
 
-You can use SideQuest for this as well, navigate to /sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ and make sure the ok_cloud_streamer_config.json file is there.
+You can use SideQuest for this as well, navigate to /sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ and make sure the ok_cloud_streamer_config.json file is there:
+
+![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/4f553c26-21dd-42e1-a896-45cbec96cf2f)
+
 
 -Install the CloudXR 4.0 server plugin on the PC running SteamVR (you may have to uninstall/reinstall or switch to Beta SteamVR). To get audio recording it also needs the server plugin configuration (there's a batch file in server/ to copy this server side config to the appropriate appdata folder). See the README in the OVR sample, it's the same process.
 
