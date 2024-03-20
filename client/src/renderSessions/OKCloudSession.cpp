@@ -555,7 +555,7 @@ void OKCloudSession::set_sharpening_enabled(const bool enabled)
 void OKCloudSession::handle_stream_connected()
 {
     openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
-    xr_app.cloudxr_connected_ = true;
+    xr_app.should_override_eye_poses_ = true;
     xr_app.enableAsyncPolling_ = true;
     xr_app.enableMainThreadPolling_ = !xr_app.enableAsyncPolling_;
 }
@@ -563,7 +563,7 @@ void OKCloudSession::handle_stream_connected()
 void OKCloudSession::handle_stream_disconnected()
 {
     openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
-    xr_app.cloudxr_connected_ = false;
+    xr_app.should_override_eye_poses_ = false;
     xr_app.enableAsyncPolling_ = false;
     xr_app.enableMainThreadPolling_ = !xr_app.enableAsyncPolling_;
 }
