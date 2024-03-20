@@ -1118,9 +1118,7 @@ namespace igl::shell
             {
                 cxrControllerDesc cxr_controller_desc = {};
                 cxr_controller_desc.id = controller_id;
-                cxr_controller_desc.role = controller_id ? "cxr://input/hand/right"
-                                                         : "cxr://input/hand/left";
-
+                cxr_controller_desc.role = (controller_id == LEFT) ? "cxr://input/hand/left" : "cxr://input/hand/right";
                 cxr_controller_desc.controllerName = "Oculus Touch";
                 cxr_controller_desc.inputCount = ARRAY_SIZE(BVR::cxr_input_paths);
                 cxr_controller_desc.inputPaths = BVR::cxr_input_paths;
@@ -1510,7 +1508,7 @@ namespace igl::shell
                 {xr_inputs.squeezeClickAction, BVR::DigitalButton_Grip_Click},
                 {xr_inputs.thumbstickTouchAction, BVR::DigitalButton_Joystick_Touch},
                 {xr_inputs.thumbstickClickAction, BVR::DigitalButton_Joystick_Click},
-                {xr_inputs.thumbRestTouchAction, BVR::DigitalButton_Touchpad_Touch},
+                //{xr_inputs.thumbRestTouchAction, BVR::DigitalButton_Touchpad_Touch},
                 //{xr_inputs.thumbRestClickAction, BVR::DigitalButton_Touchpad_Click},
                 {xr_inputs.buttonAXTouchAction, BVR::DigitalButton_A_Touch},
                 {xr_inputs.buttonAXClickAction, BVR::DigitalButton_A_Click},
@@ -1562,7 +1560,7 @@ namespace igl::shell
                 {xr_inputs.squeezeValueAction, BVR::AnalogAxis_Grip},
                 {xr_inputs.thumbstickXAction, BVR::AnalogAxis_JoystickX},
                 {xr_inputs.thumbstickYAction, BVR::AnalogAxis_JoystickY},
-                //{xr_inputs.thumbProximityAction, BVR::AnalogAxis_Grip},
+                {xr_inputs.thumbProximityAction, BVR::AnalogAxis_Proximity},
                 {xr_inputs.thumbRestForceAction, BVR::AnalogAxis_Grip_Force},
                 //{xr_inputs.trackpadXAction, BVR::AnalogAxis_JoystickX},
                 //{xr_inputs.trackpadYAction, BVR::AnalogAxis_JoystickY}
