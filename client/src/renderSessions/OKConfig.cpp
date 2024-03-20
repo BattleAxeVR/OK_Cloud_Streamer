@@ -90,7 +90,16 @@ bool OKConfig::load()
     if (root.isMember("server_ip_address"))
     {
         const Json::Value server_ip_address_value = root["server_ip_address"];
-        server_ip_address_ = server_ip_address_value.asString();
+
+        if (server_ip_address_value.isString())
+        {
+            server_ip_address_ = server_ip_address_value.asString();
+        }
+        else
+        {
+            return false;
+        }
+
     }
     else
     {
@@ -112,124 +121,204 @@ bool OKConfig::load()
     if (root.isMember("per_eye_width"))
     {
         const Json::Value value = root["per_eye_width"];
-        per_eye_width_ = value.asUInt();
-        per_eye_width_ += per_eye_width_ % 32;
+
+        if (value.isUInt())
+        {
+            per_eye_width_ = value.asUInt();
+            per_eye_width_ += per_eye_width_ % 32;
+        }
     }
 
     if (root.isMember("per_eye_height"))
     {
         const Json::Value value = root["per_eye_height"];
-        per_eye_height_ = value.asUInt();
-        per_eye_height_ += per_eye_height_ % 32;
+
+        if (value.isUInt())
+        {
+            per_eye_height_ = value.asUInt();
+            per_eye_height_ += per_eye_height_ % 32;
+        }
     }
 
     if (root.isMember("desired_refresh_rate"))
     {
         const Json::Value value = root["desired_refresh_rate"];
-        desired_refresh_rate_ = value.asUInt();
+
+        if (value.isUInt())
+        {
+            desired_refresh_rate_ = value.asUInt();
+        }
     }
 
     if (root.isMember("polling_rate_mult"))
     {
         const Json::Value value = root["polling_rate_mult"];
-        polling_rate_mult_ = value.asUInt();
+
+        if (value.isUInt())
+        {
+            polling_rate_mult_ = value.asUInt();
+        }
     }
 
     if (root.isMember("foveation"))
     {
         const Json::Value value = root["foveation"];
-        foveation_ = value.asUInt();
-        foveation_ = clamp<uint32_t>(foveation_, 0, 100);
+
+        if (value.isUInt())
+        {
+            foveation_ = value.asUInt();
+            foveation_ = clamp<uint32_t>(foveation_, 0, 100);
+        }
     }
 
     if (root.isMember("enable_sharpening"))
     {
         const Json::Value value = root["enable_sharpening"];
-        enable_sharpening_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_sharpening_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("max_res_factor"))
     {
         const Json::Value value = root["max_res_factor"];
-        max_res_factor_ = value.asFloat();
+
+        if (value.isDouble())
+        {
+            max_res_factor_ = value.asFloat();
+        }
     }
 
     if (root.isMember("max_bitrate_kbps"))
     {
         const Json::Value value = root["max_bitrate_kbps"];
-        max_bitrate_kbps_ = value.asUInt();
+
+        if (value.isUInt())
+        {
+            max_bitrate_kbps_ = value.asUInt();
+        }
     }
 
     if (root.isMember("prediction_offset_ns"))
     {
         const Json::Value value = root["prediction_offset_ns"];
-        prediction_offset_ns_ = value.asFloat();
+
+        if (value.isDouble())
+        {
+            prediction_offset_ns_ = value.asFloat();
+        }
     }
 
     if (root.isMember("pose_time_offset_s"))
     {
         const Json::Value value = root["pose_time_offset_s"];
-        pose_time_offset_s_ = value.asFloat();
+
+        if (value.isDouble())
+        {
+            pose_time_offset_s_ = value.asFloat();
+        }
     }
 
     if (root.isMember("latch_timeout_ms"))
     {
         const Json::Value value = root["latch_timeout_ms"];
-        latch_timeout_ms_ = value.asUInt();
+
+        if (value.isUInt())
+        {
+            latch_timeout_ms_ = value.asUInt();
+        }
     }
 
     if (root.isMember("enable_audio_playback"))
     {
         const Json::Value value = root["enable_audio_playback"];
-        enable_audio_playback_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_audio_playback_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_audio_recording"))
     {
         const Json::Value value = root["enable_audio_recording"];
-        enable_audio_recording_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_audio_recording_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_eye_tracking"))
     {
         const Json::Value value = root["enable_eye_tracking"];
-        enable_eye_tracking_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_eye_tracking_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_face_tracking"))
     {
         const Json::Value value = root["enable_face_tracking"];
-        enable_face_tracking_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_face_tracking_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_hand_tracking"))
     {
         const Json::Value value = root["enable_hand_tracking"];
-        enable_hand_tracking_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_hand_tracking_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_body_tracking"))
     {
         const Json::Value value = root["enable_body_tracking"];
-        enable_body_tracking_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_body_tracking_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_waist_loco"))
     {
         const Json::Value value = root["enable_waist_loco"];
-        enable_waist_loco_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_waist_loco_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_swap_thumbsticks"))
     {
         const Json::Value value = root["enable_swap_thumbsticks"];
-        enable_swap_thumbsticks_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_swap_thumbsticks_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("enable_remote_controller_offset"))
     {
         const Json::Value value = root["enable_remote_controller_offset"];
-        enable_remote_controller_offset_ = (bool)value.asUInt();
+
+        if (value.isUInt())
+        {
+            enable_remote_controller_offset_ = (bool)value.asUInt();
+        }
     }
 
     if (root.isMember("remote_controller_offset"))
