@@ -100,6 +100,14 @@ NOTES:
 
 -Running without SteamVR running at all, should be possible "soon", when Nvidia releases their Monado-based PC side OpenXR runtime which has direct CloudXR server integration. 
 
+-The width and height of the video stream are specified in the JSON config:
+
+![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/e4c780e6-bde1-4367-bac2-822ef487750d)
+
+These 2176 values are somewhat arbitrary, a tradeoff between image quality and performance (both on PC side and network latency/throughput are all affected). 
+
+What isn't arbitrary is the fact that CloudXR expects the width to be modulo 32 pixels, so if you pass something which isn't evenly divisible by 32, the code will automatically patch it to be so. However it may not match exactly what you specified or wanted. This is on purpose. Follow best practices to get the OK-est image quality possible!
+
 ------
 
 Funding and further development:
