@@ -20,6 +20,6 @@
   "enable_body_tracking": 0,
   "enable_waist_loco": 0,
   "enable_swap_thumbsticks": 0,
-  "enable_remote_controller_offset": 0,
+  "enable_remote_controller_offset": 1,
   "remote_controller_offset": 0
 }
