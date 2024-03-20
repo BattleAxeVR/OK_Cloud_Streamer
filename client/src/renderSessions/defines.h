@@ -14,7 +14,7 @@
 #define ENABLE_OBOE 1
 #endif
 
-#define DEFAULT_IP_ADDRESS "192.168.2.38"
+#define DEFAULT_IP_ADDRESS ""//"192.168.2.38"
 #define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
 #define OK_CLOUD_STREAMER_CONFIG_FILENAME "ok_cloud_streamer_config.json"
 #define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ok_cloud_streamer_config.json"
