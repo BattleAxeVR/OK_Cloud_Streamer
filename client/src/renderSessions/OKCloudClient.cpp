@@ -232,6 +232,8 @@ bool OKCloudClient::init_android_gles(XRInterface* xr_interface, EGLDisplay egl_
         return true;
     }
 
+    ok_config_.load();
+
     IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::init_android_gles\n");
 
     xr_interface_ = xr_interface;

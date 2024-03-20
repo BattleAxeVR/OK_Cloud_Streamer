@@ -67,6 +67,7 @@ bool OKConfig::load()
 
     if (!read_ok || ok_config_json.empty())
     {
+        IGLLog(IGLLogLevel::LOG_INFO, "OKConfig::load() - No config file found, using default...\n");
         return false;
     }
 
@@ -82,6 +83,7 @@ bool OKConfig::load()
 
     if (!reader->parse(ok_config_json.c_str(), ok_config_json.c_str() + str_size, &root, &err))
     {
+        IGLLog(IGLLogLevel::LOG_ERROR, "OKConfig::load() - Error parsing config file: %s\n", err.c_str());
         return false;
     }
 
