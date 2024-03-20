@@ -400,6 +400,11 @@ namespace igl::shell
             framebuffer_->updateDrawable(surfaceTextures.color);
         }
 
+        auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
+
+        const std::shared_ptr<igl::IRenderCommandEncoder> commands =
+                buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
+
 #if ENABLE_CLOUDXR
         const int view_id = shellParams().current_view_id_;
 
@@ -409,6 +414,10 @@ namespace igl::shell
         {
             openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
             xr_app.override_eye_poses_[view_id] = BVR::convert_to_xr_pose(eye_pose);
+
+            commands->endEncoding();
+            buffer->present(framebuffer_->getColorAttachment(0));
+            commandQueue_->submit(*buffer);
 
             return;
         }
@@ -437,12 +446,6 @@ namespace igl::shell
             graphicsDesc.frontFaceWinding = igl::WindingMode::CounterClockwise;
             pipelineState_ = getPlatform().getDevice().createRenderPipeline(graphicsDesc, nullptr);
         }
-
-        // Command buffers (1-N per thread): create, submit and forget
-        auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
-
-        const std::shared_ptr<igl::IRenderCommandEncoder> commands =
-                buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
 
         commands->bindBuffer(0, BindTarget::kVertex, vb0_, 0);
 
@@ -507,13 +510,11 @@ namespace igl::shell
 
         constexpr auto indexCount = 3u * 6u * 2u;
         commands->drawIndexed(PrimitiveType::Triangle, indexCount, IndexFormat::UInt16, *ib0_, 0);
+#endif
 
         commands->endEncoding();
-
         buffer->present(framebuffer_->getColorAttachment(0));
-
         commandQueue_->submit(*buffer);
-#endif
     }
 
 bool OKCloudSession::post_update() noexcept
