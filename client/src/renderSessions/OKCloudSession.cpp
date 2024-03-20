@@ -449,35 +449,7 @@ namespace igl::shell
 
         commands->bindBuffer(0, BindTarget::kVertex, vb0_, 0);
 
-#if defined(IGL_UWP_VS_FIX)
-        iglu::ManagedUniformBufferInfo info;
-  info.index = 1;
-  info.length = sizeof(VertexFormat);
-  {
-    igl::UniformDesc e;
-    e.name = "modelMatrix";
-    e.type = igl::UniformType::Mat4x4;
-    e.offset = offsetof(VertexFormat, modelMatrix);
-    info.uniforms.push_back(std::move(e));
-  }
-  {
-    igl::UniformDesc e;
-    e.name = "viewProjectionMatrix";
-    e.type = igl::UniformType::Mat4x4;
-    e.numElements = 2;
-    e.offset = offsetof(VertexFormat, viewProjectionMatrix);
-    e.elementStride = sizeof(glm::mat4);
-    info.uniforms.push_back(std::move(e));
-  }
-  {
-    igl::UniformDesc e;
-    e.name = "scaleZ";
-    e.type = igl::UniformType::Float;
-    e.offset = offsetof(VertexFormat, scaleZ);
-    info.uniforms.push_back(std::move(e));
-  }
-
-#else // to preserve a beauty of new C++ standard!
+        // to preserve a beauty of new C++ standard!
         // Bind Vertex Uniform Data
         iglu::ManagedUniformBufferInfo info;
         info.index = 1;
@@ -495,7 +467,6 @@ namespace igl::shell
                          sizeof(glm::mat4)},
         igl::UniformDesc{
                 "scaleZ", -1, igl::UniformType::Float, 1, offsetof(VertexFormat, scaleZ), 0}};
-#endif
 
         const auto vertUniformBuffer = std::make_shared<iglu::ManagedUniformBuffer>(device, info);
         IGL_ASSERT(vertUniformBuffer->result.isOk());
