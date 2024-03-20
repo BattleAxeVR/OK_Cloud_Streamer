@@ -22,7 +22,7 @@ public:
 	bool save();
 
     std::string server_ip_address_;
-    
+
     bool enable_auto_connect_ = AUTO_CONNECT_TO_CLOUDXR;
 
     uint32_t per_eye_width_ = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
