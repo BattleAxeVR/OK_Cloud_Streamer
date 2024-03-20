@@ -306,7 +306,7 @@ void OKCloudClient::shutdown_cxr()
 
 bool OKCloudClient::connect()
 {
-    if (!is_cxr_initialized_ || !is_ready_to_connect() || ok_config_.ip_address_.empty())
+    if (!is_cxr_initialized_ || !is_ready_to_connect() || ok_config_.server_ip_address_.empty())
     {
         return false;
     }
@@ -321,7 +321,7 @@ bool OKCloudClient::connect()
         }
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect IP = %s\n", ok_config_.ip_address_.c_str());
+    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect to IP = %s\n", ok_config_.server_ip_address_.c_str());
 
     cxrConnectionDesc connection_desc = {0};
     connection_desc.async = true;
@@ -329,7 +329,7 @@ bool OKCloudClient::connect()
     connection_desc.clientNetwork = cxrNetworkInterface_Unknown;
     connection_desc.topology = cxrNetworkTopology_LAN;
 
-    cxrError error = cxrConnect(cxr_receiver_, ok_config_.ip_address_.c_str(), &connection_desc);
+    cxrError error = cxrConnect(cxr_receiver_, ok_config_.server_ip_address_.c_str(), &connection_desc);
 
     if (error)
     {
@@ -402,12 +402,12 @@ bool OKCloudClient::create_receiver()
     float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
     float current_refresh_rate = xr_interface_->get_current_refresh_rate();
-    bool should_update_refresh_rate = ((current_refresh_rate > 0.0f) && (current_refresh_rate != ok_config_.desired_refresh_rate_));
+    bool should_update_refresh_rate = ((current_refresh_rate > 0.0f) && (current_refresh_rate != (float)ok_config_.desired_refresh_rate_));
 
     if (should_update_refresh_rate)
     {
         xr_interface_->query_refresh_rates();
-        xr_interface_->set_refresh_rate(ok_config_.desired_refresh_rate_);
+        xr_interface_->set_refresh_rate((float)ok_config_.desired_refresh_rate_);
         fps = xr_interface_->get_current_refresh_rate();
     }
 
@@ -424,7 +424,7 @@ bool OKCloudClient::create_receiver()
         device_desc.videoStreamDescs[stream_index].height = ok_config_.per_eye_height_;
         device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
         device_desc.videoStreamDescs[stream_index].fps = fps;
-        device_desc.videoStreamDescs[stream_index].maxBitrate = ok_config_.max_bitrate_;
+        device_desc.videoStreamDescs[stream_index].maxBitrate = ok_config_.max_bitrate_kbps_;
     }
 
     device_desc.disableVVSync = false;

@@ -16,9 +16,11 @@
 
 #define DEFAULT_IP_ADDRESS "192.168.2.38"
 #define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
+#define OK_CLOUD_STREAMER_CONFIG_FILENAME "ok_cloud_streamer_config.json"
+#define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ok_cloud_streamer_config.json"
 
 #define DEFAULT_CLOUDXR_MAX_RES_FACTOR 1.0f
-#define DEFAULT_CLOUDXR_MAX_BITRATE 0 // 0 = unlimited
+#define DEFAULT_CLOUDXR_MAX_BITRATE_KBPS 0 // 0 = unlimited
 #define DEFAULT_CLOUDXR_FOVEATION 0 // 0=100, 0=OFF. 25-50 is ok.
 #define DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS 0.0f//4000.0f
 #define DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT 6

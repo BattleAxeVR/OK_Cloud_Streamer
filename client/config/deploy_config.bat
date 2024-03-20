@@ -1,0 +1,1 @@
+adb.exe push ok_cloud_streamer_config.json /sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ok_cloud_streamer_config.json
