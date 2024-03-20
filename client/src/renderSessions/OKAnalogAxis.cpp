@@ -21,7 +21,8 @@ float OKAnalogAxis::get_previous_value() const
 
 bool OKAnalogAxis::was_value_changed() const
 {
-	return (fabs(current_value_ - previous_value_) > FLT_EPSILON);
+    return (current_value_ != previous_value_);
+    return (fabs(current_value_ - previous_value_) > FLT_EPSILON);
 }
 
 void OKAnalogAxis::set_value(const float value)

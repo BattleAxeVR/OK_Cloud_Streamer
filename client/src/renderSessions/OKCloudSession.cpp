@@ -738,6 +738,9 @@ namespace igl::shell
 #if ENABLE_CLOUDXR_FRAME_LATCH
             release_frame();
 #endif
+
+            //send_all_analog_controller_values_ = false;
+            //send_all_digital_controller_values_ = false;
         }
 
         return true;
@@ -1428,7 +1431,7 @@ namespace igl::shell
                 }
 
                 const BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[analog_axis_map.analog_axis_id_];
-                const bool was_changed = ok_analog_axis.was_value_changed();
+                const bool was_changed = send_all_analog_controller_values_ || ok_analog_axis.was_value_changed();
 
                 if (was_changed)
                 {
@@ -1458,7 +1461,7 @@ namespace igl::shell
                 const BVR::OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[digital_button_map.digital_button_id_];
 
                 const bool is_down = ok_digital_button.is_down();
-                const bool was_changed = ok_digital_button.was_changed();
+                const bool was_changed = send_all_digital_controller_values_ || ok_digital_button.was_changed();
 
                 if (was_changed)
                 {

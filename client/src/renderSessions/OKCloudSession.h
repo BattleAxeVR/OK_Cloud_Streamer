@@ -150,6 +150,9 @@ namespace igl::shell
 
         void update_controller_digital_buttons(const int controller_id);
         void update_controller_analog_axes(const int controller_id);
+
+        bool send_all_analog_controller_values_ = true;
+        bool send_all_digital_controller_values_ = true;
 #endif
 
 #if ENABLE_HAPTICS
