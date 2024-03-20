@@ -87,6 +87,14 @@ bool OKConfig::load()
         return false;
     }
 
+    if (root.isMember("server_ip_address"))
+    {
+        const Json::Value server_ip_address_value = root["server_ip_address"];
+        server_ip_address_ = server_ip_address_value.asString();
+    }
+
+    IGLLog(IGLLogLevel::LOG_ERROR, "OKConfig::load() - Parsed successfully, server IP = %s\n", server_ip_address_.c_str());
+
     return true;
 }
 
