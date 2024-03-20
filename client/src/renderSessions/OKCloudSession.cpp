@@ -1546,6 +1546,13 @@ namespace igl::shell
             BVR::OKDigitalButton& group_touch_button = ok_controller.digital_buttons_[BVR::DigitalButton_Grip_Touch];
             group_touch_button.set_state(grip_analog_axis.get_current_value() > 0.0f);
         }
+
+        if (simulate_thumb_rest_)
+        {
+            const BVR::OKAnalogAxis& grip_force_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip_Force];
+            BVR::OKDigitalButton& touchpad_touch_button = ok_controller.digital_buttons_[BVR::DigitalButton_Touchpad_Touch];
+            touchpad_touch_button.set_state(grip_force_analog_axis.get_current_value() > 0.0f);
+        }
     }
 
     void OKCloudSession::update_controller_analog_axes(const int controller_id)

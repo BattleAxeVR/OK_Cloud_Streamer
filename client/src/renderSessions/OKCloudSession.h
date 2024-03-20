@@ -160,6 +160,7 @@ namespace igl::shell
         bool send_all_digital_controller_values_ = true;
         bool combine_grip_force_with_grip_ = true;
         bool simulate_grip_touch_ = true;
+        bool simulate_thumb_rest_ = false; // doesn't work, appears "/input/thumb_rest/touch" doesn't work on CXR side
 #endif
 
 #if ENABLE_HAPTICS
