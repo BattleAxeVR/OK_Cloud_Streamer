@@ -15,6 +15,7 @@
 #endif
 
 #define DEFAULT_IP_ADDRESS "192.168.2.38"
+#define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
 
 #define DEFAULT_CLOUDXR_MAX_RES_FACTOR 1.0f
 #define DEFAULT_CLOUDXR_MAX_BITRATE 0 // 0 = unlimited

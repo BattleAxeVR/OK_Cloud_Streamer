@@ -117,7 +117,6 @@ private:
     OKPlayerState ok_player_state_;
 
     bool is_cxr_initialized_ = false;
-    std::string ip_address_ = DEFAULT_IP_ADDRESS;
 
     bool create_receiver();
     void destroy_receiver();

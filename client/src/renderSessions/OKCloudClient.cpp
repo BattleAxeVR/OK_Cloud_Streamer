@@ -306,7 +306,7 @@ void OKCloudClient::shutdown_cxr()
 
 bool OKCloudClient::connect()
 {
-    if (!is_cxr_initialized_ || !is_ready_to_connect() )
+    if (!is_cxr_initialized_ || !is_ready_to_connect() || ok_config_.ip_address_.empty())
     {
         return false;
     }
@@ -321,7 +321,7 @@ bool OKCloudClient::connect()
         }
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect IP = %s\n", ip_address_.c_str());
+    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect IP = %s\n", ok_config_.ip_address_.c_str());
 
     cxrConnectionDesc connection_desc = {0};
     connection_desc.async = true;
@@ -329,7 +329,7 @@ bool OKCloudClient::connect()
     connection_desc.clientNetwork = cxrNetworkInterface_Unknown;
     connection_desc.topology = cxrNetworkTopology_LAN;
 
-    cxrError error = cxrConnect(cxr_receiver_, ip_address_.c_str(), &connection_desc);
+    cxrError error = cxrConnect(cxr_receiver_, ok_config_.ip_address_.c_str(), &connection_desc);
 
     if (error)
     {
