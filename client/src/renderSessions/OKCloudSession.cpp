@@ -965,8 +965,13 @@ namespace igl::shell
         device_desc.embedInfoInVideo = false;
         device_desc.foveatedScaleFactor = foveation;
         device_desc.stereoDisplay = true;
-        device_desc.predOffset = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
-        device_desc.posePollFreq = (uint32_t)roundf(DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT * fps);
+
+        //const float prediction_offset_sec = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
+        const float prediction_offset_sec = (1.0f / fps);
+        device_desc.predOffset = prediction_offset_sec;
+
+        const float polling_rate = clamp<float>(roundf(DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT * fps), 0.0f, 1000.0f);
+        device_desc.posePollFreq = polling_rate;
 
 #if ENABLE_OBOE
         device_desc.receiveAudio = enable_audio_playback_;
