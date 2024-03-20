@@ -938,18 +938,16 @@ namespace igl::shell
 
         float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
-#if 0
         float current_refresh_rate = xr_app.getCurrentRefreshRate();
 
         if (current_refresh_rate > 0.0f)
         {
             xr_app.querySupportedRefreshRates();
-            xr_app.setMaxRefreshRate();
+            xr_app.setRefreshRate(DEFAULT_CLOUDXR_FRAMERATE);
             fps = xr_app.getCurrentRefreshRate();
         }
 
-        //xr_app.setSharpeningEnabled(true);
-#endif
+        xr_app.setSharpeningEnabled(true);
 
         for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
         {
