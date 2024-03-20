@@ -21,7 +21,7 @@ public:
 	bool load();
 	bool save();
 
-    std::string server_ip_address_ = DEFAULT_IP_ADDRESS;
+    std::string server_ip_address_; // There's no default IP address, you must specify one in the JSON config file
     bool enable_auto_connect_ = AUTO_CONNECT_TO_CLOUDXR;
 
     uint32_t per_eye_width_ = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
