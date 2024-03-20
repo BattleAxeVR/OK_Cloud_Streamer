@@ -30,6 +30,9 @@
 
 #define RECOMPUTE_IPD_EVERY_FRAME 1
 
+#define ENABLE_CLOUDXR_POSE_PREDICTION 1 // disable this at your own peril! bleh
+#define ANGULAR_VELOCITY_IN_DEVICE_SPACE 0
+
 #define METERS_PER_MILLIMETER 0.001f
 #define MILLIMETERS_PER_METER 1000.0f
 

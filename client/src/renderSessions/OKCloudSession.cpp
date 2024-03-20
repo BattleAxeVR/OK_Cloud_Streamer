@@ -980,8 +980,8 @@ namespace igl::shell
         device_desc.receiveAudio = false;
         device_desc.sendAudio = false;
 #endif
-        device_desc.disablePosePrediction = false;
-        device_desc.angularVelocityInDeviceSpace = false;
+        device_desc.disablePosePrediction = !ENABLE_CLOUDXR_POSE_PREDICTION;
+        device_desc.angularVelocityInDeviceSpace = ANGULAR_VELOCITY_IN_DEVICE_SPACE;
 
         {
             cxrClientCallbacks& receiver_callbacks = receiver_desc.clientCallbacks;
