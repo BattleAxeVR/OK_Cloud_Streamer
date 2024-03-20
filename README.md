@@ -68,19 +68,29 @@ Build from source:
 
 Running the OK Cloud Streamer app:
 
--First you must find and write the IP address of your server (the PC running SteamVR) in the JSON configuration file provided in client/config. You can find your IP using a command prompt and typing "ipconfig". It's usually a 192.X.X.X or similar. You can also specify an IP on the internet (indeed that's the purpose of this app, to work over local wifi or the cloud).
+-First you must find and write down the IP address of your server (the PC running SteamVR) in the JSON configuration file provided in client/config/ok_cloud_streamer_config.json.
+
+![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/14c2ae63-7922-4dc5-bb12-aac646442170)
+
+You can find your IP by opening a command prompt and typing "ipconfig". It's usually a 192.X.X.X or similar. You can also specify an IP on the internet (indeed that's the purpose of this app, to work over local wifi or the cloud).
 
 -Next, install the APK using ADB or Sidequest / Applab / whatever. Run it once, it will make the app's directory (but fail to connect). It may ask for microphone permission (not implemented yet, but soon).
 
--Next, install the JSON config file using the batch file or SideQuest/ADB to put it in the app's files/ folder.
+-Next, with Quest connected via USB to your PC, call deploy_config.bat to push the newly modified config file to the headset
 
--Install the CloudXR 4.0 server plugin on the PC running SteamVR (you may have to uninstall/reinstall or switch to Beta SteamVR). To get audio recording it also needs the server plugin configuration. See the README in the OVR sample, it's the same process.
+![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/c8eb2576-44ef-4a77-8722-995cb7cdbc5c)
+
+You can use SideQuest for this as well, navigate to /sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ and make sure the ok_cloud_streamer_config.json file is there.
+
+-Install the CloudXR 4.0 server plugin on the PC running SteamVR (you may have to uninstall/reinstall or switch to Beta SteamVR). To get audio recording it also needs the server plugin configuration (there's a batch file in server/ to copy this server side config to the appropriate appdata folder). See the README in the OVR sample, it's the same process.
 
 -Run the app, it should connect within 5 seconds or so, automatically. If it fails or crashes, try connecting again. If that doesn't work restart SteamVR, or reinstall the plugin, or try connecting with the OVR sample and the same IP address (in a different config file, see OVR dir).
 
+Generally speaking, just looking at the logs should tell you what's gone wrong, usually. If not, you can always ask me for help (within reason).
+
 NOTES: 
 
--If you change your CloudXR resolution or refresh rate / streaming framerate in the config, you must restart SteamVR for the changes to take effect the next time it connects. There is currently no way around this limitation, it's how CloudXR SteamVR plugin was designed.
+-If you change your CloudXR resolution or refresh rate / streaming framerate in the config, you must restart SteamVR each for the changes to take effect. There is currently no way around this limitation, it's how CloudXR SteamVR plugin was designed.
 
 -Running without SteamVR running at all, should be possible "soon", when Nvidia releases their Monado-based PC side OpenXR runtime which has direct CloudXR server integration. 
 
