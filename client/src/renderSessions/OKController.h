@@ -101,8 +101,6 @@ namespace BVR
 
     static AnalogAxisToCloudXRMap analog_axis_maps[] = {{AnalogAxis_Trigger, 4},
                                                         {AnalogAxis_Grip, 7},
-                                                        {AnalogAxis_Grip_Force, 7},
-                                                        //{AnalogAxis_Proximity, 7},
                                                         {AnalogAxis_JoystickX, 10},
                                                         {AnalogAxis_JoystickY,11 }};
 

@@ -140,6 +140,11 @@ namespace igl::shell
 
         void get_tracking_state(cxrVRTrackingState *cxr_tracking_state_ptr);
 
+        bool is_meta_headset() const
+        {
+            return true;
+        }
+
 #if ENABLE_CLOUDXR_CONTROLLERS
         bool controllers_initialized_ = false;
         cxrControllerHandle cxr_controller_handles_[CXR_NUM_CONTROLLERS] = {nullptr, nullptr};
@@ -153,6 +158,8 @@ namespace igl::shell
 
         bool send_all_analog_controller_values_ = true;
         bool send_all_digital_controller_values_ = true;
+        bool combine_grip_force_with_grip_ = true;
+        bool simulate_grip_touch_ = true;
 #endif
 
 #if ENABLE_HAPTICS

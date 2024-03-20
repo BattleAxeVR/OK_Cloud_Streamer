@@ -1507,7 +1507,7 @@ namespace igl::shell
                 {xr_inputs.menuClickAction, BVR::DigitalButton_ApplicationMenu},
                 {xr_inputs.triggerTouchAction, BVR::DigitalButton_Trigger_Touch},
                 {xr_inputs.triggerClickAction, BVR::DigitalButton_Trigger_Click},
-                {xr_inputs.squeezeTouchAction, BVR::DigitalButton_Grip_Touch},
+                //{xr_inputs.squeezeTouchAction, BVR::DigitalButton_Grip_Touch},
                 {xr_inputs.squeezeClickAction, BVR::DigitalButton_Grip_Click},
                 {xr_inputs.thumbstickTouchAction, BVR::DigitalButton_Joystick_Touch},
                 {xr_inputs.thumbstickClickAction, BVR::DigitalButton_Joystick_Click},
@@ -1538,6 +1538,13 @@ namespace igl::shell
 
             BVR::OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[xr_to_ok_button_mappings[j].digital_button_id];
             ok_digital_button.set_state(button_state.currentState);
+        }
+
+        if (simulate_grip_touch_)
+        {
+            const BVR::OKAnalogAxis& grip_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip];
+            BVR::OKDigitalButton& group_touch_button = ok_controller.digital_buttons_[BVR::DigitalButton_Grip_Touch];
+            group_touch_button.set_state(grip_analog_axis.get_current_value() > 0.0f);
         }
     }
 
@@ -1587,6 +1594,14 @@ namespace igl::shell
 
             BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[xr_to_ok_analog_mappings[j].analog_axis_id];
             ok_analog_axis.set_value(axis_state.currentState);
+        }
+
+        if (combine_grip_force_with_grip_)
+        {
+            const BVR::OKAnalogAxis& grip_force_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip_Force];
+
+            BVR::OKAnalogAxis& grip_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip];
+            grip_analog_axis.combine(grip_force_analog_axis);
         }
     }
 
