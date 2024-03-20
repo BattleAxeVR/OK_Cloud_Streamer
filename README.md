@@ -68,7 +68,10 @@ Build from source:
 
 Running the OK Cloud Streamer app:
 
--First you must find and write down the IP address of your server (the PC running SteamVR) in the JSON configuration file provided in client/config/ok_cloud_streamer_config.json.
+-First you must find and write down the IP address of your server (the PC running SteamVR) in the JSON configuration file provided here:
+
+https://github.com/BattleAxeVR/OK_Cloud_Streamer/blob/main/client/config/ok_cloud_streamer_config.json
+
 
 ![image](https://github.com/BattleAxeVR/OK_Cloud_Streamer/assets/11604039/14c2ae63-7922-4dc5-bb12-aac646442170)
 
