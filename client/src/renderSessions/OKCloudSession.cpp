@@ -1296,7 +1296,7 @@ namespace igl::shell
 #if ENABLE_CLOUDXR_CONTROLLER_FIX
                         BVR::GLMPose cloudxr_controller_offset;
 
-                        const float x_offset = (controller_id == LEFT_CONTROLLER) ? -CLOUDXR_CONTROLLER_OFFSET_X : CLOUDXR_CONTROLLER_OFFSET_X;
+                        const float x_offset = (controller_id == LEFT) ? -CLOUDXR_CONTROLLER_OFFSET_X : CLOUDXR_CONTROLLER_OFFSET_X;
 
                         cloudxr_controller_offset.translation_ =
                                 glm::vec3(x_offset, CLOUDXR_CONTROLLER_OFFSET_Y,
