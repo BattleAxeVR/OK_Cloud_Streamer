@@ -342,6 +342,7 @@ namespace igl::shell
 
     bool OKCloudSession::pre_update() noexcept
     {
+#if ENABLE_CLOUDXR
         if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
         {
             Platform& platform = getPlatform();
@@ -354,20 +355,14 @@ namespace igl::shell
 
             const bool init_cxr_ok = ok_client_.init_android_gles(this, egl_display, egl_context);
 
-            if (init_cxr_ok)
+            if (init_cxr_ok && ok_client_.ok_config_.enable_auto_connect_)
             {
-#if AUTO_CONNECT_TO_CLOUDXR
                 ok_client_.connect();
-#endif
             }
         }
 
-        if (ok_client_.is_connected())
-        {
-            ok_client_.latch_frame(BOTH_EYES_INDEX);
-            //return is_latched_;
-        }
-
+        ok_client_.latch_frame();
+#endif
         return true;
     }
 
@@ -491,10 +486,7 @@ namespace igl::shell
 bool OKCloudSession::post_update() noexcept
 {
 #if ENABLE_CLOUDXR
-    if (ok_client_.is_connected())
-    {
-        ok_client_.release_frame();
-    }
+    ok_client_.release_frame();
 #endif
 
     return true;

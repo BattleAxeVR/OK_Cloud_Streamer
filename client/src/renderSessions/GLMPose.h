@@ -64,9 +64,15 @@ struct GLMPose
     {
     }
 
-    GLMPose(const glm::vec3 &translation, const glm::fquat &rotation) : translation_(
-            translation), rotation_(rotation)
+    GLMPose(const glm::vec3& translation, const glm::fquat& rotation) :
+    translation_(translation), rotation_(rotation)
     {
+    }
+
+    GLMPose(const glm::vec3& translation, const glm::vec3& euler_angle_deg) :
+        translation_(translation), euler_angles_degrees_(euler_angle_deg)
+    {
+        update_rotation_from_euler();
     }
 
     glm::vec3 translation_ = glm::vec3(0.0f, 0.0f, 0.0f);

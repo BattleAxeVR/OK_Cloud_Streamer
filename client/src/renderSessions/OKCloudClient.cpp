@@ -387,7 +387,7 @@ bool OKCloudClient::create_receiver()
 #endif
 
     cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
-    device_desc.maxResFactor = DEFAULT_CLOUDXR_MAX_RES_FACTOR;
+    device_desc.maxResFactor = ok_config_.max_res_factor_;
 
     compute_ipd();
     device_desc.ipd = ipd_meters_;
@@ -396,55 +396,57 @@ bool OKCloudClient::create_receiver()
     const uint32_t number_of_streams = 2;
     device_desc.numVideoStreamDescs = number_of_streams;
 
-    uint32_t max_bitrate = DEFAULT_CLOUDXR_MAX_BITRATE;
-    float foveation = DEFAULT_CLOUDXR_FOVEATION;
-
     uint32_t per_eye_width = DEFAULT_CLOUDXR_PER_EYE_WIDTH;
     uint32_t per_eye_height = DEFAULT_CLOUDXR_PER_EYE_HEIGHT;
 
     float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
     float current_refresh_rate = xr_interface_->get_current_refresh_rate();
+    bool should_update_refresh_rate = ((current_refresh_rate > 0.0f) && (current_refresh_rate != ok_config_.desired_refresh_rate_));
 
-    if (current_refresh_rate > 0.0f)
+    if (should_update_refresh_rate)
     {
         xr_interface_->query_refresh_rates();
-        xr_interface_->set_refresh_rate(DEFAULT_CLOUDXR_FRAMERATE);
+        xr_interface_->set_refresh_rate(ok_config_.desired_refresh_rate_);
         fps = xr_interface_->get_current_refresh_rate();
     }
 
 #if ENABLE_CLOUDXR_LINK_SHARPENING
-    xr_interface_->set_sharpening_enabled(true);
+    if (ok_config_.enable_sharpening_)
+    {
+        xr_interface_->set_sharpening_enabled(true);
+    }
 #endif
 
     for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
     {
-        device_desc.videoStreamDescs[stream_index].width = per_eye_width;
-        device_desc.videoStreamDescs[stream_index].height = per_eye_height;
+        device_desc.videoStreamDescs[stream_index].width = ok_config_.per_eye_width_;
+        device_desc.videoStreamDescs[stream_index].height = ok_config_.per_eye_height_;
         device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
         device_desc.videoStreamDescs[stream_index].fps = fps;
-        device_desc.videoStreamDescs[stream_index].maxBitrate = max_bitrate;
+        device_desc.videoStreamDescs[stream_index].maxBitrate = ok_config_.max_bitrate_;
     }
 
     device_desc.disableVVSync = false;
     device_desc.embedInfoInVideo = false;
-    device_desc.foveatedScaleFactor = foveation;
+    device_desc.foveatedScaleFactor = ok_config_.foveation_;
     device_desc.stereoDisplay = true;
 
     //const float prediction_offset_sec = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
     const float prediction_offset_sec = (1.0f / fps);
     device_desc.predOffset = prediction_offset_sec;
 
-    const float polling_rate = clamp<float>(roundf(DEFAULT_CLOUDXR_POSE_POLL_FREQUENCY_MULT * fps), 0.0f, 1000.0f);
+    const float polling_rate = clamp<float>(roundf(ok_config_.polling_rate_mult_ * fps), 0.0f, 1000.0f);
     device_desc.posePollFreq = polling_rate;
 
 #if ENABLE_OBOE
-    device_desc.receiveAudio = enable_audio_playback_;
-    device_desc.sendAudio = enable_audio_recording_;
+    device_desc.receiveAudio = ok_config_.enable_audio_playback_;
+    device_desc.sendAudio = ok_config_.enable_audio_recording_;
 #else
     device_desc.receiveAudio = false;
     device_desc.sendAudio = false;
 #endif
+
     device_desc.disablePosePrediction = !ENABLE_CLOUDXR_POSE_PREDICTION;
     device_desc.angularVelocityInDeviceSpace = ANGULAR_VELOCITY_IN_DEVICE_SPACE;
 
@@ -593,9 +595,9 @@ bool OKCloudClient::add_controllers()
             cxr_controller_desc.id = controller_id;
             cxr_controller_desc.role = (controller_id == LEFT) ? "cxr://input/hand/left" : "cxr://input/hand/right";
             cxr_controller_desc.controllerName = "Oculus Touch";
-            cxr_controller_desc.inputCount = ARRAY_SIZE(BVR::cxr_input_paths);
-            cxr_controller_desc.inputPaths = BVR::cxr_input_paths;
-            cxr_controller_desc.inputValueTypes = BVR::cxr_input_value_types;
+            cxr_controller_desc.inputCount = ARRAY_SIZE(cxr_input_paths);
+            cxr_controller_desc.inputPaths = cxr_input_paths;
+            cxr_controller_desc.inputValueTypes = cxr_input_value_types;
 
             cxrError add_controller_error = cxrAddController(cxr_receiver_,
                                                              &cxr_controller_desc,
@@ -648,27 +650,14 @@ void OKCloudClient::remove_controllers()
 }
 #endif
 
-bool OKCloudClient::latch_frame(const int view_id)
+bool OKCloudClient::latch_frame()
 {
     if (!is_cxr_initialized_ || !is_connected() || is_latched_)
     {
         return false;
     }
 
-    uint32_t timeoutMS = DEFAULT_CLOUDXR_LATCH_TIMEOUT_MS;
-
-    uint32_t frame_mask = 0;
-
-    if (view_id == BOTH_EYES_INDEX)
-    {
-        frame_mask = cxrFrameMask_All;
-    }
-    else
-    {
-        frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
-    }
-
-    cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, frame_mask, timeoutMS);
+    cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, cxrFrameMask_All, ok_config_.latch_timeout_ms_);
 
     if (error)
     {
@@ -713,7 +702,7 @@ bool OKCloudClient::blit_frame(const int view_id, GLMPose& eye_pose)
     XrVector3f xr_hmd_position = convert_cxr_to_xr(cxr_hmd_position);
     XrQuaternionf xr_hmd_rotation = convert_cxr_to_xr(cxr_hmd_rotation);
 
-    const BVR::GLMPose hmd_pose(BVR::convert_to_glm(xr_hmd_position), BVR::convert_to_glm(xr_hmd_rotation));
+    const GLMPose hmd_pose(convert_to_glm(xr_hmd_position), convert_to_glm(xr_hmd_rotation));
     eye_pose = hmd_pose;
 
     const float half_ipd = ipd_meters_ * 0.5f;
@@ -754,12 +743,12 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
 
     //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::get_tracking_state\n");
 
-    const uint64_t predicted_display_time_ns = xr_interface_->get_predicted_display_time_ns() + DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS;
+    const uint64_t predicted_display_time_ns = xr_interface_->get_predicted_display_time_ns() + ok_config_.prediction_offset_ns_;
 
     cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
     memset(cxr_tracking_state_ptr, 0, sizeof(*cxr_tracking_state_ptr));
 
-    cxr_tracking_state.poseTimeOffset = DEFAULT_CLOUDXR_POSE_TIME_OFFSET_SECONDS;
+    cxr_tracking_state.poseTimeOffset = ok_config_.pose_time_offset_s_;
 
 #if ENABLE_CLOUDXR_CONTROLLERS
     add_controllers();
@@ -782,7 +771,7 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
             cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
             cxr_controller = {};
 
-            BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+            OKController& ok_controller = ok_player_state_.controllers_[controller_id];
             ok_controller.pose_.is_valid_ = false;
 
             if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
@@ -798,29 +787,22 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
                 if (controller_result == XR_SUCCESS)
                 {
                     cxr_controller.clientTimeNS = predicted_display_time_ns;
-                    ok_controller.pose_ = BVR::convert_to_glm_pose(controller_location.pose);
+                    ok_controller.pose_ = convert_to_glm_pose(controller_location.pose);
 
-#if ENABLE_CLOUDXR_CONTROLLER_FIX
-                    BVR::GLMPose cloudxr_controller_offset;
+                    if (ok_config_.enable_remote_controller_offset_)
+                    {
+                        GLMPose cloudxr_controller_offset = ok_config_.remote_controller_offset_;
 
-                    const float x_offset = (controller_id == LEFT) ? -CLOUDXR_CONTROLLER_OFFSET_X : CLOUDXR_CONTROLLER_OFFSET_X;
+                        if (controller_id == LEFT)
+                        {
+                            cloudxr_controller_offset.translation_.x *= -1.0f;
+                        }
 
-                    cloudxr_controller_offset.translation_ =
-                            glm::vec3(x_offset, CLOUDXR_CONTROLLER_OFFSET_Y,
-                                      CLOUDXR_CONTROLLER_OFFSET_Z);
+                        const glm::vec3 offset_ws = ok_controller.pose_.rotation_ * cloudxr_controller_offset.translation_;
+                        ok_controller.pose_.translation_ += offset_ws;
+                        ok_controller.pose_.rotation_ = glm::normalize(ok_controller.pose_.rotation_ * cloudxr_controller_offset.rotation_);
 
-                    cloudxr_controller_offset.euler_angles_degrees_ =
-                            glm::vec3(CLOUDXR_CONTROLLER_ROTATION_EULER_X, CLOUDXR_CONTROLLER_ROTATION_EULER_Y,
-                                      CLOUDXR_CONTROLLER_ROTATION_EULER_Z);
-
-                    cloudxr_controller_offset.update_rotation_from_euler();
-
-                    const glm::vec3 offset_ws = ok_controller.pose_.rotation_ * cloudxr_controller_offset.translation_;
-                    ok_controller.pose_.translation_ += offset_ws;
-                    ok_controller.pose_.rotation_ = glm::normalize(ok_controller.pose_.rotation_ * cloudxr_controller_offset.rotation_);
-
-                    cxr_controller.pose = convert_glm_to_cxr_pose(ok_controller.pose_);
-#endif
+                    }
 
                     cxr_controller.pose = convert_glm_to_cxr_pose(ok_controller.pose_);
 
@@ -861,7 +843,7 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
 
         if (XR_UNQUALIFIED_SUCCESS(hmd_result))
         {
-            cxr_hmd_pose = BVR::convert_xr_to_cxr_pose(hmd_location);
+            cxr_hmd_pose = convert_xr_to_cxr_pose(hmd_location);
             cxr_tracking_state.hmd.clientTimeNS = predicted_display_time_ns;
             cxr_tracking_state.hmd.activityLevel = cxrDeviceActivityLevel_UserInteraction;
         }
@@ -907,21 +889,21 @@ void OKCloudClient::fire_controller_events(const int controller_id, const uint64
     cxrControllerEvent cxr_events[MAX_CLOUDXR_CONTROLLER_EVENTS] = {};
     uint32_t cxr_event_count = 0;
 
-    const BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+    const OKController& ok_controller = ok_player_state_.controllers_[controller_id];
 
     {
-        const uint32_t num_analog_axis_maps = ARRAY_SIZE(BVR::analog_axis_maps);
+        const uint32_t num_analog_axis_maps = ARRAY_SIZE(analog_axis_maps);
 
         for (uint32_t map_id = 0; map_id < num_analog_axis_maps; map_id++)
         {
-            const BVR::AnalogAxisToCloudXRMap &analog_axis_map = BVR::analog_axis_maps[map_id];
+            const AnalogAxisToCloudXRMap &analog_axis_map = analog_axis_maps[map_id];
 
             if (analog_axis_map.cloudxr_path_id_ == INVALID_INDEX)
             {
                 continue;
             }
 
-            const BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[analog_axis_map.analog_axis_id_];
+            const OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[analog_axis_map.analog_axis_id_];
             const bool was_changed = send_all_analog_controller_values_ || ok_analog_axis.was_value_changed();
 
             if (was_changed)
@@ -938,18 +920,18 @@ void OKCloudClient::fire_controller_events(const int controller_id, const uint64
     }
 
     {
-        const uint32_t num_digital_button_maps = ARRAY_SIZE(BVR::digital_button_maps);
+        const uint32_t num_digital_button_maps = ARRAY_SIZE(digital_button_maps);
 
         for (uint32_t map_id = 0; map_id < num_digital_button_maps; map_id++)
         {
-            const BVR::DigitalButtonToCloudXR_Map& digital_button_map = BVR::digital_button_maps[map_id][controller_id];
+            const DigitalButtonToCloudXR_Map& digital_button_map = digital_button_maps[map_id][controller_id];
 
             if (digital_button_map.cloudxr_path_id_ == INVALID_INDEX)
             {
                 continue;
             }
 
-            const BVR::OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[digital_button_map.digital_button_id_];
+            const OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[digital_button_map.digital_button_id_];
 
             const bool is_down = ok_digital_button.is_down();
             const bool was_changed = send_all_digital_controller_values_ || ok_digital_button.was_changed();
@@ -996,27 +978,27 @@ void OKCloudClient::update_controller_digital_buttons(const int controller_id)
     struct XRActionToDigitalButtonID_Mapping
     {
         XrAction action;
-        BVR::DigitalButtonID digital_button_id;
+        DigitalButtonID digital_button_id;
     };
 
     XRActionToDigitalButtonID_Mapping xr_to_ok_button_mappings[] =
             {
-                    {xr_inputs.menuClickAction, BVR::DigitalButton_ApplicationMenu},
-                    {xr_inputs.triggerTouchAction, BVR::DigitalButton_Trigger_Touch},
-                    {xr_inputs.triggerClickAction, BVR::DigitalButton_Trigger_Click},
-                    //{xr_inputs.squeezeTouchAction, BVR::DigitalButton_Grip_Touch},
-                    {xr_inputs.squeezeClickAction, BVR::DigitalButton_Grip_Click},
-                    {xr_inputs.thumbstickTouchAction, BVR::DigitalButton_Joystick_Touch},
-                    {xr_inputs.thumbstickClickAction, BVR::DigitalButton_Joystick_Click},
-                    //{xr_inputs.thumbRestTouchAction, BVR::DigitalButton_Touchpad_Touch},
-                    //{xr_inputs.thumbRestClickAction, BVR::DigitalButton_Touchpad_Click},
-                    {xr_inputs.buttonAXTouchAction, BVR::DigitalButton_A_Touch},
-                    {xr_inputs.buttonAXClickAction, BVR::DigitalButton_A_Click},
-                    {xr_inputs.buttonBYTouchAction, BVR::DigitalButton_B_Touch},
-                    {xr_inputs.buttonBYClickAction, BVR::DigitalButton_B_Click}
+                    {xr_inputs.menuClickAction, DigitalButton_ApplicationMenu},
+                    {xr_inputs.triggerTouchAction, DigitalButton_Trigger_Touch},
+                    {xr_inputs.triggerClickAction, DigitalButton_Trigger_Click},
+                    //{xr_inputs.squeezeTouchAction, DigitalButton_Grip_Touch},
+                    {xr_inputs.squeezeClickAction, DigitalButton_Grip_Click},
+                    {xr_inputs.thumbstickTouchAction, DigitalButton_Joystick_Touch},
+                    {xr_inputs.thumbstickClickAction, DigitalButton_Joystick_Click},
+                    //{xr_inputs.thumbRestTouchAction, DigitalButton_Touchpad_Touch},
+                    //{xr_inputs.thumbRestClickAction, DigitalButton_Touchpad_Click},
+                    {xr_inputs.buttonAXTouchAction, DigitalButton_A_Touch},
+                    {xr_inputs.buttonAXClickAction, DigitalButton_A_Click},
+                    {xr_inputs.buttonBYTouchAction, DigitalButton_B_Touch},
+                    {xr_inputs.buttonBYClickAction, DigitalButton_B_Click}
             };
 
-    BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+    OKController& ok_controller = ok_player_state_.controllers_[controller_id];
 
     XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
     action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
@@ -1033,21 +1015,21 @@ void OKCloudClient::update_controller_digital_buttons(const int controller_id)
             continue;
         }
 
-        BVR::OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[xr_to_ok_button_mappings[j].digital_button_id];
+        OKDigitalButton& ok_digital_button = ok_controller.digital_buttons_[xr_to_ok_button_mappings[j].digital_button_id];
         ok_digital_button.set_state(button_state.currentState);
     }
 
     if (simulate_grip_touch_)
     {
-        const BVR::OKAnalogAxis& grip_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip];
-        BVR::OKDigitalButton& group_touch_button = ok_controller.digital_buttons_[BVR::DigitalButton_Grip_Touch];
+        const OKAnalogAxis& grip_analog_axis = ok_controller.analog_axes_[AnalogAxis_Grip];
+        OKDigitalButton& group_touch_button = ok_controller.digital_buttons_[DigitalButton_Grip_Touch];
         group_touch_button.set_state(grip_analog_axis.get_current_value() > 0.0f);
     }
 
     if (simulate_thumb_rest_)
     {
-        const BVR::OKAnalogAxis& grip_force_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip_Force];
-        BVR::OKDigitalButton& touchpad_touch_button = ok_controller.digital_buttons_[BVR::DigitalButton_Touchpad_Touch];
+        const OKAnalogAxis& grip_force_analog_axis = ok_controller.analog_axes_[AnalogAxis_Grip_Force];
+        OKDigitalButton& touchpad_touch_button = ok_controller.digital_buttons_[DigitalButton_Touchpad_Touch];
         touchpad_touch_button.set_state(grip_force_analog_axis.get_current_value() > 0.0f);
     }
 }
@@ -1071,22 +1053,22 @@ void OKCloudClient::update_controller_analog_axes(const int controller_id)
     struct XRActionToAnalogAxisID_Mapping
     {
         XrAction action;
-        BVR::AnalogAxisID analog_axis_id;
+        AnalogAxisID analog_axis_id;
     };
 
     XRActionToAnalogAxisID_Mapping xr_to_ok_analog_mappings[] =
             {
-                    {xr_inputs.triggerValueAction, BVR::AnalogAxis_Trigger},
-                    {xr_inputs.squeezeValueAction, BVR::AnalogAxis_Grip},
-                    {xr_inputs.thumbstickXAction, BVR::AnalogAxis_JoystickX},
-                    {xr_inputs.thumbstickYAction, BVR::AnalogAxis_JoystickY},
-                    {xr_inputs.thumbProximityAction, BVR::AnalogAxis_Proximity},
-                    {xr_inputs.thumbRestForceAction, BVR::AnalogAxis_Grip_Force},
-                    //{xr_inputs.trackpadXAction, BVR::AnalogAxis_JoystickX},
-                    //{xr_inputs.trackpadYAction, BVR::AnalogAxis_JoystickY}
+                    {xr_inputs.triggerValueAction, AnalogAxis_Trigger},
+                    {xr_inputs.squeezeValueAction, AnalogAxis_Grip},
+                    {xr_inputs.thumbstickXAction, AnalogAxis_JoystickX},
+                    {xr_inputs.thumbstickYAction, AnalogAxis_JoystickY},
+                    {xr_inputs.thumbProximityAction, AnalogAxis_Proximity},
+                    {xr_inputs.thumbRestForceAction, AnalogAxis_Grip_Force},
+                    //{xr_inputs.trackpadXAction, AnalogAxis_JoystickX},
+                    //{xr_inputs.trackpadYAction, AnalogAxis_JoystickY}
             };
 
-    BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+    OKController& ok_controller = ok_player_state_.controllers_[controller_id];
 
     XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
     action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
@@ -1102,15 +1084,15 @@ void OKCloudClient::update_controller_analog_axes(const int controller_id)
             continue;
         }
 
-        BVR::OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[xr_to_ok_analog_mappings[j].analog_axis_id];
+        OKAnalogAxis& ok_analog_axis = ok_controller.analog_axes_[xr_to_ok_analog_mappings[j].analog_axis_id];
         ok_analog_axis.set_value(axis_state.currentState);
     }
 
     if (combine_grip_force_with_grip_)
     {
-        const BVR::OKAnalogAxis& grip_force_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip_Force];
+        const OKAnalogAxis& grip_force_analog_axis = ok_controller.analog_axes_[AnalogAxis_Grip_Force];
 
-        BVR::OKAnalogAxis& grip_analog_axis = ok_controller.analog_axes_[BVR::AnalogAxis_Grip];
+        OKAnalogAxis& grip_analog_axis = ok_controller.analog_axes_[AnalogAxis_Grip];
         grip_analog_axis.combine(grip_force_analog_axis);
     }
 }
@@ -1137,7 +1119,7 @@ void OKCloudClient::trigger_haptics(const cxrHapticFeedback* haptics)
 #if ENABLE_OBOE
 bool OKCloudClient::init_audio()
 {
-    if (!enable_audio_playback_ && !enable_audio_recording_)
+    if (!ok_config_.enable_audio_playback_ && !ok_config_.enable_audio_recording_)
     {
         return false;
     }
@@ -1149,7 +1131,7 @@ bool OKCloudClient::init_audio()
 
     IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::init_audio\n");
 
-    if (enable_audio_playback_)
+    if (ok_config_.enable_audio_playback_)
     {
         // Playback Stream
         oboe::AudioStreamBuilder audio_output_stream_builder = {};
@@ -1189,7 +1171,7 @@ bool OKCloudClient::init_audio()
         }
     }
 
-    if (enable_audio_recording_)
+    if (ok_config_.enable_audio_recording_)
     {
         // Capture Stream
         oboe::AudioStreamBuilder audio_capture_stream_builder = {};
@@ -1266,7 +1248,7 @@ void OKCloudClient::shutdown_audio()
 
 cxrBool OKCloudClient::render_audio(const cxrAudioFrame* audio_frame)
 {
-    if (!audio_frame || !is_audio_initialized_ || !enable_audio_playback_ || !audio_playback_stream_)
+    if (!audio_frame || !is_audio_initialized_ || !ok_config_.enable_audio_playback_ || !audio_playback_stream_)
     {
         return cxrFalse;
     }

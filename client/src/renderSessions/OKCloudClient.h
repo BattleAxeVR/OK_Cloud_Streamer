@@ -71,13 +71,15 @@ public:
 
     bool init_android_gles(XRInterface* xr_interface, EGLDisplay egl_display, EGLContext egl_context);
 
+    bool pre_render_update();
+    bool post_render_update();
     void update_cxr_state(cxrClientState state, cxrError error);
     void shutdown_cxr();
 
     bool connect();
     void disconnect();
 
-    bool latch_frame(const int view_id);
+    bool latch_frame();
     bool blit_frame(const int view_id, GLMPose& eye_pose);
     void release_frame();
 
@@ -110,12 +112,11 @@ public:
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void* data, int32_t frame_count) override;
 #endif
 
-private:
-    XRInterface* xr_interface_ = nullptr;
-
     OKConfig ok_config_;
     OKPlayerState ok_player_state_;
 
+private:
+    XRInterface* xr_interface_ = nullptr;
     bool is_cxr_initialized_ = false;
 
     bool create_receiver();
@@ -165,8 +166,6 @@ private:
     cxrBool render_audio(const cxrAudioFrame* audio_frame);
 
     bool is_audio_initialized_ = false;
-    bool enable_audio_playback_ = ENABLE_CLOUDXR_AUDIO_PLAYBACK;
-    bool enable_audio_recording_ = ENABLE_CLOUDXR_AUDIO_RECORDING;
     std::shared_ptr<oboe::AudioStream> audio_playback_stream_;
     std::shared_ptr<oboe::AudioStream> audio_record_stream_;
 #endif
