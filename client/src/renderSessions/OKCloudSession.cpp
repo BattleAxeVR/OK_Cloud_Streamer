@@ -83,20 +83,6 @@ XrQuaternionf convert_cxr_to_xr(const cxrQuaternion &cxr_quat)
     return xr_quat;
 }
 
-static double GetTimeInSeconds()
-{
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    return (now.tv_sec * 1e9 + now.tv_nsec) * 0.000000001;
-}
-
-static uint64_t GetTimeInNS()
-{
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    return ((uint64_t)(now.tv_sec * 1e9) + now.tv_nsec);
-}
-
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
 }
@@ -1260,7 +1246,7 @@ namespace igl::shell
 
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
 
-        const uint64_t predicted_display_time_ns = GetTimeInNS() + DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS;
+        const uint64_t predicted_display_time_ns = xr_app.get_predicted_display_time_ns() + DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS;
         openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
 
         cxrVRTrackingState& cxr_tracking_state = *cxr_tracking_state_ptr;
@@ -1310,7 +1296,7 @@ namespace igl::shell
 #if ENABLE_CLOUDXR_CONTROLLER_FIX
                         BVR::GLMPose cloudxr_controller_offset;
 
-                        const float x_offset = (controller_id == LEFT) ? -CLOUDXR_CONTROLLER_OFFSET_X : CLOUDXR_CONTROLLER_OFFSET_X;
+                        const float x_offset = (controller_id == LEFT_CONTROLLER) ? -CLOUDXR_CONTROLLER_OFFSET_X : CLOUDXR_CONTROLLER_OFFSET_X;
 
                         cloudxr_controller_offset.translation_ =
                                 glm::vec3(x_offset, CLOUDXR_CONTROLLER_OFFSET_Y,
