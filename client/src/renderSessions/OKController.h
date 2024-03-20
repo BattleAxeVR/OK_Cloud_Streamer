@@ -72,38 +72,6 @@ namespace BVR
         int cloudxr_path_id_;
     };
 
-
-    static DigitalButtonToCloudXR_Map digital_button_maps[][NUM_CONTROLLERS] = {{{DigitalButton_ApplicationMenu, 0},
-                                                                                  { DigitalButton_System,INVALID_INDEX }},
-                                                                          {{DigitalButton_Trigger_Click, 2},
-                                                                                  { DigitalButton_Trigger_Click,2 }},
-                                                                          {{DigitalButton_Trigger_Touch, 3},
-                                                                                  { DigitalButton_Trigger_Touch,3 }},
-                                                                          {{DigitalButton_Grip_Click, 5},
-                                                                                  { DigitalButton_Grip_Click,5 }},
-                                                                          {{DigitalButton_Grip_Touch, 6},
-                                                                                  { DigitalButton_Grip_Touch,6 }},
-                                                                          {{DigitalButton_Joystick_Click, 8},
-                                                                                  { DigitalButton_Joystick_Click,8 }},
-                                                                          {{DigitalButton_Joystick_Touch, 9},
-                                                                                  { DigitalButton_Joystick_Touch,9 }},
-                                                                          {{DigitalButton_A_Click, 14},
-                                                                                  { DigitalButton_A_Click,12 }},
-                                                                                {{DigitalButton_B_Click, 15},
-                                                                                        { DigitalButton_B_Click,13 }},
-                                                                          {{DigitalButton_A_Touch, 18},
-                                                                                  { DigitalButton_A_Touch,16 }},
-                                                                                { {DigitalButton_B_Touch, 19},
-                                                                                  { DigitalButton_B_Touch,17 }},
-                                                                          { {DigitalButton_Touchpad_Touch, 20},
-                                                                            { DigitalButton_Touchpad_Touch, 20 }}
-    };
-
-    static AnalogAxisToCloudXRMap analog_axis_maps[] = {{AnalogAxis_Trigger, 4},
-                                                        {AnalogAxis_Grip, 7},
-                                                        {AnalogAxis_JoystickX, 10},
-                                                        {AnalogAxis_JoystickY,11 }};
-
 class OKController 
 {
 	public:

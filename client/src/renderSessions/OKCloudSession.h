@@ -9,6 +9,7 @@
 
 #if ENABLE_CLOUDXR
 #include "OKCloudClient.h"
+#endif
 
 #include <shell/shared/renderSession/RenderSession.h>
 
@@ -33,8 +34,8 @@ namespace igl::shell
     }
 
     class OKCloudSession : public RenderSession
-#if ENABLE_OBOE
-    , oboe::AudioStreamDataCallback
+#if ENABLE_CLOUDXR
+    , BVR::XRInterface
 #endif
     {
     public:
@@ -46,44 +47,29 @@ namespace igl::shell
         void update(igl::SurfaceTextures surfaceTextures) noexcept override;
         bool post_update() noexcept override;
 
-        // CloudXR stuff
-        bool init_cxr();
+#if ENABLE_CLOUDXR
+        virtual XrInstance get_instance() override;
+        virtual XrSession get_session() override;
 
-        void update_cxr_state(cxrClientState state, cxrError error);
+        virtual igl::shell::openxr::XrInputState* get_input_state() override;
+        virtual XrTime get_predicted_display_time_ns() override;
 
-        void shutdown_cxr();
+        virtual float get_current_refresh_rate() override;
+        virtual void query_refresh_rates() override;
+        virtual bool set_refresh_rate(const float refresh_rate) override;
 
-        bool connect();
+#if ENABLE_CLOUDXR_LINK_SHARPENING
+        virtual void set_sharpening_enabled(const bool enabled) override;
+#endif
 
-        void disconnect();
+        virtual void handle_stream_connected() override;
+        virtual void handle_stream_disconnected() override;
 
-        void set_ip_address(const std::string &ip_address) {
-            ip_address_ = ip_address;
-        }
+        virtual const XrView get_view(const int view_id) override;
 
-        bool is_cxr_initialized() const {
-            return is_cxr_initialized_;
-        }
-
-        bool is_ready_to_connect() const {
-            return (cxr_client_state_ == cxrClientState::cxrClientState_ReadyToConnect);
-        }
-
-        bool is_connected() const {
-            return (cxr_client_state_ == cxrClientState::cxrClientState_StreamingSessionInProgress);
-        }
-
-        bool is_connecting() const {
-            return (cxr_client_state_ ==
-                    cxrClientState::cxrClientState_ConnectionAttemptInProgress);
-        }
-
-        bool failed_to_connect() const {
-            return (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptFailed);
-        }
-
-#if ENABLE_OBOE
-        oboe::DataCallbackResult onAudioReady(oboe::AudioStream* audio_stream, void* data, int32_t frame_count) override;
+        virtual void poll_actions(const bool main_thread) override;
+        virtual XrSpace get_base_space() override;
+        virtual XrSpace get_head_space() override;
 #endif
 
     private:
@@ -100,82 +86,16 @@ namespace igl::shell
         VertexFormat vertexParameters_;
 
         void createSamplerAndTextures(const IDevice & /*device*/);
-
         void setVertexParams();
 
-        bool is_cxr_initialized_ = false;
-
-#if ENABLE_OBOE
-        bool init_audio();
-        void shutdown_audio();
-        cxrBool render_audio(const cxrAudioFrame* audio_frame);
-
-        bool is_audio_initialized_ = false;
-        bool enable_audio_playback_ = ENABLE_CLOUDXR_AUDIO_PLAYBACK;
-        bool enable_audio_recording_ = ENABLE_CLOUDXR_AUDIO_RECORDING;
-        std::shared_ptr<oboe::AudioStream> audio_playback_stream_;
-        std::shared_ptr<oboe::AudioStream> audio_record_stream_;
-#endif
-
-        std::string ip_address_ = DEFAULT_IP_ADDRESS;
-
-        bool create_receiver();
-        void destroy_receiver();
-
-        void compute_ipd();
-
-#if ENABLE_CLOUDXR_FRAME_LATCH
-        bool latch_frame(int view_id);
-        void release_frame();
-#endif
-
-        void get_tracking_state(cxrVRTrackingState *cxr_tracking_state_ptr);
-
-        bool is_meta_headset() const
-        {
-            return true;
-        }
-
-#if ENABLE_CLOUDXR_CONTROLLERS
-        bool controllers_initialized_ = false;
-        cxrControllerHandle cxr_controller_handles_[CXR_NUM_CONTROLLERS] = {nullptr, nullptr};
-        bool add_controllers();
-        void remove_controllers();
-        void send_controller_poses(cxrControllerTrackingState& cxr_controller, const int controller_id, const uint64_t predicted_display_time_ns);
-        void fire_controller_events(const int controller_id, const uint64_t predicted_display_time_ns);
-
-        void update_controller_digital_buttons(const int controller_id);
-        void update_controller_analog_axes(const int controller_id);
-
-        bool send_all_analog_controller_values_ = true;
-        bool send_all_digital_controller_values_ = true;
-        bool combine_grip_force_with_grip_ = true;
-        bool simulate_grip_touch_ = true;
-        bool simulate_thumb_rest_ = false; // doesn't work, appears "/input/thumb_rest/touch" doesn't work on CXR side
-#endif
-
-#if ENABLE_HAPTICS
-        void trigger_haptics(const cxrHapticFeedback *haptics);
-#endif
-        CloudXR::ClientOptions cxr_options_ = {};
-        cxrGraphicsContext graphics_context_ = {};
-        cxrReceiverHandle cxr_receiver_ = nullptr;
-        cxrClientState cxr_client_state_ = cxrClientState_ReadyToConnect;
-        cxrFramesLatched latched_frames_ = {};
-        bool is_latched_ = false;
-
-        float ipd_meters_ = DEFAULT_CLOUDXR_IPD_M;
-
-#if USE_CLOUDXR_POSE_ID
-        uint64_t poseID_ = 0;
-#endif
-
+#if ENABLE_CLOUDXR
         BVR::OKCloudClient ok_client_;
+#endif
+
     };
 
 } // namespace igl::shell
 
-#endif // ENABLE_CLOUDXR
 
 #endif // OK_CLOUD_SESSION_H
 
