@@ -38,6 +38,7 @@
 #include "OKController.cpp"
 #include "OKDigitalButton.cpp"
 #include "OKAnalogAxis.cpp"
+#include "OKCloudClient.cpp"
 
 #ifndef XR_USE_TIMESPEC
 #define XR_USE_TIMESPEC

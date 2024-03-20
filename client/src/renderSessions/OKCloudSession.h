@@ -8,24 +8,15 @@
 #include "defines.h"
 
 #if ENABLE_CLOUDXR
-#include "OKConfig.h"
-#include "OKPlayerState.h"
+#include "OKCloudClient.h"
 
 #include <shell/shared/renderSession/RenderSession.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include <igl/IGL.h>
 #include <shell/shared/platform/Platform.h>
-
-#include <CloudXRClient.h>
-#include <CloudXRMatrixHelpers.h>
-#include <CloudXRClientOptions.h>
-#include <CloudXRController.h>
-
-#if ENABLE_OBOE
-#include <oboe/Oboe.h>
-#endif
 
 namespace igl::shell
 {
