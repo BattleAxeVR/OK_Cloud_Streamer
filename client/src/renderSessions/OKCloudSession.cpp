@@ -1280,7 +1280,7 @@ namespace igl::shell
                 cxrControllerTrackingState& cxr_controller = cxr_tracking_state.controller[controller_id];
                 cxr_controller = {};
 
-                BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+                BVR::OKController& ok_controller = ok_client_.ok_player_state_.controllers_[controller_id];
                 ok_controller.pose_.is_valid_ = false;
 
                 if (XR_UNQUALIFIED_SUCCESS(result) && pose_state.isActive)
@@ -1422,7 +1422,7 @@ namespace igl::shell
         cxrControllerEvent cxr_events[MAX_CLOUDXR_CONTROLLER_EVENTS] = {};
         uint32_t cxr_event_count = 0;
 
-        const BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+        const BVR::OKController& ok_controller = ok_client_.ok_player_state_.controllers_[controller_id];
 
         {
             const uint32_t num_analog_axis_maps = ARRAY_SIZE(BVR::analog_axis_maps);
@@ -1525,7 +1525,7 @@ namespace igl::shell
                 {xr_inputs.buttonBYClickAction, BVR::DigitalButton_B_Click}
         };
 
-        BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+        BVR::OKController& ok_controller = ok_client_.ok_player_state_.controllers_[controller_id];
 
         XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
         action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
@@ -1589,7 +1589,7 @@ namespace igl::shell
                 //{xr_inputs.trackpadYAction, BVR::AnalogAxis_JoystickY}
         };
 
-        BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
+        BVR::OKController& ok_controller = ok_client_.ok_player_state_.controllers_[controller_id];
 
         XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
         action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];

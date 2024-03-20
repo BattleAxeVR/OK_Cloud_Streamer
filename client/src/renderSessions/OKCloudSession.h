@@ -170,8 +170,7 @@ namespace igl::shell
         uint64_t poseID_ = 0;
 #endif
 
-        BVR::OKConfig ok_config_;
-        BVR::OKPlayerState ok_player_state_;
+        BVR::OKCloudClient ok_client_;
     };
 
 } // namespace igl::shell

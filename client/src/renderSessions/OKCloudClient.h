@@ -26,8 +26,11 @@ namespace BVR
 
 class OKCloudClient 
 {
-	public:
-		OKCloudClient();
+public:
+    OKCloudClient();
+
+    OKConfig ok_config_;
+    OKPlayerState ok_player_state_;
 };
 
 }  // namespace BVR
