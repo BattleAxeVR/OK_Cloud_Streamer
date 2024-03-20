@@ -1510,6 +1510,8 @@ namespace igl::shell
                 {xr_inputs.squeezeClickAction, BVR::DigitalButton_Grip_Click},
                 {xr_inputs.thumbstickTouchAction, BVR::DigitalButton_Joystick_Touch},
                 {xr_inputs.thumbstickClickAction, BVR::DigitalButton_Joystick_Click},
+                {xr_inputs.thumbRestTouchAction, BVR::DigitalButton_Touchpad_Touch},
+                //{xr_inputs.thumbRestClickAction, BVR::DigitalButton_Touchpad_Click},
                 {xr_inputs.buttonAXTouchAction, BVR::DigitalButton_A_Touch},
                 {xr_inputs.buttonAXClickAction, BVR::DigitalButton_A_Click},
                 {xr_inputs.buttonBYTouchAction, BVR::DigitalButton_B_Touch},
@@ -1559,7 +1561,11 @@ namespace igl::shell
                 {xr_inputs.triggerValueAction, BVR::AnalogAxis_Trigger},
                 {xr_inputs.squeezeValueAction, BVR::AnalogAxis_Grip},
                 {xr_inputs.thumbstickXAction, BVR::AnalogAxis_JoystickX},
-                {xr_inputs.thumbstickYAction, BVR::AnalogAxis_JoystickY}
+                {xr_inputs.thumbstickYAction, BVR::AnalogAxis_JoystickY},
+                //{xr_inputs.thumbProximityAction, BVR::AnalogAxis_Grip},
+                {xr_inputs.thumbRestForceAction, BVR::AnalogAxis_Grip_Force},
+                //{xr_inputs.trackpadXAction, BVR::AnalogAxis_JoystickX},
+                //{xr_inputs.trackpadYAction, BVR::AnalogAxis_JoystickY}
         };
 
         BVR::OKController& ok_controller = ok_player_state_.controllers_[controller_id];
