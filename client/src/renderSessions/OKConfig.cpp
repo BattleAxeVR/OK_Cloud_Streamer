@@ -114,7 +114,7 @@ bool OKConfig::load()
     if (root.isMember("enable_auto_connect"))
     {
         const Json::Value value = root["enable_auto_connect"];
-        enable_auto_connect_ = (bool)value.asUInt();
+        //enable_auto_connect_ = (bool)value.asUInt();
     }
 
     // Res has to be modulo 32 pixels for optimal image quality / scaling
@@ -178,7 +178,7 @@ bool OKConfig::load()
 
         if (value.isUInt())
         {
-            enable_sharpening_ = (bool)value.asUInt();
+            //enable_sharpening_ = (bool)value.asUInt();
         }
     }
 
@@ -238,7 +238,7 @@ bool OKConfig::load()
 
         if (value.isUInt())
         {
-            enable_audio_playback_ = (bool)value.asUInt();
+            //enable_audio_playback_ = (bool)value.asUInt();
         }
     }
 
@@ -248,7 +248,7 @@ bool OKConfig::load()
 
         if (value.isUInt())
         {
-            enable_audio_recording_ = (bool)value.asUInt();
+            //enable_audio_recording_ = (bool)value.asUInt();
         }
     }
 
