@@ -361,8 +361,12 @@ namespace igl::shell
             }
         }
 
-        ok_client_.latch_frame();
+        if (ok_client_.is_connected())
+        {
+            return ok_client_.latch_frame();
+        }
 #endif
+
         return true;
     }
 
@@ -395,11 +399,6 @@ namespace igl::shell
             framebuffer_->updateDrawable(surfaceTextures.color);
         }
 
-        auto buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
-
-        const std::shared_ptr<igl::IRenderCommandEncoder> commands =
-                buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
-
 #if ENABLE_CLOUDXR
         const int view_id = shellParams().current_view_id_;
 
@@ -410,13 +409,15 @@ namespace igl::shell
             openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
             xr_app.override_eye_poses_[view_id] = BVR::convert_to_xr_pose(eye_pose);
 
-            commands->endEncoding();
-            buffer->present(framebuffer_->getColorAttachment(0));
-            commandQueue_->submit(*buffer);
-
             return;
         }
 #endif
+
+        std::shared_ptr<ICommandBuffer> buffer = commandQueue_->createCommandBuffer(CommandBufferDesc{}, nullptr);
+
+        const std::shared_ptr<igl::IRenderCommandEncoder> commands =
+                buffer->createRenderCommandEncoder(renderPass_, framebuffer_);
+
 
 #if DRAW_CUBE_UNTIL_CONNECTED
         // cube animation
