@@ -43,7 +43,7 @@ bool EGLHelper::Initialize()
     eglInitialize(display, 0, 0);
 
     EGLConfig bestConfig;
-    EGLHelper::HelperEGLConfig questConfig(8, 8, 8, 8, EGL_DEPTH_SIZE, 16, 4, EGL_OPENGL_ES3_BIT);
+    EGLHelper::HelperEGLConfig questConfig(8, 8, 8, 8, 0, 0, 0, EGL_OPENGL_ES3_BIT);
     if (!ChooseConfig(display, questConfig, bestConfig))
     {
         CXR_LOGE("EGLHelper failed to choose a display config!");
