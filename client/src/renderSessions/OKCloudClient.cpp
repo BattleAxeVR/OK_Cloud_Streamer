@@ -413,6 +413,8 @@ bool OKCloudClient::create_receiver()
         fps = xr_interface_->get_current_refresh_rate();
     }
 
+    const uint32_t integer_fps = (uint32_t)roundf(fps);
+
 #if ENABLE_CLOUDXR_LINK_SHARPENING
     if (ok_config_.enable_sharpening_)
     {
@@ -425,7 +427,7 @@ bool OKCloudClient::create_receiver()
         device_desc.videoStreamDescs[stream_index].width = ok_config_.per_eye_width_;
         device_desc.videoStreamDescs[stream_index].height = ok_config_.per_eye_height_;
         device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
-        device_desc.videoStreamDescs[stream_index].fps = fps;
+        device_desc.videoStreamDescs[stream_index].fps = (float)integer_fps;
         device_desc.videoStreamDescs[stream_index].maxBitrate = ok_config_.max_bitrate_kbps_;
     }
 
@@ -434,12 +436,16 @@ bool OKCloudClient::create_receiver()
     device_desc.foveatedScaleFactor = ok_config_.foveation_;
     device_desc.stereoDisplay = true;
 
-    //const float prediction_offset_sec = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
+#if USE_FRAME_PERIOD_AS_POSE_PREDICTION_OFFSET
     const float prediction_offset_sec = (1.0f / fps);
+#else
+    const float prediction_offset_sec = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
+#endif
+
     device_desc.predOffset = prediction_offset_sec;
 
-    const float polling_rate = clamp<float>(roundf(ok_config_.polling_rate_mult_ * fps), 0.0f, 1000.0f);
-    device_desc.posePollFreq = polling_rate;
+    const uint32_t polling_rate_hz = clamp<uint32_t>(ok_config_.polling_rate_mult_ * integer_fps, (uint32_t)MIN_CLOUDXR_POSE_POLLING_HZ, (uint32_t)MAX_CLOUDXR_POSE_POLLING_HZ);
+    device_desc.posePollFreq = polling_rate_hz;
 
 #if ENABLE_OBOE
     device_desc.receiveAudio = ok_config_.enable_audio_playback_;
