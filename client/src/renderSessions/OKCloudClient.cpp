@@ -366,7 +366,14 @@ bool OKCloudClient::create_receiver()
     cxrReceiverDesc receiver_desc = {0};
     receiver_desc.requestedVersion = CLOUDXR_VERSION_DWORD;
 
-    receiver_desc.shareContext = &graphics_context_;
+    cxrGraphicsContext context{cxrGraphicsContext_GLES};
+    context.egl.display = eglGetCurrentDisplay();
+    context.egl.context = eglGetCurrentContext();
+
+    receiver_desc.shareContext = &context;
+
+    //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
+    //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
 
     // Debug flags
     receiver_desc.debugFlags = 0;//cxrDebugFlags_EnableAImageReaderDecoder;
@@ -442,10 +449,10 @@ bool OKCloudClient::create_receiver()
     const float prediction_offset_sec = DEFAULT_CLOUDXR_PREDICTION_OFFSET_NS * NS_TO_SEC;
 #endif
 
-    device_desc.predOffset = prediction_offset_sec;
+    device_desc.predOffset = 0;//prediction_offset_sec;
 
-    const uint32_t polling_rate_hz = clamp<uint32_t>(ok_config_.polling_rate_mult_ * integer_fps, (uint32_t)MIN_CLOUDXR_POSE_POLLING_HZ, (uint32_t)MAX_CLOUDXR_POSE_POLLING_HZ);
-    device_desc.posePollFreq = polling_rate_hz;
+    //const uint32_t polling_rate_hz = clamp<uint32_t>(ok_config_.polling_rate_mult_ * integer_fps, (uint32_t)MIN_CLOUDXR_POSE_POLLING_HZ, (uint32_t)MAX_CLOUDXR_POSE_POLLING_HZ);
+    device_desc.posePollFreq = 0;// polling_rate_hz;
 
 #if ENABLE_OBOE
     device_desc.receiveAudio = ok_config_.enable_audio_playback_;
