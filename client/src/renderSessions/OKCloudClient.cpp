@@ -679,7 +679,7 @@ bool OKCloudClient::latch_frame()
         return false;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::latch_frame SUCCESS\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::latch_frame SUCCESS\n");
     is_latched_ = true;
 
     return true;
@@ -701,7 +701,7 @@ bool OKCloudClient::blit_frame(const int view_id, GLMPose& eye_pose)
         return false;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::blit_frame SUCCESS\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::blit_frame SUCCESS\n");
 
     cxrVector3 cxr_hmd_position = {};
     cxrQuaternion cxr_hmd_rotation = {};
@@ -728,7 +728,7 @@ void OKCloudClient::release_frame()
         return;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::release_frame\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::release_frame\n");
     cxrReleaseFrame(cxr_receiver_, &latched_frames_);
     is_latched_ = false;
 }
