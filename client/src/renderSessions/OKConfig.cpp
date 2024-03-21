@@ -32,7 +32,7 @@ bool read_file(const std::string& filename, std::string& file_contents)
         return false;
     }
 
-    char* buffer = (char*)malloc(file_size);
+    char* buffer = (char*)malloc(file_size + 1);
     size_t bytes_read = fread(buffer, 1, file_size, file);
 
     if (bytes_read != file_size)
@@ -42,6 +42,7 @@ bool read_file(const std::string& filename, std::string& file_contents)
         return false;
     }
 
+    buffer[bytes_read] = 0;
     file_contents = buffer;
 
     free(buffer);
