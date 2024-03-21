@@ -4,6 +4,11 @@
 
 #include "defines.h"
 
+#if USE_EGL_HELPER
+#include "EGLHelper.cpp"
+EGLHelper egl_helper = {};
+#endif
+
 #include "IGLU/managedUniformBuffer/ManagedUniformBuffer.h"
 
 #include <algorithm>
@@ -342,9 +347,21 @@ void OKCloudSession::setVertexParams()
 
 bool OKCloudSession::pre_update() noexcept
 {
-#if ENABLE_CLOUDXR && 0
+#if (ENABLE_CLOUDXR && 1)
     if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
     {
+
+#if USE_EGL_HELPER
+        const bool init_egl_ok = egl_helper.Initialize();
+
+        if (!init_egl_ok)
+        {
+            return false;
+        }
+
+        EGLDisplay egl_display = (EGLDisplay)egl_helper.GetDisplay();
+        EGLContext egl_context = (EGLContext)egl_helper.GetContext();
+#else
         Platform& platform = getPlatform();
         const igl::IDevice& device = platform.getDevice();
         const igl::opengl::Device* gl_device_ptr = (const igl::opengl::Device*)&device;
@@ -352,7 +369,7 @@ bool OKCloudSession::pre_update() noexcept
 
         EGLDisplay egl_display = egl_context_ptr->getDisplay();
         EGLContext egl_context = egl_context_ptr->get();
-
+#endif
         const bool init_cxr_ok = ok_client_.init_android_gles(this, egl_display, egl_context);
 
         if (init_cxr_ok && ok_client_.ok_config_.enable_auto_connect_)
@@ -399,7 +416,7 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
         framebuffer_->updateDrawable(surfaceTextures.color);
     }
 
-#if (ENABLE_CLOUDXR && 0)
+#if (ENABLE_CLOUDXR && 1)
     const int view_id = shellParams().current_view_id_;
 
     BVR::GLMPose eye_pose;
