@@ -138,7 +138,7 @@ protected:
 
     bool mRefreshChanged = false;
     float_t mTargetDisplayRefresh = 0;
-    const float_t cDefaultDisplayRefresh = 90.0f; // Can change this to hardcode alternate value...
+    const float_t cDefaultDisplayRefresh = 72.0f; // Can change this to hardcode alternate value...
 
     double mNextDisplayTime = 0;
     ovrRigidBodyPosef mLastHeadPose;
