@@ -669,11 +669,16 @@ bool OKCloudClient::latch_frame()
 
     if (error)
     {
-        const bool is_real_error = (error != cxrError_Frame_Not_Ready);
+        const bool frame_not_ready = (error == cxrError_Frame_Not_Ready);
+        const bool is_real_error = !frame_not_ready;
 
         if (is_real_error)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "cxrLatchFrame error = %s\n", cxrErrorString(error));
+            IGLLog(IGLLogLevel::LOG_ERROR, "OKCloudClient::latch_frame cxrLatchFrame error = %s\n", cxrErrorString(error));
+        }
+        else if (frame_not_ready)
+        {
+            IGLLog(IGLLogLevel::LOG_WARNING, "OKCloudClient::latch_frame cxrLatchFrame FRAME NOT READY = %s\n", cxrErrorString(error));
         }
 
         return false;
@@ -687,8 +692,14 @@ bool OKCloudClient::latch_frame()
 
 bool OKCloudClient::blit_frame(const int view_id, GLMPose& eye_pose)
 {
-    if (!is_connected() || !is_latched_)
+    if (!is_connected())
     {
+        return false;
+    }
+
+    if (!is_latched_)
+    {
+        IGLLog(IGLLogLevel::LOG_WARNING, "OKCloudClient::blit_frame NOT LATCHED, skipping\n");
         return false;
     }
 
