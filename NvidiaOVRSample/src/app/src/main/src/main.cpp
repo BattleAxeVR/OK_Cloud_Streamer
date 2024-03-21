@@ -1316,8 +1316,8 @@ cxrDeviceDesc OKCloudStreamer::GetDeviceDesc(float fovX, float fovY)
     uint32_t height = texH;
 #else
     // TODO: This is trying to use display-native per eye w/h instead.
-    uint32_t width = dispW / 2;
-    uint32_t height = dispH;
+    uint32_t width = 1920;//dispW / 2;
+    uint32_t height = 1920;//dispH;
 #endif
 
     desc.numVideoStreamDescs = CXR_NUM_VIDEO_STREAMS_XR;
@@ -1343,8 +1343,8 @@ cxrDeviceDesc OKCloudStreamer::GetDeviceDesc(float fovX, float fovY)
     desc.ipd = vrapi_GetInterpupillaryDistance(&tracking);
 
     desc.predOffset = ServerPredictionOffset;
-    desc.receiveAudio = GOptions.mReceiveAudio;
-    desc.sendAudio = GOptions.mSendAudio;
+    desc.receiveAudio = 0;//GOptions.mReceiveAudio;
+    desc.sendAudio = 0;// GOptions.mSendAudio;
     desc.posePollFreq = 0;
     desc.disablePosePrediction = false;
     desc.angularVelocityInDeviceSpace = false;

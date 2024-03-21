@@ -366,12 +366,15 @@ bool OKCloudClient::create_receiver()
     cxrReceiverDesc receiver_desc = {0};
     receiver_desc.requestedVersion = CLOUDXR_VERSION_DWORD;
 
+#if 0
     cxrGraphicsContext context{cxrGraphicsContext_GLES};
     context.egl.display = eglGetCurrentDisplay();
     context.egl.context = eglGetCurrentContext();
 
     receiver_desc.shareContext = &context;
-
+#else
+    receiver_desc.shareContext = &graphics_context_;
+#endif
     //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
     //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
 
@@ -383,8 +386,8 @@ bool OKCloudClient::create_receiver()
         // Logging
         //receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
 
-        receiver_desc.logMaxSizeKB = CLOUDXR_LOG_MAX_DEFAULT;
-        receiver_desc.logMaxAgeDays = CLOUDXR_LOG_MAX_DEFAULT;
+        receiver_desc.logMaxSizeKB = -1;
+        receiver_desc.logMaxAgeDays = -1;//CLOUDXR_LOG_MAX_DEFAULT;
 
         const std::string application_id = "OK Cloud Streamer v1.0";
 
@@ -396,7 +399,7 @@ bool OKCloudClient::create_receiver()
 #endif
 
     cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
-    device_desc.maxResFactor = ok_config_.max_res_factor_;
+    device_desc.maxResFactor = 1.0f;// ok_config_.max_res_factor_;
 
     compute_ipd();
     device_desc.ipd = ipd_meters_;

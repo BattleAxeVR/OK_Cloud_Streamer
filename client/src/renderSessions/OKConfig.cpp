@@ -198,7 +198,7 @@ bool OKConfig::load()
 
         if (value.isUInt())
         {
-            max_bitrate_kbps_ = value.asUInt();
+            //max_bitrate_kbps_ = value.asUInt();
         }
     }
 

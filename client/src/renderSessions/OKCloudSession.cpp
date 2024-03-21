@@ -4,6 +4,25 @@
 
 #include "defines.h"
 
+
+#include "EGLHelper.h"
+
+#include <openxr/openxr.h>
+
+#ifndef XR_USE_GRAPHICS_API_OPENGL_ES
+#define XR_USE_GRAPHICS_API_OPENGL_ES
+#endif
+
+#ifndef XR_USE_PLATFORM_ANDROID
+#define XR_USE_PLATFORM_ANDROID
+#endif
+
+class _jobject;
+typedef _jobject*       jobject;
+#include <openxr/openxr_platform.h>
+
+#include "shell/openxr/mobile/opengl/XrAppImplGLES.h"
+
 #if USE_EGL_HELPER
 #include "EGLHelper.cpp"
 EGLHelper egl_helper = {};
@@ -29,6 +48,7 @@ EGLHelper egl_helper = {};
 #include "OKCloudSession.h"
 #include "shell/shared/renderSession/ShellParams.h"
 
+
 #define EXTERNAL_XR_BUILD
 #undef IGL_DEBUG
 #include "shell/openxr/mobile/XrApp.cpp"
@@ -48,8 +68,6 @@ EGLHelper egl_helper = {};
 #ifndef XR_USE_TIMESPEC
 #define XR_USE_TIMESPEC
 #endif
-
-#include <openxr/openxr_platform.h>
 
 namespace igl::shell
 {
@@ -347,43 +365,6 @@ void OKCloudSession::setVertexParams()
 
 bool OKCloudSession::pre_update() noexcept
 {
-#if (ENABLE_CLOUDXR && 1)
-    if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
-    {
-
-#if USE_EGL_HELPER
-        const bool init_egl_ok = egl_helper.Initialize();
-
-        if (!init_egl_ok)
-        {
-            return false;
-        }
-
-        EGLDisplay egl_display = (EGLDisplay)egl_helper.GetDisplay();
-        EGLContext egl_context = (EGLContext)egl_helper.GetContext();
-#else
-        Platform& platform = getPlatform();
-        const igl::IDevice& device = platform.getDevice();
-        const igl::opengl::Device* gl_device_ptr = (const igl::opengl::Device*)&device;
-        const opengl::egl::Context* egl_context_ptr = (opengl::egl::Context*)(&gl_device_ptr->getContext());
-
-        EGLDisplay egl_display = egl_context_ptr->getDisplay();
-        EGLContext egl_context = egl_context_ptr->get();
-#endif
-        const bool init_cxr_ok = ok_client_.init_android_gles(this, egl_display, egl_context);
-
-        if (init_cxr_ok && ok_client_.ok_config_.enable_auto_connect_)
-        {
-            ok_client_.connect();
-        }
-    }
-
-    if (ok_client_.is_connected())
-    {
-        return ok_client_.latch_frame();
-    }
-#endif
-
     return true;
 }
 
@@ -417,7 +398,47 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
     }
 
 #if (ENABLE_CLOUDXR && 1)
+    if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
+    {
+
+#if USE_EGL_HELPER
+        const bool init_egl_ok = egl_helper.Initialize();
+
+        if (!init_egl_ok)
+        {
+            return false;
+        }
+
+        EGLDisplay egl_display = (EGLDisplay)egl_helper.GetDisplay();
+        EGLContext egl_context = (EGLContext)egl_helper.GetContext();
+#elif 1
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        igl::shell::openxr::mobile::XrAppImplGLES* ptr = (igl::shell::openxr::mobile::XrAppImplGLES*)(xr_app.impl_.get());
+        EGLDisplay egl_display = ptr->graphicsBindingAndroidGLES.display;
+        EGLContext egl_context = ptr->graphicsBindingAndroidGLES.context;
+#else
+        Platform& platform = getPlatform();
+        const igl::IDevice& device = platform.getDevice();
+        const igl::opengl::Device* gl_device_ptr = (const igl::opengl::Device*)&device;
+        const opengl::egl::Context* egl_context_ptr = (opengl::egl::Context*)(&gl_device_ptr->getContext());
+
+        EGLDisplay egl_display = egl_context_ptr->getDisplay();
+        EGLContext egl_context = egl_context_ptr->get();
+#endif
+        const bool init_cxr_ok = ok_client_.init_android_gles(this, egl_display, egl_context);
+
+        if (init_cxr_ok && ok_client_.ok_config_.enable_auto_connect_)
+        {
+            ok_client_.connect();
+        }
+    }
+
     const int view_id = shellParams().current_view_id_;
+
+    if ((view_id == LEFT) && ok_client_.is_connected())
+    {
+        ok_client_.latch_frame();
+    }
 
     BVR::GLMPose eye_pose;
 
