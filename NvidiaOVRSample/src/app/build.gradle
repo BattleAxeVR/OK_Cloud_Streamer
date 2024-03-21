@@ -43,9 +43,9 @@ android {
     signingConfigs {
         release {
             storeFile file('./battleaxevr_keystore.jks')
-            storePassword keystorePassword
+            storePassword "${System.getenv("BATTLEAXEVR_KEYSTORE_PASSWORD")}"
             keyAlias 'key0'
-            keyPassword keystorePassword
+            keyPassword "${System.getenv("BATTLEAXEVR_KEY_PASSWORD")}"
         }
     }
 
