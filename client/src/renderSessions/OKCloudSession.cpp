@@ -406,7 +406,7 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
 
         if (!init_egl_ok)
         {
-            return false;
+            return;
         }
 
         EGLDisplay egl_display = (EGLDisplay)egl_helper.GetDisplay();
