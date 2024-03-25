@@ -3,7 +3,7 @@
   "enable_auto_connect": 1,
   "per_eye_width": 1920,
   "per_eye_height": 1920,
-  "desired_refresh_rate": 72,
+  "desired_refresh_rate": 120,
   "polling_rate_mult": 4,
   "foveation": 0,
   "enable_sharpening": 1,
