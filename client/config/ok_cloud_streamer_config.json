@@ -6,7 +6,7 @@
   "desired_refresh_rate": 120,
   "polling_rate_mult": 4,
   "foveation": 0,
-  "enable_sharpening": 1,
+  "enable_sharpening": 0,
   "max_res_factor": 1.0,
   "max_bitrate_kbps": 0,
   "prediction_offset_ns": 0.0,

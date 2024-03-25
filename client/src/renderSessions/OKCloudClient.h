@@ -137,11 +137,12 @@ private:
     void update_controller_digital_buttons(const int controller_id);
     void update_controller_analog_axes(const int controller_id);
 
-    bool send_all_analog_controller_values_ = true;
-    bool send_all_digital_controller_values_ = true;
-    bool combine_grip_force_with_grip_ = true;
-    bool simulate_grip_touch_ = true;
-    bool simulate_thumb_rest_ = false; // doesn't work, appears "/input/thumb_rest/touch" doesn't work on CXR side
+    bool send_all_analog_controller_values_ = SEND_ALL_DIGITAL_EVENTS_EVERY_FRAME;
+    bool send_all_digital_controller_values_ = SEND_ALL_ANALOG_EVENTS_EVERY_FRAME;
+
+    bool combine_grip_force_with_grip_ = COMBINE_GRIP_FORCE_WITH_GRIP;
+    bool simulate_grip_touch_ = SIMULATE_GRIP_TOUCH;
+    bool simulate_thumb_rest_ = SIMULATE_THUMB_REST; // doesn't work, appears "/input/thumb_rest/touch" doesn't work on CXR side
 #endif
 
 #if ENABLE_HAPTICS
