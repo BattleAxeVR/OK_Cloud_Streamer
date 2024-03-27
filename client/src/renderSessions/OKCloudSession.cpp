@@ -4,8 +4,6 @@
 
 #include "ok_defines.h"
 
-#include "EGLHelper.h"
-
 #include <openxr/openxr.h>
 
 #ifndef XR_USE_GRAPHICS_API_OPENGL_ES
@@ -16,16 +14,15 @@
 #define XR_USE_PLATFORM_ANDROID
 #endif
 
+#include <EGL/egl.h>
+#define EGL_EGLEXT_PROTOTYPES
+#include <EGL/eglext.h>
+
 class _jobject;
 typedef _jobject*       jobject;
 #include <openxr/openxr_platform.h>
 
 #include "shell/openxr/mobile/opengl/XrAppImplGLES.h"
-
-#if USE_EGL_HELPER
-#include "EGLHelper.cpp"
-EGLHelper egl_helper = {};
-#endif
 
 #include "IGLU/managedUniformBuffer/ManagedUniformBuffer.h"
 
@@ -445,21 +442,6 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
         ok_inputs_.trackpadXAction = xr_inputs.trackpadXAction;
         ok_inputs_.trackpadYAction = xr_inputs.trackpadYAction;
 
-#if USE_EGL_HELPER
-        const bool init_egl_ok = egl_helper.Initialize();
-
-        if (!init_egl_ok)
-        {
-            return;
-        }
-
-        EGLDisplay egl_display = (EGLDisplay)egl_helper.GetDisplay();
-        EGLContext egl_context = (EGLContext)egl_helper.GetContext();
-#elif 1
-        igl::shell::openxr::mobile::XrAppImplGLES* ptr = (igl::shell::openxr::mobile::XrAppImplGLES*)(xr_app.impl_.get());
-        EGLDisplay egl_display = ptr->graphicsBindingAndroidGLES.display;
-        EGLContext egl_context = ptr->graphicsBindingAndroidGLES.context;
-#else
         Platform& platform = getPlatform();
         const igl::IDevice& device = platform.getDevice();
         const igl::opengl::Device* gl_device_ptr = (const igl::opengl::Device*)&device;
@@ -467,7 +449,7 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
 
         EGLDisplay egl_display = egl_context_ptr->getDisplay();
         EGLContext egl_context = egl_context_ptr->get();
-#endif
+
         const bool init_cxr_ok = ok_client_.init_android_gles(this, egl_display, egl_context);
 
         if (init_cxr_ok && ok_client_.ok_config_.enable_auto_connect_)

@@ -111,6 +111,21 @@ public:
 
     OKConfig ok_config_;
     OKPlayerState ok_player_state_;
+    
+    cxrReceiverDesc& get_receiver_desc()
+    {
+        return receiver_desc_;
+    }
+    
+    const cxrReceiverDesc& get_receiver_desc() const
+    {
+        return receiver_desc_;
+    }
+    
+    cxrReceiverHandle get_receiver()
+    {
+        return cxr_receiver_;
+    }
 
 private:
     OKOpenXRInterface* xr_interface_ = nullptr;
@@ -146,9 +161,9 @@ private:
 #if ENABLE_HAPTICS
     void trigger_haptics(const cxrHapticFeedback *haptics);
 #endif
-    CloudXR::ClientOptions cxr_options_ = {};
     cxrGraphicsContext graphics_context_ = {};
     cxrReceiverHandle cxr_receiver_ = nullptr;
+    cxrReceiverDesc receiver_desc_ = {0};
     cxrClientState cxr_client_state_ = cxrClientState_ReadyToConnect;
     cxrFramesLatched latched_frames_ = {};
     bool is_latched_ = false;

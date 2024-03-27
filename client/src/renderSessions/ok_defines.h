@@ -2,8 +2,8 @@
 // Copyright (c) 2024 BattleAxeVR. All rights reserved.
 //--------------------------------------------------------------------------------------
 
-#ifndef DEFINES_H
-#define DEFINES_H
+#ifndef OK_DEFINES_H
+#define OK_DEFINES_H
 
 #ifndef ENABLE_CLOUDXR
 #define ENABLE_CLOUDXR 0
@@ -26,7 +26,7 @@
 #endif
 
 #define DEFAULT_SERVER_IP_ADDRESS "192.168.2.38"
-#define USE_ADVANCED_IMAGE_READER_DECODER 1
+#define USE_ADVANCED_IMAGE_READER_DECODER 0
 
 #define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
 #define OK_CLOUD_STREAMER_CONFIG_FILENAME "ok_cloud_streamer_config.json"
@@ -68,6 +68,8 @@
 #define ENABLE_CLOUDXR_LOGGING 1
 #define ENABLE_CLOUDXR_LOGGING_VERBOSE (ENABLE_CLOUDXR_LOGGING && 0)
 #define CLOUDXR_LOG_FRAME_NOT_READY_EVENT 0
+
+#define USE_OK_CALLBACKS 0
 
 #define ENABLE_CLOUDXR_HMD 1
 #define ENABLE_CLOUDXR_CONTROLLERS (ENABLE_CLOUDXR_HMD && 0)
@@ -111,6 +113,4 @@
 
 #define ENABLE_SWAP_THUMBSTICKS 0
 
-#define USE_EGL_HELPER 0
-
-#endif // DEFINES_H
+#endif // OK_DEFINES_H

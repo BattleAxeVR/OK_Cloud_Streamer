@@ -8,10 +8,11 @@
 
 #include "OKCloudClient.h"
 
+#if (ENABLE_CLOUDXR_LOGGING && 0)
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
 }
-
+#endif
 
 namespace BVR 
 {
@@ -363,44 +364,30 @@ bool OKCloudClient::create_receiver()
     //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
 
     // Set parameters here...
-    cxrReceiverDesc receiver_desc = {0};
-    receiver_desc.requestedVersion = CLOUDXR_VERSION_DWORD;
-
-#if 0
-    cxrGraphicsContext context{cxrGraphicsContext_GLES};
-    context.egl.display = eglGetCurrentDisplay();
-    context.egl.context = eglGetCurrentContext();
-
-    receiver_desc.shareContext = &context;
-#else
-    receiver_desc.shareContext = &graphics_context_;
-#endif
-    //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
-    //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
+    receiver_desc_.requestedVersion = CLOUDXR_VERSION_DWORD;
+    receiver_desc_.shareContext = &graphics_context_;
 
     // Debug flags
 #if USE_ADVANCED_IMAGE_READER_DECODER
-    receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;
+    receiver_desc_.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;
 #else
-    receiver_desc.debugFlags = 0;
+    receiver_desc_.debugFlags = 0;
 #endif
-
+    
 #if ENABLE_CLOUDXR_LOGGING
     {
 #if ENABLE_CLOUDXR_LOGGING_VERBOSE
-        receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
+        receiver_desc_.debugFlags |= cxrDebugFlags_LogVerbose;
 #endif
-
-        receiver_desc.logMaxSizeKB = -1;
-        receiver_desc.logMaxAgeDays = -1;//CLOUDXR_LOG_MAX_DEFAULT;
         std::string log_dir = ok_config_.app_directory_ + "logs/";
-
-        strncpy(receiver_desc.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
-        receiver_desc.appOutputPath[CXR_MAX_PATH - 1] = 0;
+        strncpy(receiver_desc_.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
+        receiver_desc_.logMaxSizeKB = CLOUDXR_LOG_MAX_DEFAULT;
+        receiver_desc_.logMaxAgeDays = CLOUDXR_LOG_MAX_DEFAULT;
+        receiver_desc_.appOutputPath[CXR_MAX_PATH - 1] = 0;
     }
 #endif
 
-    cxrDeviceDesc& device_desc = receiver_desc.deviceDesc;
+    cxrDeviceDesc& device_desc = receiver_desc_.deviceDesc;
     device_desc.maxResFactor = 1.0f;// ok_config_.max_res_factor_;
 
     compute_ipd();
@@ -415,6 +402,7 @@ bool OKCloudClient::create_receiver()
 
     float fps = DEFAULT_CLOUDXR_FRAMERATE;
 
+#if 0
     float current_refresh_rate = xr_interface_->get_current_refresh_rate();
     bool should_update_refresh_rate = ((current_refresh_rate > 0.0f) && (current_refresh_rate != (float)ok_config_.desired_refresh_rate_));
 
@@ -433,19 +421,22 @@ bool OKCloudClient::create_receiver()
         xr_interface_->set_sharpening_enabled(true);
     }
 #endif
+#endif
 
     for (uint32_t stream_index = 0; stream_index < number_of_streams; stream_index++)
     {
+        device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
+        
         device_desc.videoStreamDescs[stream_index].width = ok_config_.per_eye_width_;
         device_desc.videoStreamDescs[stream_index].height = ok_config_.per_eye_height_;
-        device_desc.videoStreamDescs[stream_index].format = cxrClientSurfaceFormat_RGB;
-        device_desc.videoStreamDescs[stream_index].fps = (float)integer_fps;
-        device_desc.videoStreamDescs[stream_index].maxBitrate = ok_config_.max_bitrate_kbps_;
+        
+        device_desc.videoStreamDescs[stream_index].fps = fps;// (float)integer_fps;
+        device_desc.videoStreamDescs[stream_index].maxBitrate = 0.0f;//ok_config_.max_bitrate_kbps_;
     }
 
     device_desc.disableVVSync = false;
     device_desc.embedInfoInVideo = false;
-    device_desc.foveatedScaleFactor = ok_config_.foveation_;
+    device_desc.foveatedScaleFactor = 0.0f;//ok_config_.foveation_;
     device_desc.stereoDisplay = true;
 
 #if USE_FRAME_PERIOD_AS_POSE_PREDICTION_OFFSET
@@ -467,11 +458,12 @@ bool OKCloudClient::create_receiver()
     device_desc.sendAudio = false;
 #endif
 
-    device_desc.disablePosePrediction = !ENABLE_CLOUDXR_POSE_PREDICTION;
-    device_desc.angularVelocityInDeviceSpace = ANGULAR_VELOCITY_IN_DEVICE_SPACE;
-
+    device_desc.disablePosePrediction = false;//!ENABLE_CLOUDXR_POSE_PREDICTION;
+    device_desc.angularVelocityInDeviceSpace = false;// ANGULAR_VELOCITY_IN_DEVICE_SPACE;
+    
+#if USE_OK_CALLBACKS
     {
-        cxrClientCallbacks& receiver_callbacks = receiver_desc.clientCallbacks;
+        cxrClientCallbacks& receiver_callbacks = receiver_desc_.clientCallbacks;
         receiver_callbacks.clientContext = this;
 
         receiver_callbacks.UpdateClientState = [](void *context, cxrClientState cxr_client_state, cxrError error) {
@@ -495,6 +487,7 @@ bool OKCloudClient::create_receiver()
         };
 #endif
     }
+#endif
 
     {
         // Default Chaperone
@@ -531,7 +524,7 @@ bool OKCloudClient::create_receiver()
         }
     }
 
-    cxrError error = cxrCreateReceiver(&receiver_desc, &cxr_receiver_);
+    cxrError error = cxrCreateReceiver(&receiver_desc_, &cxr_receiver_);
 
     if (error)
     {
@@ -548,7 +541,7 @@ void OKCloudClient::destroy_receiver()
     {
         return;
     }
-
+    
     //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::destroy_receiver\n");
 
 #if ENABLE_OBOE
@@ -561,6 +554,7 @@ void OKCloudClient::destroy_receiver()
 
     cxrDestroyReceiver(cxr_receiver_);
     cxr_receiver_ = nullptr;
+    receiver_desc_ = {0};
 
 #if USE_CLOUDXR_POSE_ID
     poseID_ = 0;
