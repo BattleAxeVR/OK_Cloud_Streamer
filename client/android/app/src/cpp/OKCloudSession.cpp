@@ -385,11 +385,19 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
 #if (ENABLE_CLOUDXR && 1)
     if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
     {
+
+#if ENABLE_CLOUDXR_CONTROLLERS
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
-        igl::shell::openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
+        const igl::shell::openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
 
         ok_inputs_.handSubactionPath[BVR::LEFT_CONTROLLER] = xr_inputs.handSubactionPath[BVR::LEFT_CONTROLLER];
         ok_inputs_.handSubactionPath[BVR::RIGHT_CONTROLLER] = xr_inputs.handSubactionPath[BVR::RIGHT_CONTROLLER];
+
+        ok_inputs_.gripSpace[BVR::LEFT_CONTROLLER] = xr_inputs.gripSpace[BVR::LEFT_CONTROLLER];
+        ok_inputs_.gripSpace[BVR::RIGHT_CONTROLLER] = xr_inputs.gripSpace[BVR::RIGHT_CONTROLLER];
+
+        ok_inputs_.aimSpace[BVR::LEFT_CONTROLLER] = xr_inputs.aimSpace[BVR::LEFT_CONTROLLER];
+        ok_inputs_.aimSpace[BVR::RIGHT_CONTROLLER] = xr_inputs.aimSpace[BVR::RIGHT_CONTROLLER];
 
         ok_inputs_.actionSet = xr_inputs.actionSet;
         ok_inputs_.grabAction = xr_inputs.grabAction;
@@ -430,6 +438,7 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
 
         ok_inputs_.trackpadXAction = xr_inputs.trackpadXAction;
         ok_inputs_.trackpadYAction = xr_inputs.trackpadYAction;
+#endif
 
         Platform& platform = getPlatform();
         const igl::IDevice& device = platform.getDevice();
@@ -623,8 +632,13 @@ const XrView OKCloudSession::get_view(const int view_id)
 
 void OKCloudSession::poll_actions(const bool main_thread)
 {
-    openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
-    xr_app.pollActions(main_thread);
+    (void)main_thread;
+
+    const XrActiveActionSet activeActionSet{ok_inputs_.actionSet, XR_NULL_PATH};
+    XrActionsSyncInfo syncInfo{XR_TYPE_ACTIONS_SYNC_INFO};
+    syncInfo.countActiveActionSets = 1;
+    syncInfo.activeActionSets = &activeActionSet;
+    XR_CHECK(xrSyncActions(get_session(), &syncInfo));
 }
 
 XrSpace OKCloudSession::get_base_space()
