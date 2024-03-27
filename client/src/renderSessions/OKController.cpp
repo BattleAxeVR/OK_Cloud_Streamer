@@ -2,7 +2,7 @@
 // Copyright (c) 2024 BattleAxeVR. All rights reserved.
 //--------------------------------------------------------------------------------------
 
-#include "defines.h"
+#include "ok_defines.h"
 #include "OKController.h"
 #include "OKPlayerState.h"
 

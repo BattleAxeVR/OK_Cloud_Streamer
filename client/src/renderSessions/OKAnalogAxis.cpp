@@ -2,7 +2,7 @@
 // Copyright (c) 2024 BattleAxeVR. All rights reserved.
 //--------------------------------------------------------------------------------------
 
-#include "defines.h"
+#include "ok_defines.h"
 #include "OKAnalogAxis.h"
 #include "GLMPose.h"
 #include <algorithm>

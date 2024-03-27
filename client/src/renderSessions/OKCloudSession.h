@@ -5,7 +5,7 @@
 #ifndef OK_CLOUD_SESSION_H
 #define OK_CLOUD_SESSION_H
 
-#include "defines.h"
+#include "ok_defines.h"
 
 #if ENABLE_CLOUDXR
 #include "OKCloudClient.h"

@@ -7,7 +7,7 @@
 
 #include <string>
 #include "GLMPose.h"
-#include "defines.h"
+#include "ok_defines.h"
 
 namespace BVR 
 {
