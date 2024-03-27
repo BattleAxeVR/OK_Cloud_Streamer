@@ -387,17 +387,15 @@ bool OKCloudClient::create_receiver()
 
 #if ENABLE_CLOUDXR_LOGGING
     {
-        // Logging
-        //receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
+#if ENABLE_CLOUDXR_LOGGING_VERBOSE
+        receiver_desc.debugFlags |= cxrDebugFlags_LogVerbose;
+#endif
 
         receiver_desc.logMaxSizeKB = -1;
         receiver_desc.logMaxAgeDays = -1;//CLOUDXR_LOG_MAX_DEFAULT;
+        std::string log_dir = ok_config_.app_directory_ + "logs/";
 
-        const std::string application_id = "OK Cloud Streamer v1.0";
-
-        std::string log_dir = OK_CLOUD_STREAMER_LOG_DIR;
         strncpy(receiver_desc.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
-
         receiver_desc.appOutputPath[CXR_MAX_PATH - 1] = 0;
     }
 #endif
