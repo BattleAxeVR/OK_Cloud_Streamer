@@ -26,6 +26,7 @@
 #endif
 
 #define DEFAULT_SERVER_IP_ADDRESS "192.168.2.38"
+#define USE_ADVANCED_IMAGE_READER_DECODER 1
 
 #define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
 #define OK_CLOUD_STREAMER_CONFIG_FILENAME "ok_cloud_streamer_config.json"

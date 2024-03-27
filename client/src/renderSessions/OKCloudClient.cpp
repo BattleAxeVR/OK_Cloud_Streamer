@@ -379,7 +379,11 @@ bool OKCloudClient::create_receiver()
     //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
 
     // Debug flags
-    receiver_desc.debugFlags = 0;//cxrDebugFlags_EnableAImageReaderDecoder;
+#if USE_ADVANCED_IMAGE_READER_DECODER
+    receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;
+#else
+    receiver_desc.debugFlags = 0;
+#endif
 
 #if ENABLE_CLOUDXR_LOGGING
     {
