@@ -14,3 +14,6 @@ target_include_directories(IGLLibrary PUBLIC "${NDK_PATH}/sources/android/native
 
 target_include_directories(IGLShellShared PUBLIC ${CLOUDXR_ROOT}/include)
 target_sources(IGLShellShared PRIVATE ${CLOUDXR_ROOT}/include/CloudXRController.cpp)
+
+
+add_subdirectory(src)

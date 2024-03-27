@@ -5,11 +5,7 @@
 #include "ok_defines.h"
 
 #include "OKConfig.h"
-
-#include "jsoncpp/json/json.h"
-#include "jsoncpp/json_value.cpp"
-#include "jsoncpp/json_reader.cpp"
-#include "jsoncpp/json_writer.cpp"
+#include <json/json.h>
 
 namespace BVR 
 {

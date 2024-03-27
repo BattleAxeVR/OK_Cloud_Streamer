@@ -20,4 +20,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "IGL"
-include ':app-ok-cloud-streamer-gles'
+include ':app'

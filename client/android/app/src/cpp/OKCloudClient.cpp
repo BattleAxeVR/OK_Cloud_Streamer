@@ -1131,7 +1131,7 @@ bool OKCloudClient::init_audio()
         return true;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::init_audio\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::init_audio\n");
 
     if (ok_config_.enable_audio_playback_)
     {
@@ -1151,7 +1151,7 @@ bool OKCloudClient::init_audio()
 
         if (playback_stream_result != oboe::Result::OK)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "openStream playback error = %s\n", oboe::convertToText(playback_stream_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "openStream playback error = %s\n", oboe::convertToText(playback_stream_result));
             return false;
         }
 
@@ -1160,7 +1160,7 @@ bool OKCloudClient::init_audio()
 
         if (set_buffer_size_result != oboe::Result::OK)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "setBufferSizeInFrames playback error = %s\n", oboe::convertToText(set_buffer_size_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "setBufferSizeInFrames playback error = %s\n", oboe::convertToText(set_buffer_size_result));
             return false;
         }
 
@@ -1168,7 +1168,7 @@ bool OKCloudClient::init_audio()
 
         if (start_playback_result != oboe::Result::OK)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "start audio playback error = %s\n", oboe::convertToText(start_playback_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "start audio playback error = %s\n", oboe::convertToText(start_playback_result));
             return false;
         }
     }
@@ -1200,7 +1200,7 @@ bool OKCloudClient::init_audio()
 
         if (capture_stream_result != oboe::Result::OK)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "openStream record error = %s\n", oboe::convertToText(capture_stream_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "openStream record error = %s\n", oboe::convertToText(capture_stream_result));
             return false;
         }
 
@@ -1209,7 +1209,7 @@ bool OKCloudClient::init_audio()
 
         if (set_buffer_size_result != oboe::Result::OK)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "setBufferSizeInFrames record error = %s\n", oboe::convertToText(set_buffer_size_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "setBufferSizeInFrames record error = %s\n", oboe::convertToText(set_buffer_size_result));
             return false;
         }
 
@@ -1217,7 +1217,7 @@ bool OKCloudClient::init_audio()
 
         if (start_record_result != oboe::Result::OK)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "start audio record error = %s\n", oboe::convertToText(start_record_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "start audio record error = %s\n", oboe::convertToText(start_record_result));
             return false;
         }
     }
@@ -1233,7 +1233,7 @@ void OKCloudClient::shutdown_audio()
         return;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::shutdown_audio\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::shutdown_audio\n");
 
     if (audio_playback_stream_)
     {
@@ -1263,7 +1263,7 @@ cxrBool OKCloudClient::render_audio(const cxrAudioFrame* audio_frame)
 
     if (!write_result)
     {
-        IGLLog(IGLLogLevel::LOG_ERROR, "Error rendering audio: %s", oboe::convertToText(write_result.error()));
+        //IGLLog(IGLLogLevel::LOG_ERROR, "Error rendering audio: %s", oboe::convertToText(write_result.error()));
 
         if (write_result.error() == oboe::Result::ErrorDisconnected)
         {

@@ -44,22 +44,11 @@ typedef _jobject*       jobject;
 #include "OKCloudSession.h"
 #include "shell/shared/renderSession/ShellParams.h"
 
-
 #define EXTERNAL_XR_BUILD
 #undef IGL_DEBUG
 #include "shell/openxr/mobile/XrApp.cpp"
 #include "shell/openxr/src/XrSwapchainProvider.cpp"
 #undef EXTERNAL_XR_BUILD
-
-#if ENABLE_CLOUDXR
-#include "GLMPose.cpp"
-#include "OKConfig.cpp"
-#include "OKPlayerState.cpp"
-#include "OKController.cpp"
-#include "OKDigitalButton.cpp"
-#include "OKAnalogAxis.cpp"
-#include "OKCloudClient.cpp"
-#endif
 
 #ifndef XR_USE_TIMESPEC
 #define XR_USE_TIMESPEC
