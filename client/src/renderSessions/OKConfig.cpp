@@ -63,8 +63,10 @@ void OKConfig::reset()
 
 bool OKConfig::load()
 {
+    const std::string fullpath = app_directory_ + json_filename_;
+
     std::string ok_config_json;
-    const bool read_ok = read_file(json_fullpath_, ok_config_json);
+    const bool read_ok = read_file(fullpath, ok_config_json);
 
     if (!read_ok || ok_config_json.empty())
     {

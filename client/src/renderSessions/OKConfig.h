@@ -57,10 +57,8 @@ public:
     GLMPose remote_controller_offset_ = {{CLOUDXR_CONTROLLER_OFFSET_X, CLOUDXR_CONTROLLER_OFFSET_Y, CLOUDXR_CONTROLLER_OFFSET_Z},
                                          {CLOUDXR_CONTROLLER_ROTATION_EULER_X, CLOUDXR_CONTROLLER_ROTATION_EULER_Y, CLOUDXR_CONTROLLER_ROTATION_EULER_Z}};
 
-private:
-    //std::string app_directory_ = OK_CLOUD_STREAMER_APP_DIRECTORY;
-    //std::string json_filename_ = OK_CLOUD_STREAMER_CONFIG_FILENAME;
-    std::string json_fullpath_ = OK_CLOUD_STREAMER_CONFIG_FULLPATH;
+    std::string app_directory_ = OK_CLOUD_STREAMER_APP_DIRECTORY;
+    std::string json_filename_ = OK_CLOUD_STREAMER_CONFIG_FILENAME;
 };
 
 } // namespace BVR
