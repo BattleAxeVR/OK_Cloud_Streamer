@@ -33,6 +33,9 @@
 //#define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ok_cloud_streamer_config.json"
 #define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.ok_cloud_streamer.opengles/files/ok_cloud_streamer_config.json"
 
+//#define OK_CLOUD_STREAMER_LOG_DIR "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/logs/"
+#define OK_CLOUD_STREAMER_LOG_DIR "/sdcard/Android/data/com.battleaxevr.ok_cloud_streamer.opengles/files/logs/"
+
 #define DEFAULT_CLOUDXR_MAX_RES_FACTOR 1.0f
 #define DEFAULT_CLOUDXR_MAX_BITRATE_KBPS 50000 // 0 = unlimited
 
@@ -67,7 +70,7 @@
 
 #define AUTO_CONNECT_TO_CLOUDXR 1
 #define USE_CLOUDXR_POSE_ID 1
-#define ENABLE_CLOUDXR_LOGGING 1
+#define ENABLE_CLOUDXR_LOGGING 0
 #define CLOUDXR_LOG_FRAME_NOT_READY_EVENT 0
 
 #define ENABLE_CLOUDXR_HMD 1

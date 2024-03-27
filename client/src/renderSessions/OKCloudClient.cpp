@@ -379,7 +379,7 @@ bool OKCloudClient::create_receiver()
     //receiver_desc.shareContext->egl.context = graphics_context_.egl.context;
 
     // Debug flags
-    receiver_desc.debugFlags = cxrDebugFlags_EnableAImageReaderDecoder;
+    receiver_desc.debugFlags = 0;//cxrDebugFlags_EnableAImageReaderDecoder;
 
 #if ENABLE_CLOUDXR_LOGGING
     {
@@ -391,7 +391,7 @@ bool OKCloudClient::create_receiver()
 
         const std::string application_id = "OK Cloud Streamer v1.0";
 
-        std::string log_dir = "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/logs/";
+        std::string log_dir = OK_CLOUD_STREAMER_LOG_DIR;
         strncpy(receiver_desc.appOutputPath, log_dir.c_str(), CXR_MAX_PATH - 1);
 
         receiver_desc.appOutputPath[CXR_MAX_PATH - 1] = 0;
