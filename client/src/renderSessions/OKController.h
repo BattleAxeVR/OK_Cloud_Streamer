@@ -11,67 +11,115 @@
 
 namespace BVR 
 {
-    const int NUM_CONTROLLERS = 2;
-    const int LEFT_CONTROLLER = 0;
-    const int RIGHT_CONTROLLER = 1;
+const int NUM_CONTROLLERS = 2;
+const int LEFT_CONTROLLER = 0;
+const int RIGHT_CONTROLLER = 1;
 
-    class OKPlayerState;
+struct OKOpenXRControllerActions
+{
+    XrPath handSubactionPath[NUM_CONTROLLERS] = {};
 
-    typedef enum
-    {
-        DigitalButton_System,
-        DigitalButton_ApplicationMenu,
+    XrSpace gripSpace[NUM_CONTROLLERS] = {XR_NULL_HANDLE, XR_NULL_HANDLE};
+    XrSpace aimSpace[NUM_CONTROLLERS] = {XR_NULL_HANDLE, XR_NULL_HANDLE};
 
-        DigitalButton_Trigger_Touch,
-        DigitalButton_Trigger_Click,
+    XrActionSet actionSet{XR_NULL_HANDLE};
+    XrAction grabAction{XR_NULL_HANDLE};
+    XrAction vibrateAction{XR_NULL_HANDLE};
 
-        DigitalButton_Grip_Touch,
-        DigitalButton_Grip_Click,
+    XrAction gripPoseAction{ XR_NULL_HANDLE };
+    XrAction aimPoseAction{ XR_NULL_HANDLE };
+    XrAction menuClickAction{ XR_NULL_HANDLE };
 
-        DigitalButton_Touchpad_Touch,
-        DigitalButton_Touchpad_Click,
+    XrAction triggerClickAction{ XR_NULL_HANDLE };
+    XrAction triggerTouchAction{ XR_NULL_HANDLE };
+    XrAction triggerValueAction{ XR_NULL_HANDLE };
 
-        DigitalButton_Joystick_Touch,
-        DigitalButton_Joystick_Click,
+    XrAction squeezeClickAction{ XR_NULL_HANDLE };
+    XrAction squeezeTouchAction{ XR_NULL_HANDLE };
+    XrAction squeezeValueAction{ XR_NULL_HANDLE };
+    // XrAction squeezeForceAction{ XR_NULL_HANDLE };
 
-        DigitalButton_A_Touch,
-        DigitalButton_A_Click,
+    XrAction thumbstickTouchAction{ XR_NULL_HANDLE };
+    XrAction thumbstickClickAction{ XR_NULL_HANDLE };
 
-        DigitalButton_B_Touch,
-        DigitalButton_B_Click,
+    XrAction thumbstickXAction{ XR_NULL_HANDLE };
+    XrAction thumbstickYAction{ XR_NULL_HANDLE };
 
-        DIGITAL_BUTTON_COUNT
-    } DigitalButtonID;
+    XrAction thumbRestTouchAction{ XR_NULL_HANDLE };
+    XrAction thumbRestClickAction{ XR_NULL_HANDLE };
+    XrAction thumbRestForceAction{ XR_NULL_HANDLE };
+    XrAction thumbProximityAction{ XR_NULL_HANDLE };
 
-    typedef enum
-    {
-        AnalogAxis_Trigger,
+    XrAction pinchValueAction{ XR_NULL_HANDLE };
+    XrAction pinchForceAction{ XR_NULL_HANDLE };
 
-        AnalogAxis_TouchpadX,
-        AnalogAxis_TouchpadY,
+    XrAction buttonAXClickAction{ XR_NULL_HANDLE };
+    XrAction buttonAXTouchAction{ XR_NULL_HANDLE };
 
-        AnalogAxis_JoystickX,
-        AnalogAxis_JoystickY,
+    XrAction buttonBYClickAction{ XR_NULL_HANDLE };
+    XrAction buttonBYTouchAction{ XR_NULL_HANDLE };
 
-        AnalogAxis_Grip,
-        AnalogAxis_Grip_Force,
+    XrAction trackpadXAction{ XR_NULL_HANDLE };
+    XrAction trackpadYAction{ XR_NULL_HANDLE };
+};
 
-        AnalogAxis_Proximity,
+class OKPlayerState;
 
-        ANALOG_AXIS_COUNT
-    } AnalogAxisID;
+typedef enum
+{
+    DigitalButton_System,
+    DigitalButton_ApplicationMenu,
 
-    struct DigitalButtonToCloudXR_Map
-    {
-        DigitalButtonID digital_button_id_;
-        int cloudxr_path_id_;
-    };
+    DigitalButton_Trigger_Touch,
+    DigitalButton_Trigger_Click,
 
-    struct AnalogAxisToCloudXRMap
-    {
-        AnalogAxisID analog_axis_id_;
-        int cloudxr_path_id_;
-    };
+    DigitalButton_Grip_Touch,
+    DigitalButton_Grip_Click,
+
+    DigitalButton_Touchpad_Touch,
+    DigitalButton_Touchpad_Click,
+
+    DigitalButton_Joystick_Touch,
+    DigitalButton_Joystick_Click,
+
+    DigitalButton_A_Touch,
+    DigitalButton_A_Click,
+
+    DigitalButton_B_Touch,
+    DigitalButton_B_Click,
+
+    DIGITAL_BUTTON_COUNT
+} DigitalButtonID;
+
+typedef enum
+{
+    AnalogAxis_Trigger,
+
+    AnalogAxis_TouchpadX,
+    AnalogAxis_TouchpadY,
+
+    AnalogAxis_JoystickX,
+    AnalogAxis_JoystickY,
+
+    AnalogAxis_Grip,
+    AnalogAxis_Grip_Force,
+
+    AnalogAxis_Proximity,
+
+    ANALOG_AXIS_COUNT
+} AnalogAxisID;
+
+struct DigitalButtonToCloudXR_Map
+{
+    DigitalButtonID digital_button_id_;
+    int cloudxr_path_id_;
+};
+
+struct AnalogAxisToCloudXRMap
+{
+    AnalogAxisID analog_axis_id_;
+    int cloudxr_path_id_;
+};
 
 class OKController 
 {

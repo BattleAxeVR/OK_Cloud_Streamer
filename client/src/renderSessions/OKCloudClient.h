@@ -25,21 +25,18 @@
 // Android / GL ES Only
 #include <EGL/egl.h>
 
-namespace igl::shell::openxr
-{
-    struct XrInputState;
-}
-
 namespace BVR 
 {
 
-class XRInterface
+class OKOpenXRInterface
 {
 public:
     virtual XrInstance get_instance() = 0;
     virtual XrSession get_session() = 0;
 
-    virtual igl::shell::openxr::XrInputState* get_input_state() = 0;
+    virtual OKOpenXRControllerActions& get_actions() = 0;
+    virtual const OKOpenXRControllerActions& get_actions() const = 0;
+
     virtual XrTime get_predicted_display_time_ns() = 0;
 
     virtual float get_current_refresh_rate() = 0;
@@ -69,7 +66,7 @@ public:
     OKCloudClient();
     virtual ~OKCloudClient();
 
-    bool init_android_gles(XRInterface* xr_interface, EGLDisplay egl_display, EGLContext egl_context);
+    bool init_android_gles(OKOpenXRInterface* xr_interface, EGLDisplay egl_display, EGLContext egl_context);
 
     bool pre_render_update();
     bool post_render_update();
@@ -116,7 +113,8 @@ public:
     OKPlayerState ok_player_state_;
 
 private:
-    XRInterface* xr_interface_ = nullptr;
+    OKOpenXRInterface* xr_interface_ = nullptr;
+    OKOpenXRControllerActions xr_actions_;
     bool is_cxr_initialized_ = false;
 
     bool create_receiver();

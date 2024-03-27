@@ -220,7 +220,7 @@ OKCloudClient::~OKCloudClient()
 {
 }
 
-bool OKCloudClient::init_android_gles(XRInterface* xr_interface, EGLDisplay egl_display, EGLContext egl_context)
+bool OKCloudClient::init_android_gles(OKOpenXRInterface* xr_interface, EGLDisplay egl_display, EGLContext egl_context)
 {
     if (!xr_interface || !egl_display || !egl_context)
     {
@@ -759,14 +759,7 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
         return;
     }
 
-    igl::shell::openxr::XrInputState* xr_inputs_ptr = xr_interface_->get_input_state();
-
-    if (!xr_inputs_ptr)
-    {
-        return;
-    }
-
-    igl::shell::openxr::XrInputState& xr_inputs = *xr_inputs_ptr;
+    OKOpenXRControllerActions& ok_inputs = xr_interface_->get_actions();
 
     //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::get_tracking_state\n");
 
@@ -790,8 +783,8 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
             XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
             XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
 
-            action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
-            action_info.action = xr_inputs.aimPoseAction;
+            action_info.subactionPath = ok_inputs.handSubactionPath[controller_id];
+            action_info.action = ok_inputs.aimPoseAction;
 
             XrResult result = xrGetActionStatePose(xr_interface_->get_session(), &action_info,  &pose_state);
 
@@ -808,7 +801,7 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
                                                        &controller_velocity};
 
                 XrResult controller_result =
-                        xrLocateSpace(xr_inputs.aimSpace[controller_id], xr_interface_->get_base_space(),
+                        xrLocateSpace(ok_inputs.aimSpace[controller_id], xr_interface_->get_base_space(),
                                       predicted_display_time_ns, &controller_location);
 
                 if (controller_result == XR_SUCCESS)
@@ -993,14 +986,7 @@ void OKCloudClient::update_controller_digital_buttons(const int controller_id)
         return;
     }
 
-    igl::shell::openxr::XrInputState* xr_inputs_ptr = xr_interface_->get_input_state();
-
-    if (!xr_inputs_ptr)
-    {
-        return;
-    }
-
-    igl::shell::openxr::XrInputState& xr_inputs = *xr_inputs_ptr;
+    OKOpenXRControllerActions& ok_inputs = xr_interface_->get_actions();
 
     struct XRActionToDigitalButtonID_Mapping
     {
@@ -1010,34 +996,34 @@ void OKCloudClient::update_controller_digital_buttons(const int controller_id)
 
     XRActionToDigitalButtonID_Mapping xr_to_ok_button_mappings[] =
             {
-                    {xr_inputs.menuClickAction, DigitalButton_ApplicationMenu},
-                    {xr_inputs.triggerTouchAction, DigitalButton_Trigger_Touch},
-                    {xr_inputs.triggerClickAction, DigitalButton_Trigger_Click},
-                    //{xr_inputs.squeezeTouchAction, DigitalButton_Grip_Touch},
-                    {xr_inputs.squeezeClickAction, DigitalButton_Grip_Click},
-                    {xr_inputs.thumbstickTouchAction, DigitalButton_Joystick_Touch},
-                    {xr_inputs.thumbstickClickAction, DigitalButton_Joystick_Click},
-                    //{xr_inputs.thumbRestTouchAction, DigitalButton_Touchpad_Touch},
-                    //{xr_inputs.thumbRestClickAction, DigitalButton_Touchpad_Click},
-                    {xr_inputs.buttonAXTouchAction, DigitalButton_A_Touch},
-                    {xr_inputs.buttonAXClickAction, DigitalButton_A_Click},
-                    {xr_inputs.buttonBYTouchAction, DigitalButton_B_Touch},
-                    {xr_inputs.buttonBYClickAction, DigitalButton_B_Click}
+                    {ok_inputs.menuClickAction, DigitalButton_ApplicationMenu},
+                    {ok_inputs.triggerTouchAction, DigitalButton_Trigger_Touch},
+                    {ok_inputs.triggerClickAction, DigitalButton_Trigger_Click},
+                    //{ok_inputs.squeezeTouchAction, DigitalButton_Grip_Touch},
+                    {ok_inputs.squeezeClickAction, DigitalButton_Grip_Click},
+                    {ok_inputs.thumbstickTouchAction, DigitalButton_Joystick_Touch},
+                    {ok_inputs.thumbstickClickAction, DigitalButton_Joystick_Click},
+                    //{ok_inputs.thumbRestTouchAction, DigitalButton_Touchpad_Touch},
+                    //{ok_inputs.thumbRestClickAction, DigitalButton_Touchpad_Click},
+                    {ok_inputs.buttonAXTouchAction, DigitalButton_A_Touch},
+                    {ok_inputs.buttonAXClickAction, DigitalButton_A_Click},
+                    {ok_inputs.buttonBYTouchAction, DigitalButton_B_Touch},
+                    {ok_inputs.buttonBYClickAction, DigitalButton_B_Click}
             };
 
     OKController& ok_controller = ok_player_state_.controllers_[controller_id];
 
     XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
-    action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
+    action_info.subactionPath = ok_inputs.handSubactionPath[controller_id];
 
     XrActionStateBoolean button_state = {XR_TYPE_ACTION_STATE_BOOLEAN};
 
     for (uint32_t j = 0; j < ARRAY_SIZE(xr_to_ok_button_mappings); j++)
     {
         action_info.action = xr_to_ok_button_mappings[j].action;
-        XR_CHECK(xrGetActionStateBoolean(xr_interface_->get_session(), &action_info, &button_state));
+        XrResult action_result = xrGetActionStateBoolean(xr_interface_->get_session(), &action_info, &button_state);
 
-        if (!button_state.isActive)
+        if ((action_result != XR_SUCCESS) || !button_state.isActive)
         {
             continue;
         }
@@ -1068,14 +1054,7 @@ void OKCloudClient::update_controller_analog_axes(const int controller_id)
         return;
     }
 
-    igl::shell::openxr::XrInputState* xr_inputs_ptr = xr_interface_->get_input_state();
-
-    if (!xr_inputs_ptr)
-    {
-        return;
-    }
-
-    igl::shell::openxr::XrInputState& xr_inputs = *xr_inputs_ptr;
+    OKOpenXRControllerActions& ok_inputs = xr_interface_->get_actions();
 
     struct XRActionToAnalogAxisID_Mapping
     {
@@ -1085,20 +1064,20 @@ void OKCloudClient::update_controller_analog_axes(const int controller_id)
 
     XRActionToAnalogAxisID_Mapping xr_to_ok_analog_mappings[] =
             {
-                    {xr_inputs.triggerValueAction, AnalogAxis_Trigger},
-                    {xr_inputs.squeezeValueAction, AnalogAxis_Grip},
-                    {xr_inputs.thumbstickXAction, AnalogAxis_JoystickX},
-                    {xr_inputs.thumbstickYAction, AnalogAxis_JoystickY},
-                    {xr_inputs.thumbProximityAction, AnalogAxis_Proximity},
-                    {xr_inputs.thumbRestForceAction, AnalogAxis_Grip_Force},
-                    //{xr_inputs.trackpadXAction, AnalogAxis_JoystickX},
-                    //{xr_inputs.trackpadYAction, AnalogAxis_JoystickY}
+                    {ok_inputs.triggerValueAction, AnalogAxis_Trigger},
+                    {ok_inputs.squeezeValueAction, AnalogAxis_Grip},
+                    {ok_inputs.thumbstickXAction, AnalogAxis_JoystickX},
+                    {ok_inputs.thumbstickYAction, AnalogAxis_JoystickY},
+                    {ok_inputs.thumbProximityAction, AnalogAxis_Proximity},
+                    {ok_inputs.thumbRestForceAction, AnalogAxis_Grip_Force},
+                    //{ok_inputs.trackpadXAction, AnalogAxis_JoystickX},
+                    //{ok_inputs.trackpadYAction, AnalogAxis_JoystickY}
             };
 
     OKController& ok_controller = ok_player_state_.controllers_[controller_id];
 
     XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
-    action_info.subactionPath = xr_inputs.handSubactionPath[controller_id];
+    action_info.subactionPath = ok_inputs.handSubactionPath[controller_id];
     XrActionStateFloat axis_state = {XR_TYPE_ACTION_STATE_FLOAT};
 
     for (uint32_t j = 0; j < ARRAY_SIZE(xr_to_ok_analog_mappings); j++)
@@ -1106,7 +1085,7 @@ void OKCloudClient::update_controller_analog_axes(const int controller_id)
         action_info.action = xr_to_ok_analog_mappings[j].action;
         XrResult action_result = xrGetActionStateFloat(xr_interface_->get_session(), &action_info, &axis_state);
 
-        if (!axis_state.isActive || (action_result != XR_SUCCESS))
+        if ((action_result != XR_SUCCESS) || !axis_state.isActive)
         {
             continue;
         }

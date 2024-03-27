@@ -9,6 +9,7 @@
 
 #if ENABLE_CLOUDXR
 #include "OKCloudClient.h"
+#include "OKController.h"
 #endif
 
 #include <shell/shared/renderSession/RenderSession.h>
@@ -35,7 +36,7 @@ namespace igl::shell
 
     class OKCloudSession : public RenderSession
 #if ENABLE_CLOUDXR
-    , BVR::XRInterface
+    , BVR::OKOpenXRInterface
 #endif
     {
     public:
@@ -51,7 +52,9 @@ namespace igl::shell
         virtual XrInstance get_instance() override;
         virtual XrSession get_session() override;
 
-        virtual igl::shell::openxr::XrInputState* get_input_state() override;
+        virtual BVR::OKOpenXRControllerActions& get_actions() override;
+        virtual const BVR::OKOpenXRControllerActions& get_actions() const override;
+
         virtual XrTime get_predicted_display_time_ns() override;
 
         virtual float get_current_refresh_rate() override;
@@ -90,6 +93,7 @@ namespace igl::shell
 
 #if ENABLE_CLOUDXR
         BVR::OKCloudClient ok_client_;
+        BVR::OKOpenXRControllerActions ok_inputs_;
 #endif
 
     };

@@ -400,6 +400,51 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
 #if (ENABLE_CLOUDXR && 1)
     if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
     {
+        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
+        igl::shell::openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
+
+        ok_inputs_.handSubactionPath[BVR::LEFT_CONTROLLER] = xr_inputs.handSubactionPath[BVR::LEFT_CONTROLLER];
+        ok_inputs_.handSubactionPath[BVR::RIGHT_CONTROLLER] = xr_inputs.handSubactionPath[BVR::RIGHT_CONTROLLER];
+
+        ok_inputs_.actionSet = xr_inputs.actionSet;
+        ok_inputs_.grabAction = xr_inputs.grabAction;
+        ok_inputs_.vibrateAction = xr_inputs.vibrateAction;
+
+        ok_inputs_.gripPoseAction = xr_inputs.gripPoseAction;
+        ok_inputs_.aimPoseAction = xr_inputs.aimPoseAction;
+        ok_inputs_.menuClickAction = xr_inputs.menuClickAction;
+
+        ok_inputs_.triggerClickAction = xr_inputs.triggerClickAction;
+        ok_inputs_.triggerTouchAction = xr_inputs.triggerTouchAction;
+        ok_inputs_.triggerValueAction = xr_inputs.triggerValueAction;
+
+        ok_inputs_.squeezeClickAction = xr_inputs.squeezeClickAction;
+        ok_inputs_.squeezeTouchAction = xr_inputs.squeezeTouchAction;
+        ok_inputs_.squeezeValueAction = xr_inputs.squeezeValueAction;
+        //ok_inputs_.squeezeForceAction = xr_inputs.squeezeForceAction;
+
+        ok_inputs_.thumbstickTouchAction = xr_inputs.thumbstickTouchAction;
+        ok_inputs_.thumbstickClickAction = xr_inputs.thumbstickClickAction;
+
+        ok_inputs_.thumbstickXAction = xr_inputs.thumbstickXAction;
+        ok_inputs_.thumbstickYAction = xr_inputs.thumbstickYAction;
+
+        ok_inputs_.thumbRestTouchAction = xr_inputs.thumbRestTouchAction;
+        ok_inputs_.thumbRestClickAction = xr_inputs.thumbRestClickAction;
+        ok_inputs_.thumbRestForceAction = xr_inputs.thumbRestForceAction;
+        ok_inputs_.thumbProximityAction = xr_inputs.thumbProximityAction;
+
+        ok_inputs_.pinchValueAction = xr_inputs.pinchValueAction;
+        ok_inputs_.pinchForceAction = xr_inputs.pinchForceAction;
+
+        ok_inputs_.buttonAXClickAction = xr_inputs.buttonAXClickAction;
+        ok_inputs_.buttonAXTouchAction = xr_inputs.buttonAXTouchAction;
+
+        ok_inputs_.buttonBYClickAction = xr_inputs.buttonBYClickAction;
+        ok_inputs_.buttonBYTouchAction = xr_inputs.buttonBYTouchAction;
+
+        ok_inputs_.trackpadXAction = xr_inputs.trackpadXAction;
+        ok_inputs_.trackpadYAction = xr_inputs.trackpadYAction;
 
 #if USE_EGL_HELPER
         const bool init_egl_ok = egl_helper.Initialize();
@@ -412,7 +457,6 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
         EGLDisplay egl_display = (EGLDisplay)egl_helper.GetDisplay();
         EGLContext egl_context = (EGLContext)egl_helper.GetContext();
 #elif 1
-        openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         igl::shell::openxr::mobile::XrAppImplGLES* ptr = (igl::shell::openxr::mobile::XrAppImplGLES*)(xr_app.impl_.get());
         EGLDisplay egl_display = ptr->graphicsBindingAndroidGLES.display;
         EGLContext egl_context = ptr->graphicsBindingAndroidGLES.context;
@@ -543,10 +587,14 @@ XrSession OKCloudSession::get_session()
     return xr_app.session();
 }
 
-igl::shell::openxr::XrInputState* OKCloudSession::get_input_state()
+BVR::OKOpenXRControllerActions& OKCloudSession::get_actions()
 {
-    openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
-    return &xr_app.xr_inputs_;
+    return ok_inputs_;
+}
+
+const BVR::OKOpenXRControllerActions& OKCloudSession::get_actions() const
+{
+    return ok_inputs_;
 }
 
 XrTime OKCloudSession::get_predicted_display_time_ns()
@@ -554,7 +602,6 @@ XrTime OKCloudSession::get_predicted_display_time_ns()
     openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
     return xr_app.get_predicted_display_time_ns();
 }
-
 
 float OKCloudSession::get_current_refresh_rate()
 {
