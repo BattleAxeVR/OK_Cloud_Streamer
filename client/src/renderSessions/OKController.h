@@ -7,6 +7,7 @@
 
 #include "OKDigitalButton.h"
 #include "OKAnalogAxis.h"
+#include "GLMPose.h"
 
 namespace BVR 
 {
@@ -14,7 +15,7 @@ namespace BVR
     const int LEFT_CONTROLLER = 0;
     const int RIGHT_CONTROLLER = 1;
 
-    struct OKPlayerState;
+    class OKPlayerState;
 
     typedef enum
     {

@@ -234,7 +234,7 @@ bool OKCloudClient::init_android_gles(XRInterface* xr_interface, EGLDisplay egl_
 
     ok_config_.load();
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::init_android_gles\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::init_android_gles\n");
 
     xr_interface_ = xr_interface;
 
@@ -257,28 +257,28 @@ void OKCloudClient::update_cxr_state(cxrClientState state, cxrError error)
     switch (state)
     {
         case cxrClientState_ReadyToConnect:
-            IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ReadyToConnect");
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ReadyToConnect");
             break;
         case cxrClientState_ConnectionAttemptInProgress:
-            IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptInProgress");
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptInProgress");
             break;
         case cxrClientState_ConnectionAttemptFailed:
-            IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptFailed");
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptFailed");
             break;
         case cxrClientState_StreamingSessionInProgress:
-            IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_StreamingSessionInProgress");
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_StreamingSessionInProgress");
             xr_interface_->handle_stream_connected();
             break;
         case cxrClientState_Disconnected:
         {
-            IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Disconnected, setting back to cxrClientState_ReadyToConnect");
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Disconnected, setting back to cxrClientState_ReadyToConnect");
             cxr_client_state_ = cxrClientState_ReadyToConnect;
             xr_interface_->handle_stream_disconnected();
             break;
         }
         case cxrClientState_Exiting:
         {
-            IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting, setting back to cxrClientState_ReadyToConnect");
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_Exiting, setting back to cxrClientState_ReadyToConnect");
             cxr_client_state_ = cxrClientState_ReadyToConnect;
             xr_interface_->handle_stream_disconnected();
             break;
@@ -295,7 +295,7 @@ void OKCloudClient::shutdown_cxr()
         return;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::shutdown_cxr\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::shutdown_cxr\n");
 
     disconnect();
 
@@ -323,7 +323,7 @@ bool OKCloudClient::connect()
         }
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect to IP = %s\n", ok_config_.server_ip_address_.c_str());
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::connect to IP = %s\n", ok_config_.server_ip_address_.c_str());
 
     cxrConnectionDesc connection_desc = {0};
     connection_desc.async = true;
@@ -335,7 +335,7 @@ bool OKCloudClient::connect()
 
     if (error)
     {
-        IGLLog(IGLLogLevel::LOG_ERROR, "cxrConnect error = %s\n", cxrErrorString(error));
+        //IGLLog(IGLLogLevel::LOG_ERROR, "cxrConnect error = %s\n", cxrErrorString(error));
         return false;
     }
 
@@ -349,7 +349,7 @@ void OKCloudClient::disconnect()
         return;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::disconnect\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::disconnect\n");
     destroy_receiver();
 }
 
@@ -360,7 +360,7 @@ bool OKCloudClient::create_receiver()
         return false;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::create_receiver\n");
 
     // Set parameters here...
     cxrReceiverDesc receiver_desc = {0};
@@ -519,7 +519,7 @@ bool OKCloudClient::create_receiver()
 
     {
         //FOV
-        for (int view_id = LEFT; view_id < NUM_SIDES; view_id++)
+        for (int view_id = LEFT_EYE; view_id < NUM_EYES; view_id++)
         {
             const XrView view = xr_interface_->get_view(view_id);
             device_desc.proj[view_id][0] = tanf(view.fov.angleLeft);
@@ -533,7 +533,7 @@ bool OKCloudClient::create_receiver()
 
     if (error)
     {
-        IGLLog(IGLLogLevel::LOG_ERROR, "cxrCreateReceiver error = %s\n", cxrErrorString(error));
+        //IGLLog(IGLLogLevel::LOG_ERROR, "cxrCreateReceiver error = %s\n", cxrErrorString(error));
         return false;
     }
 
@@ -547,7 +547,7 @@ void OKCloudClient::destroy_receiver()
         return;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::destroy_receiver\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudSession::destroy_receiver\n");
 
 #if ENABLE_OBOE
     shutdown_audio();
@@ -574,8 +574,8 @@ void OKCloudClient::compute_ipd()
         return;
     }
 
-    const XrView left_view = xr_interface_->get_view(LEFT);
-    const XrView right_view = xr_interface_->get_view(RIGHT);
+    const XrView left_view = xr_interface_->get_view(LEFT_EYE);
+    const XrView right_view = xr_interface_->get_view(RIGHT_EYE);
 
     const XrPosef& left_eye_pose = left_view.pose;
     const XrPosef& right_eye_pose = right_view.pose;
@@ -603,7 +603,7 @@ bool OKCloudClient::add_controllers()
         return true;
     }
 
-    for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
+    for (int controller_id = LEFT_CONTROLLER; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
     {
         //assert(cxr_controller_handles_[controller_id] == nullptr);
 
@@ -611,7 +611,7 @@ bool OKCloudClient::add_controllers()
         {
             cxrControllerDesc cxr_controller_desc = {};
             cxr_controller_desc.id = controller_id;
-            cxr_controller_desc.role = (controller_id == LEFT) ? "cxr://input/hand/left" : "cxr://input/hand/right";
+            cxr_controller_desc.role = (controller_id == LEFT_CONTROLLER) ? "cxr://input/hand/left" : "cxr://input/hand/right";
             cxr_controller_desc.controllerName = "Oculus Touch";
             cxr_controller_desc.inputCount = ARRAY_SIZE(cxr_input_paths);
             cxr_controller_desc.inputPaths = cxr_input_paths;
@@ -623,8 +623,8 @@ bool OKCloudClient::add_controllers()
 
             if (add_controller_error)
             {
-                IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n",
-                       cxrErrorString(add_controller_error));
+                //IGLLog(IGLLogLevel::LOG_ERROR, "cxrAddController error = %s\n",
+                 //      cxrErrorString(add_controller_error));
 
                 return false;
             }
@@ -642,7 +642,7 @@ void OKCloudClient::remove_controllers()
         return;
     }
 
-    for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
+    for (int controller_id = LEFT_CONTROLLER; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
     {
         //assert(cxr_controller_handles_[controller_id] != nullptr);
 
@@ -655,8 +655,8 @@ void OKCloudClient::remove_controllers()
 
                 if (remove_controller_error)
                 {
-                    IGLLog(IGLLogLevel::LOG_ERROR, "cxrRemoveController error = %s\n",
-                           cxrErrorString(remove_controller_error));
+                    //IGLLog(IGLLogLevel::LOG_ERROR, "cxrRemoveController error = %s\n",
+                    //       cxrErrorString(remove_controller_error));
                 }
             }
 
@@ -684,7 +684,7 @@ bool OKCloudClient::latch_frame()
 
         if (log_error)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "OKCloudClient::latch_frame cxrLatchFrame error = %s\n", cxrErrorString(error));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "OKCloudClient::latch_frame cxrLatchFrame error = %s\n", cxrErrorString(error));
         }
 
         return false;
@@ -705,16 +705,18 @@ bool OKCloudClient::blit_frame(const int view_id, GLMPose& eye_pose)
 
     if (!is_latched_)
     {
-        IGLLog(IGLLogLevel::LOG_WARNING, "OKCloudClient::blit_frame NOT LATCHED, skipping\n");
+        //IGLLog(IGLLogLevel::LOG_WARNING, "OKCloudClient::blit_frame NOT LATCHED, skipping\n");
         return false;
     }
 
-    uint32_t frame_mask = (view_id == LEFT) ? cxrFrameMask_Left : cxrFrameMask_Right;
+    const bool is_left_eye = (view_id == LEFT_EYE);
+
+    uint32_t frame_mask = is_left_eye ? cxrFrameMask_Left : cxrFrameMask_Right;
     cxrError blit_error = cxrBlitFrame(cxr_receiver_, &latched_frames_, frame_mask);
 
     if (blit_error)
     {
-        IGLLog(IGLLogLevel::LOG_ERROR, "OKCloudClient::blit_frame cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
+        //IGLLog(IGLLogLevel::LOG_ERROR, "OKCloudClient::blit_frame cxrBlitFrame error = %s\n", cxrErrorString(blit_error));
         return false;
     }
 
@@ -731,7 +733,7 @@ bool OKCloudClient::blit_frame(const int view_id, GLMPose& eye_pose)
     eye_pose = hmd_pose;
 
     const float half_ipd = ipd_meters_ * 0.5f;
-    const float ipd_offset = (view_id == LEFT) ? -half_ipd : half_ipd;
+    const float ipd_offset = is_left_eye ? -half_ipd : half_ipd;
     const glm::vec3 ipd_offset_vec = glm::vec3(ipd_offset, 0.0f, 0.0f);
     eye_pose.translation_ += hmd_pose.rotation_ * ipd_offset_vec;
 
@@ -783,7 +785,7 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
         // Poll from async thread, possibly much higher Hz (up to 1 Khz) than main render thread (to reduce latency)
         xr_interface_->poll_actions(false);
 
-        for (int controller_id = LEFT; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
+        for (int controller_id = LEFT_CONTROLLER; controller_id < CXR_NUM_CONTROLLERS; controller_id++)
         {
             XrActionStateGetInfo action_info = {XR_TYPE_ACTION_STATE_GET_INFO};
             XrActionStatePose pose_state = {XR_TYPE_ACTION_STATE_POSE};
@@ -818,7 +820,7 @@ void OKCloudClient::get_tracking_state(cxrVRTrackingState* cxr_tracking_state_pt
                     {
                         GLMPose cloudxr_controller_offset = ok_config_.remote_controller_offset_;
 
-                        if (controller_id == LEFT)
+                        if (controller_id == LEFT_CONTROLLER)
                         {
                             cloudxr_controller_offset.translation_.x *= -1.0f;
                         }
@@ -885,7 +887,7 @@ void OKCloudClient::send_controller_poses(cxrControllerTrackingState& cxr_contro
         return;
     }
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::send_controller_poses\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::send_controller_poses\n");
 
     {
         const uint32_t pose_count = 1;
@@ -896,8 +898,8 @@ void OKCloudClient::send_controller_poses(cxrControllerTrackingState& cxr_contro
 
         if (send_controller_pose_result)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "cxrSendControllerPoses error = %s\n",
-                   cxrErrorString(send_controller_pose_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "cxrSendControllerPoses error = %s\n",
+             //      cxrErrorString(send_controller_pose_result));
         }
     }
 }
@@ -978,8 +980,8 @@ void OKCloudClient::fire_controller_events(const int controller_id, const uint64
 
         if (fire_controller_events_result)
         {
-            IGLLog(IGLLogLevel::LOG_ERROR, "cxrFireControllerEvents error = %s\n",
-                   cxrErrorString(fire_controller_events_result));
+            //IGLLog(IGLLogLevel::LOG_ERROR, "cxrFireControllerEvents error = %s\n",
+//                   cxrErrorString(fire_controller_events_result));
         }
     }
 }
@@ -1102,9 +1104,9 @@ void OKCloudClient::update_controller_analog_axes(const int controller_id)
     for (uint32_t j = 0; j < ARRAY_SIZE(xr_to_ok_analog_mappings); j++)
     {
         action_info.action = xr_to_ok_analog_mappings[j].action;
-        XR_CHECK(xrGetActionStateFloat(xr_interface_->get_session(), &action_info, &axis_state));
+        XrResult action_result = xrGetActionStateFloat(xr_interface_->get_session(), &action_info, &axis_state);
 
-        if (!axis_state.isActive)
+        if (!axis_state.isActive || (action_result != XR_SUCCESS))
         {
             continue;
         }
@@ -1135,7 +1137,7 @@ void OKCloudClient::trigger_haptics(const cxrHapticFeedback* haptics)
     const int controller_id = haptics->deviceID;
     const float duration_ms = haptics->seconds * 1e9;
 
-    IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::trigger_haptics\n");
+    //IGLLog(IGLLogLevel::LOG_INFO, "OKCloudClient::trigger_haptics\n");
 
     //apply_haptics(controller_id, haptics->amplitude, duration_ms, haptics->frequency);
 }

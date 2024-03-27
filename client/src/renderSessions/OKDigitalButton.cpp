@@ -5,6 +5,7 @@
 #include "defines.h"
 #include "OKDigitalButton.h"
 #include <math.h>
+#include <algorithm>
 
 namespace BVR
 {

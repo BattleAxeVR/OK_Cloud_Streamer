@@ -5,13 +5,24 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-
 #ifndef ENABLE_CLOUDXR
-#define ENABLE_CLOUDXR 1
+#define ENABLE_CLOUDXR 0
 #endif
 
 #ifndef ENABLE_OBOE
-#define ENABLE_OBOE 1
+#define ENABLE_OBOE 0
+#endif
+
+#ifndef LEFT_EYE
+#define LEFT_EYE 0
+#endif
+
+#ifndef RIGHT_EYE
+#define RIGHT_EYE 1
+#endif
+
+#ifndef NUM_EYES
+#define NUM_EYES 2
 #endif
 
 #define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
@@ -56,7 +67,7 @@
 #define CLOUDXR_LOG_FRAME_NOT_READY_EVENT 0
 
 #define ENABLE_CLOUDXR_HMD 1
-#define ENABLE_CLOUDXR_CONTROLLERS (ENABLE_CLOUDXR_HMD && 1)
+#define ENABLE_CLOUDXR_CONTROLLERS (ENABLE_CLOUDXR_HMD && 0)
 #define ENABLE_HAPTICS (ENABLE_CLOUDXR_CONTROLLERS && 1)
 
 #define INVALID_INDEX -1

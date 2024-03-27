@@ -10,7 +10,7 @@
 namespace BVR 
 {
 
-OKPlayerState::OKPlayerState() : controllers_{{*this, LEFT}, {*this, RIGHT}}
+OKPlayerState::OKPlayerState() : controllers_{{*this, LEFT_CONTROLLER}, {*this, RIGHT_CONTROLLER}}
 {
 	
 }
