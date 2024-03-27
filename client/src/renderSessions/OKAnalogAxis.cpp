@@ -4,6 +4,8 @@
 
 #include "defines.h"
 #include "OKAnalogAxis.h"
+#include "GLMPose.h"
+#include <algorithm>
 #include <math.h>
 
 namespace BVR

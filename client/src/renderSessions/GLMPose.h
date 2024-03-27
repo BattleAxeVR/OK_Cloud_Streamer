@@ -7,18 +7,17 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
+namespace BVR
+{
 template<typename T> static inline T clamp(T v, T mn, T mx)
 {
-	return (v < mn) ? mn : (v > mx) ? mx : v;
+    return (v < mn) ? mn : (v > mx) ? mx : v;
 }
 
 inline float sign(float val)
 {
     return (val < 0.0f) ? -1.0f : 1.0f;
 }
-
-namespace BVR
-{
 
 const float ROOT_OF_HALF = 0.7071067690849304f;
 
