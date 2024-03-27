@@ -11,3 +11,6 @@ option(ENABLE_CLOUDXR "Enable CloudXR Integration" ON)
 add_subdirectory(igl)
 target_include_directories(IGLLibrary PUBLIC "${IGL_ROOT_DIR}")
 target_include_directories(IGLLibrary PUBLIC "${NDK_PATH}/sources/android/native_app_glue")
+
+target_include_directories(IGLShellShared PUBLIC ${CLOUDXR_ROOT}/include)
+target_sources(IGLShellShared PRIVATE ${CLOUDXR_ROOT}/include/CloudXRController.cpp)
