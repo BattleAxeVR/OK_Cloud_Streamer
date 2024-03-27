@@ -7,6 +7,7 @@
 
 #include <string>
 #include "GLMPose.h"
+#include "defines.h"
 
 namespace BVR 
 {
@@ -21,7 +22,7 @@ public:
 	bool load();
 	bool save();
 
-    std::string server_ip_address_;
+    std::string server_ip_address_ = DEFAULT_SERVER_IP_ADDRESS;
 
     bool enable_auto_connect_ = AUTO_CONNECT_TO_CLOUDXR;
 
@@ -57,8 +58,8 @@ public:
                                          {CLOUDXR_CONTROLLER_ROTATION_EULER_X, CLOUDXR_CONTROLLER_ROTATION_EULER_Y, CLOUDXR_CONTROLLER_ROTATION_EULER_Z}};
 
 private:
-    std::string app_directory_ = OK_CLOUD_STREAMER_APP_DIRECTORY;
-    std::string json_filename_ = OK_CLOUD_STREAMER_CONFIG_FILENAME;
+    //std::string app_directory_ = OK_CLOUD_STREAMER_APP_DIRECTORY;
+    //std::string json_filename_ = OK_CLOUD_STREAMER_CONFIG_FILENAME;
     std::string json_fullpath_ = OK_CLOUD_STREAMER_CONFIG_FULLPATH;
 };
 

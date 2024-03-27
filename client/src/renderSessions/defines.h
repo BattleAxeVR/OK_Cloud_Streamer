@@ -25,9 +25,13 @@
 #define NUM_EYES 2
 #endif
 
-#define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
+#define DEFAULT_SERVER_IP_ADDRESS "192.168.2.38"
+
+//#define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
+
 #define OK_CLOUD_STREAMER_CONFIG_FILENAME "ok_cloud_streamer_config.json"
-#define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ok_cloud_streamer_config.json"
+//#define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/ok_cloud_streamer_config.json"
+#define OK_CLOUD_STREAMER_CONFIG_FULLPATH "/sdcard/Android/data/com.battleaxevr.ok_cloud_streamer.opengles/files/ok_cloud_streamer_config.json"
 
 #define DEFAULT_CLOUDXR_MAX_RES_FACTOR 1.0f
 #define DEFAULT_CLOUDXR_MAX_BITRATE_KBPS 50000 // 0 = unlimited
