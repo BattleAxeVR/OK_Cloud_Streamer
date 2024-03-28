@@ -87,17 +87,17 @@ public:
 
     bool is_ready_to_connect() const
     {
-        return (cxr_client_state_ == cxrClientState::cxrClientState_ReadyToConnect);
+        return (is_cxr_initialized_ && (cxr_client_state_ == cxrClientState::cxrClientState_ReadyToConnect));
     }
 
     bool is_connected() const
     {
-        return (cxr_client_state_ == cxrClientState::cxrClientState_StreamingSessionInProgress);
+        return (is_cxr_initialized_ && (cxr_client_state_ == cxrClientState::cxrClientState_StreamingSessionInProgress));
     }
 
     bool is_connecting() const
     {
-        return (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptInProgress);
+        return (is_cxr_initialized_ && (cxr_client_state_ == cxrClientState::cxrClientState_ConnectionAttemptInProgress));
     }
 
     bool failed_to_connect() const
