@@ -383,7 +383,16 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
     }
 
 #if (ENABLE_CLOUDXR && 1)
-    if (!ok_client_.is_cxr_initialized())
+    const float delay_ms = 5000.0;
+
+    static std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::steady_clock::now();
+    std::chrono::time_point<std::chrono::high_resolution_clock> now_time = std::chrono::steady_clock::now();
+
+    float time_since_begin_ms = (float)(std::chrono::duration<double, std::milli>(now_time - start_time).count());
+
+    const bool try_connecting = (time_since_begin_ms > delay_ms);
+
+    if (!ok_client_.is_cxr_initialized() && try_connecting)
     {
 #if ENABLE_CLOUDXR_CONTROLLERS
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
