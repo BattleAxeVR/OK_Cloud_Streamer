@@ -384,7 +384,7 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
 
 #if (ENABLE_CLOUDXR && 1)
 
-#if (WAIT_TO_CONNECT_MS > 0.0f)
+#if WAIT_TO_CONNECT
     const float delay_ms = WAIT_TO_CONNECT_MS;
 
     static std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::steady_clock::now();
