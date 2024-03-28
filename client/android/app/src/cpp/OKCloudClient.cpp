@@ -247,10 +247,8 @@ bool OKCloudClient::init_android_gles(OKOpenXRInterface* xr_interface, EGLDispla
     init_audio();
 #endif
 
-    const bool init_ok = create_receiver();
-
-    is_cxr_initialized_ = init_ok;
-    return init_ok;
+    is_cxr_initialized_ = true;
+    return is_cxr_initialized_;
 }
 
 void OKCloudClient::update_cxr_state(cxrClientState state, cxrError error)
@@ -264,8 +262,11 @@ void OKCloudClient::update_cxr_state(cxrClientState state, cxrError error)
             //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptInProgress");
             break;
         case cxrClientState_ConnectionAttemptFailed:
-            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptFailed");
+        {
+            const char* error_str = cxrErrorString(error);
+            //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_ConnectionAttemptFailed = %s\n", error_str);
             break;
+        }
         case cxrClientState_StreamingSessionInProgress:
             //IGLLog(IGLLogLevel::LOG_INFO, "CloudXR State = cxrClientState_StreamingSessionInProgress");
             xr_interface_->handle_stream_connected();
@@ -671,7 +672,7 @@ bool OKCloudClient::latch_frame()
         return false;
     }
 
-    memset(&latched_frames_, 0, sizeof(latched_frames_));
+    //memset(&latched_frames_, 0, sizeof(latched_frames_));
     cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, cxrFrameMask_All, ok_config_.latch_timeout_ms_);
 
     if (error)
