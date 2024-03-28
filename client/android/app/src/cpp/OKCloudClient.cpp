@@ -671,6 +671,7 @@ bool OKCloudClient::latch_frame()
         return false;
     }
 
+    memset(&latched_frames_, 0, sizeof(latched_frames_));
     cxrError error = cxrLatchFrame(cxr_receiver_, &latched_frames_, cxrFrameMask_All, ok_config_.latch_timeout_ms_);
 
     if (error)

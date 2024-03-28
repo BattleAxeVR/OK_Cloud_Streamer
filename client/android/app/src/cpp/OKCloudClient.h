@@ -127,7 +127,7 @@ public:
         return cxr_receiver_;
     }
 
-private:
+//private:
     OKOpenXRInterface* xr_interface_ = nullptr;
     OKOpenXRControllerActions xr_actions_;
     bool is_cxr_initialized_ = false;
