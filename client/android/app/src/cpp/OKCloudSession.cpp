@@ -383,9 +383,8 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
     }
 
 #if (ENABLE_CLOUDXR && 1)
-    if (!ok_client_.is_cxr_initialized() && ok_client_.is_ready_to_connect())
+    if (!ok_client_.is_cxr_initialized())
     {
-
 #if ENABLE_CLOUDXR_CONTROLLERS
         openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
         const igl::shell::openxr::XrInputState& xr_inputs = xr_app.xr_inputs_;
