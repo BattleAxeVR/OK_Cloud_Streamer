@@ -26,7 +26,14 @@
 #endif
 
 #define DEFAULT_SERVER_IP_ADDRESS "192.168.2.38"
+
+#ifndef USE_ADVANCED_IMAGE_READER_DECODER
 #define USE_ADVANCED_IMAGE_READER_DECODER 1
+#endif
+
+#ifndef USE_OK_CALLBACKS
+#define USE_OK_CALLBACKS 1
+#endif
 
 #define OK_CLOUD_STREAMER_APP_DIRECTORY "/sdcard/Android/data/com.battleaxevr.okcloudstreamer.gles/files/"
 #define OK_CLOUD_STREAMER_CONFIG_FILENAME "ok_cloud_streamer_config.json"
@@ -74,7 +81,6 @@
 #define ENABLE_CLOUDXR_LOGGING_STUB 0
 #endif
 
-#define USE_OK_CALLBACKS 1
 
 #define ENABLE_CLOUDXR_HMD 1
 #define ENABLE_CLOUDXR_CONTROLLERS (ENABLE_CLOUDXR_HMD && 0)
