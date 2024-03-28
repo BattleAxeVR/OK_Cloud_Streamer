@@ -8,7 +8,7 @@
 
 #include "OKCloudClient.h"
 
-#if (ENABLE_CLOUDXR_LOGGING && 0)
+#if ENABLE_CLOUDXR_LOGGING_STUB
 extern "C" void dispatchLogMsg(cxrLogLevel level, cxrMessageCategory category, void *extra, const char *tag, const char *fmt, ...)
 {
 }
