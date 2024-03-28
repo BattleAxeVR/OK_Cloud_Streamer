@@ -124,4 +124,6 @@
 
 #define ENABLE_SWAP_THUMBSTICKS 0
 
+#define WAIT_TO_CONNECT_MS 5000.0f
+
 #endif // OK_DEFINES_H

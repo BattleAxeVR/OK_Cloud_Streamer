@@ -383,7 +383,9 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
     }
 
 #if (ENABLE_CLOUDXR && 1)
-    const float delay_ms = 5000.0;
+
+#if (WAIT_TO_CONNECT_MS > 0.0f)
+    const float delay_ms = WAIT_TO_CONNECT_MS;
 
     static std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::steady_clock::now();
     std::chrono::time_point<std::chrono::high_resolution_clock> now_time = std::chrono::steady_clock::now();
@@ -391,6 +393,9 @@ void OKCloudSession::update(igl::SurfaceTextures surfaceTextures) noexcept
     float time_since_begin_ms = (float)(std::chrono::duration<double, std::milli>(now_time - start_time).count());
 
     const bool try_connecting = (time_since_begin_ms > delay_ms);
+#else
+    const bool try_connecting = true;
+#endif
 
     if (!ok_client_.is_cxr_initialized() && try_connecting)
     {
