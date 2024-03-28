@@ -226,7 +226,7 @@ bool OKConfig::load()
 
         if (value.isUInt())
         {
-            latch_timeout_ms_ = value.asUInt();
+            //latch_timeout_ms_ = value.asUInt();
         }
     }
 
