@@ -578,8 +578,15 @@ const BVR::OKOpenXRControllerActions& OKCloudSession::get_actions() const
 
 XrTime OKCloudSession::get_predicted_display_time_ns()
 {
+#if 1
+    struct timespec now_ts = {0};
+    clock_gettime(CLOCK_MONOTONIC, &now_ts);
+    XrTime now_time = ((uint64_t)(now_ts.tv_sec * 1e9) + now_ts.tv_nsec);
+    return now_time;
+#else
     openxr::XrApp& xr_app = *shellParams().xr_app_ptr_;
     return xr_app.get_predicted_display_time_ns();
+#endif
 }
 
 float OKCloudSession::get_current_refresh_rate()
